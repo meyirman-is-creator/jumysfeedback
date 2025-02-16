@@ -1,0 +1,36 @@
+.create-benefit {
+  &__title {
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  &__subtitle {
+    margin-bottom: 2rem;
+    line-height: 1.4;
+  }
+
+  &__form {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__label {
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+  &__radio-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__common-questions {
+    margin-top: 2rem;
+
+    .MuiAccordion-root {
+      margin-top: 1rem;
+    }
+  }
+}
