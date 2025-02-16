@@ -1,0 +1,84 @@
+.footer {
+  width: 100%;
+  background-color: #fff;
+  padding: 40px 20px;
+}
+
+.topSection {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 40px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logo {
+  font-weight: bold;
+}
+
+.columnTitle {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.bottomSection {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.downloadSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.downloadText {
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.iconRow {
+  display: flex;
+  align-items: center;
+
+  button {
+    margin-right: 8px;
+  }
+}
+
+.socialSection {
+  display: flex;
+  align-items: center;
+
+  button {
+    margin: 0 4px;
+    color: #000;
+  }
+}
+
+.regionSection {
+  margin-top: 16px;
+
+  .regionSelect {
+    min-width: 140px;
+  }
+}
+
+/* Стили для ссылок внутри колонок */
+.column a {
+  color: #000;
+  text-decoration: none;
+  font-size: 0.9rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

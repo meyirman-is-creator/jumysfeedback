@@ -1,0 +1,33 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #800000;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+}
+
+.link {
+  margin-left: 24px;
+  color: #000;
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  .icon {
+    margin-right: 4px;
+  }
+}
