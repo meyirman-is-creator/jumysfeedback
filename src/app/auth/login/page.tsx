@@ -8,9 +8,10 @@ import {
   Container,
   Box,
   InputAdornment,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import { AccountCircle, Lock } from "@mui/icons-material";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "./LoginPage.module.scss";
 
@@ -67,9 +68,11 @@ export default function LoginPage() {
           }}
         />
 
-        <Box className={styles["login-page__forgot-password"]}>
-          <Link href="/auth/forgot-password">Forgot password?</Link>
-        </Box>
+        <FormControlLabel
+          control={<Checkbox className={styles["login-page__checkbox"]} />}
+          label="Remember me"
+          className={styles["login-page__remember"]}
+        />
 
         <Button
           variant="contained"

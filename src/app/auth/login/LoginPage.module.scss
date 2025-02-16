@@ -36,18 +36,13 @@
     }
   }
 
-  &__forgot-password {
-    text-align: left;
+  &__checkbox {
+    color: #800000 !important; /* цвет чекбокса */
+  }
 
-    a {
-      color: #000;
-      font-size: 0.9rem;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
+  &__remember {
+    margin-left: 0 !important;
+    /* если нужен дополнительный отступ или выравнивание, можно добавить */
   }
 
   &__submit {
