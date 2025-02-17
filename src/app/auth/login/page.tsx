@@ -10,17 +10,46 @@ import {
   InputAdornment,
   Checkbox,
   FormControlLabel,
+  IconButton,
 } from "@mui/material";
-import { AccountCircle, Lock } from "@mui/icons-material";
+import { AccountCircle, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import styles from "./LoginPage.module.scss";
 
 export default function LoginPage() {
   const router = useRouter();
 
+  const [username, setUsername] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [usernameError, setUsernameError] = React.useState(false);
+  const [passwordError, setPasswordError] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Логика входа
+
+    let valid = true;
+
+    if (username.trim() === "") {
+      setUsernameError(true);
+      valid = false;
+    } else {
+      setUsernameError(false);
+    }
+
+    if (password.trim() === "") {
+      setPasswordError(true);
+      valid = false;
+    } else {
+      setPasswordError(false);
+    }
+
+    if (!valid) return;
+
+    // Логика входа (например, запрос к серверу)
+
+    // После успешного входа делаем редирект на главную страницу "/"
+    router.push("/");
   };
 
   return (
@@ -43,6 +72,15 @@ export default function LoginPage() {
           fullWidth
           required
           className={styles["login-page__input"]}
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            if (usernameError && e.target.value.trim() !== "") {
+              setUsernameError(false);
+            }
+          }}
+          error={usernameError}
+          helperText={usernameError ? "Username is required" : ""}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -54,15 +92,34 @@ export default function LoginPage() {
 
         <TextField
           label="Password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           variant="outlined"
           fullWidth
           required
           className={styles["login-page__input"]}
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (passwordError && e.target.value.trim() !== "") {
+              setPasswordError(false);
+            }
+          }}
+          error={passwordError}
+          helperText={passwordError ? "Password is required" : ""}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
                 <Lock />
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
               </InputAdornment>
             ),
           }}
