@@ -33,7 +33,7 @@ const CompaniesPage = () => {
   const [location, setLocation] = React.useState("");
   const [industry, setIndustry] = React.useState("");
 
-  const itemsPerPage = 9;
+  const itemsPerPage = 15;
   const totalPages = Math.ceil(mockCompanies.length / itemsPerPage);
   const startIndex = (page - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;

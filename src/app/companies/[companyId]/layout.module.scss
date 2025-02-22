@@ -1,0 +1,93 @@
+.companyLayout {
+  &__banner {
+    width: 100%;
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+  }
+
+  &__header {
+    margin-top:10px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+  }
+
+  &__logo {
+    margin-right: 1rem;
+    img {
+      width: 150px;
+      height: auto;
+      object-fit: contain;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+  }
+
+  &__title {
+    color: #a20000;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__rating {
+    color: #444;
+    font-weight: 500;
+  }
+
+  &__location {
+    color: #d2691e;
+    font-weight: 500;
+  }
+
+  &__actions {
+    button {
+      background-color: #a20000 !important;
+      color: #fff !important;
+      &:hover {
+        background-color: #b30000 !important;
+      }
+    }
+  }
+
+  &__tabsNav {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  &__tabBtn {
+    display: inline-block;
+    text-decoration: none;
+    text-transform: none;
+    color: #444;
+    font-weight: 500;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+      color: #d2691e;
+    }
+  }
+
+  .activeTab {
+    color: #a20000;
+    border-bottom-color: #a20000;
+  }
+}
+
+.notFound {
+  margin-top: 3rem;
+}

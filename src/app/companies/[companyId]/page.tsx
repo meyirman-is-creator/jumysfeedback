@@ -1,14 +1,29 @@
 "use client";
 import React from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Container, Typography, Box, Button, Grid } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Box,
+  Button,
+  Grid,
+  Divider,
+} from "@mui/material";
 import { mockCompanies } from "@/features/company/mockData";
 import styles from "./CompanyOverviewPage.module.scss";
 
-const CompanyOverviewPage = () => {
+function getRandomCompanies(count: number, excludeId: string) {
+  const filtered = mockCompanies.filter((c) => c.id !== excludeId);
+  const shuffled = [...filtered].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+export default function CompanyOverviewPage() {
   const params = useParams();
   const router = useRouter();
-  const companyId = params.companyId;
+  const companyId =
+    typeof params.companyId === "string" ? params.companyId : "";
   const company = mockCompanies.find((item) => item.id === companyId);
 
   if (!company) {
@@ -19,43 +34,25 @@ const CompanyOverviewPage = () => {
     );
   }
 
-  const handleAddReview = () => {
-    router.push("/create/review");
-  };
-  const handleAddInterview = () => {
-    router.push("/create/interview");
-  };
-  const handleAddBenefit = () => {
-    router.push("/create/benefit");
-  };
-  const handleSeeAllReviews = () => {
+  const singleReview = company.reviews[0];
+  const singleBenefit = company.benefits[0];
+  const singleInterview = company.interviews[0];
+  const singleSalary = company.salaries[0];
+
+  const handleSeeAllReviews = () =>
     router.push(`/companies/${companyId}/reviews`);
-  };
-  const handleSeeAllInterviews = () => {
+  const handleSeeAllBenefits = () =>
+    router.push(`/companies/${companyId}/benefits`);
+  const handleSeeAllInterviews = () =>
     router.push(`/companies/${companyId}/interviews`);
-  };
+  const handleSeeAllSalaries = () =>
+    router.push(`/companies/${companyId}/salaries`);
+
+  const randomRecommended = getRandomCompanies(5, companyId);
+  const randomTopCompanies = getRandomCompanies(4, companyId);
 
   return (
     <Container maxWidth="md" className={styles.companyOverview}>
-      <Box className={styles.companyOverview__header}>
-        <Box className={styles.companyOverview__logo}>
-          <img src={company.logoUrl} alt={company.name} />
-        </Box>
-        <Box className={styles.companyOverview__info}>
-          <Typography variant="h4" className={styles.companyOverview__title}>
-            {company.name}
-          </Typography>
-          <Typography variant="subtitle1">Рейтинг: {company.rating}</Typography>
-          <Typography variant="subtitle2">{company.location}</Typography>
-          <Button variant="contained" onClick={handleAddReview}>
-            Добавить отзыв
-          </Button>
-        </Box>
-      </Box>
-
-      <Box className={styles.companyOverview__tabs}>
-        <Typography variant="h5">Обзор</Typography>
-      </Box>
       <Box className={styles.companyOverview__tabPanel}>
         <Typography variant="body1">
           Основана: {company.overallInfo.founded}
@@ -71,71 +68,247 @@ const CompanyOverviewPage = () => {
         </Typography>
       </Box>
 
-      <Box className={styles.companyOverview__section}>
-        <Typography variant="h6">Обзор отзывов</Typography>
-        <Typography variant="body2">
-          Всего отзывов: {company.reviews.length}
-        </Typography>
-        <Button onClick={handleSeeAllReviews}>Посмотреть все отзывы</Button>
+      <Box className={styles.companyOverview__overallSections}>
+        <Box className={styles.companyOverview__section}>
+          <Typography variant="h6">Один из отзывов</Typography>
+          {singleReview ? (
+            <Box className={styles.companyOverview__itemBox}>
+              <Typography
+                variant="subtitle1"
+                className={styles.companyOverview__itemTitle}
+              >
+                {singleReview.title}
+              </Typography>
+              <Typography
+                variant="body2"
+                className={styles.companyOverview__itemSub}
+              >
+                Рейтинг: {singleReview.rating} — Автор: {singleReview.author}
+              </Typography>
+              <Typography
+                variant="body2"
+                className={styles.companyOverview__itemBody}
+              >
+                {singleReview.body}
+              </Typography>
+            </Box>
+          ) : (
+            <Typography variant="body2">Пока нет отзывов</Typography>
+          )}
+          {company.reviews.length > 0 && (
+            <Button
+              className={styles.companyOverview__linkButton}
+              onClick={handleSeeAllReviews}
+            >
+              Посмотреть все {company.reviews.length}
+            </Button>
+          )}
+        </Box>
+
+        <Divider />
+
+        <Box className={styles.companyOverview__section}>
+          <Typography variant="h6">Один из бенефитов</Typography>
+          {singleBenefit ? (
+            <Box className={styles.companyOverview__itemBox}>
+              <Typography
+                variant="subtitle1"
+                className={styles.companyOverview__itemTitle}
+              >
+                {singleBenefit.title}
+              </Typography>
+              <Typography
+                variant="body2"
+                className={styles.companyOverview__itemBody}
+              >
+                {singleBenefit.description}
+              </Typography>
+            </Box>
+          ) : (
+            <Typography variant="body2">Пока нет бенефитов</Typography>
+          )}
+          {company.benefits.length > 0 && (
+            <Button
+              className={styles.companyOverview__linkButton}
+              onClick={handleSeeAllBenefits}
+            >
+              Посмотреть все {company.benefits.length}
+            </Button>
+          )}
+        </Box>
+
+        <Divider />
+
+        <Box className={styles.companyOverview__section}>
+          <Typography variant="h6">Одна из зарплат</Typography>
+          {singleSalary ? (
+            <Box className={styles.companyOverview__itemBox}>
+              <Typography
+                variant="subtitle1"
+                className={styles.companyOverview__itemTitle}
+              >
+                {singleSalary.position}
+              </Typography>
+              <Typography
+                variant="body2"
+                className={styles.companyOverview__itemBody}
+              >
+                {singleSalary.amount}
+              </Typography>
+            </Box>
+          ) : (
+            <Typography variant="body2">Пока нет данных о зарплатах</Typography>
+          )}
+          {company.salaries.length > 0 && (
+            <Button
+              className={styles.companyOverview__linkButton}
+              onClick={handleSeeAllSalaries}
+            >
+              Посмотреть все {company.salaries.length}
+            </Button>
+          )}
+        </Box>
+
+        <Divider />
+
+        <Box className={styles.companyOverview__section}>
+          <Typography variant="h6">Одно из собеседований</Typography>
+          {singleInterview ? (
+            <Box className={styles.companyOverview__itemBox}>
+              <Typography
+                variant="subtitle1"
+                className={styles.companyOverview__itemTitle}
+              >
+                {singleInterview.position}
+              </Typography>
+              <Typography
+                variant="body2"
+                className={styles.companyOverview__itemSub}
+              >
+                Сложность: {singleInterview.difficulty} — Опыт:{" "}
+                {singleInterview.experience}
+              </Typography>
+              <Typography
+                variant="body2"
+                className={styles.companyOverview__itemBody}
+              >
+                {singleInterview.details}
+              </Typography>
+            </Box>
+          ) : (
+            <Typography variant="body2">Пока нет собеседований</Typography>
+          )}
+          {company.interviews.length > 0 && (
+            <Button
+              className={styles.companyOverview__linkButton}
+              onClick={handleSeeAllInterviews}
+            >
+              Посмотреть все {company.interviews.length}
+            </Button>
+          )}
+        </Box>
       </Box>
 
-      <Box className={styles.companyOverview__section}>
-        <Typography variant="h6">Обзор собеседований</Typography>
-        <Typography variant="body2">
-          Всего собеседований: {company.interviews.length}
+      <Box className={styles.companyOverview__addContentSection}>
+        <Typography
+          variant="h6"
+          className={styles.companyOverview__addContentTitle}
+        >
+          Добавить контент
         </Typography>
-        <Button onClick={handleSeeAllInterviews}>
-          Посмотреть все собеседования
-        </Button>
-      </Box>
-
-      <Box className={styles.companyOverview__section}>
-        <Typography variant="h6">Добавить контент</Typography>
-        <Box display="flex" gap="1rem" mt={1}>
-          <Button variant="outlined" onClick={handleAddReview}>
+        <Box className={styles.companyOverview__addContentButtons}>
+          <Button
+            variant="outlined"
+            className={styles.companyOverview__outlinedBtn}
+          >
             Отзыв
           </Button>
-          <Button variant="outlined" onClick={handleAddInterview}>
+          <Button
+            variant="outlined"
+            className={styles.companyOverview__outlinedBtn}
+          >
             Собеседование
           </Button>
-          <Button variant="outlined" onClick={handleAddBenefit}>
+          <Button
+            variant="outlined"
+            className={styles.companyOverview__outlinedBtn}
+          >
             Бенефит
           </Button>
         </Box>
       </Box>
 
       <Box className={styles.companyOverview__section}>
-        <Typography variant="h6">Рекомендуемые компании</Typography>
+        <Typography variant="h6">Также рекомендуем</Typography>
         <Grid container spacing={2}>
-          {company.recommended.map((rec) => (
-            <Grid item xs={12} sm={6} key={rec.id}>
-              <Box className={styles.companyOverview__recommendation}>
-                <img src={rec.logoUrl} alt={rec.name} />
-                <Box>
-                  <Typography variant="subtitle1">{rec.name}</Typography>
-                  <Typography variant="body2">Рейтинг: {rec.rating}</Typography>
+          {randomRecommended.map((rec) => (
+            <Grid item xs={12} key={rec.id}>
+              <Link href={`/companies/${rec.id}`}>
+                <Box className={styles.companyOverview__recommendation}>
+                  <img src={rec.logoUrl} alt={rec.name} />
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      {rec.name} {rec.rating}★
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#666" }}>
+                      {Math.floor(Math.random() * 50000 + 1000)} Reviews
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "var(--secondary-color)", fontWeight: 500 }}
+                    >
+                      Compare &rarr;
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
+              </Link>
             </Grid>
           ))}
         </Grid>
       </Box>
 
+      <Divider sx={{ margin: "2rem 0" }} />
+
       <Box className={styles.companyOverview__section}>
         <Typography variant="h6">Топ компании</Typography>
         <Grid container spacing={2}>
-          {company.topCompanies.map((tc) => (
-            <Grid item xs={12} sm={6} key={tc.id}>
-              <Box className={styles.companyOverview__topCompany}>
-                <Typography variant="subtitle1">{tc.name}</Typography>
-                <Typography variant="body2">Рейтинг: {tc.rating}</Typography>
-              </Box>
+          {randomTopCompanies.map((tc) => (
+            <Grid item xs={12} key={tc.id}>
+              <Link href={`/companies/${tc.id}`}>
+                <Box className={styles.companyOverview__topCompany}>
+                  <img
+                    src={tc.logoUrl}
+                    alt={tc.name}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      marginRight: 8,
+                      objectFit: "contain",
+                    }}
+                  />
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, color: "var(--primary-color)" }}
+                    >
+                      {tc.name}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#666" }}>
+                      Compensation &amp; Benefits
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "var(--primary-color)", fontWeight: 500 }}
+                    >
+                      {tc.rating}★
+                    </Typography>
+                  </Box>
+                </Box>
+              </Link>
             </Grid>
           ))}
         </Grid>
       </Box>
     </Container>
   );
-};
-
-export default CompanyOverviewPage;
+}
