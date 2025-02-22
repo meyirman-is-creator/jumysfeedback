@@ -1,14 +1,48 @@
-.company-overview {
-    &__title {
-      margin-bottom: 2rem;
-    }
-  
-    &__tabs {
-      margin-bottom: 1rem;
-    }
-  
-    &__tab-panel {
-      // Стили для контента таба
+.companyOverview {
+  &__header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  &__logo {
+    margin-right: 1rem;
+    img {
+      width: 60px;
+      height: 60px;
     }
   }
-  
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    button {
+      margin-top: 0.5rem;
+    }
+  }
+  &__title {
+    margin-bottom: 0;
+  }
+  &__tabs {
+    margin-bottom: 1rem;
+  }
+  &__tabPanel {
+    margin-bottom: 2rem;
+  }
+  &__section {
+    margin-bottom: 2rem;
+  }
+  &__recommendation {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    img {
+      width: 40px;
+      height: 40px;
+    }
+  }
+  &__topCompany {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+}

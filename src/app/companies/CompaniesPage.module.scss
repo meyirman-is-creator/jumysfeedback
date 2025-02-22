@@ -1,11 +1,165 @@
-.companies-page {
-    &__title {
-      margin-bottom: 2rem;
-      text-align: center;
+.companiesPage {
+  margin-top: 2rem;
+
+  &__results {
+    margin-bottom: 0.5rem;
+    color: #666;
+  }
+
+  &__filters {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    margin-bottom: 1rem;
+
+    .MuiTypography-subtitle1 {
+      color: #333;
+      font-weight: 500;
+      margin-bottom: 0.3rem;
     }
-  
-    &__card {
-      // Стили для карточек компаний
+
+    .MuiFormControl-root {
+      margin-top: 0.3rem;
+    }
+
+    .MuiTextField-root,
+    .MuiFormControl-root {
+      .MuiOutlinedInput-root,
+      .MuiOutlinedInput-notchedOutline {
+        &:hover fieldset {
+          border-color: #a20000;
+        }
+        &.Mui-focused fieldset {
+          border-color: #a20000;
+        }
+      }
+    }
+
+    .MuiCheckbox-root,
+    .MuiRadio-root {
+      color: #a20000 !important;
+    }
+
+    .MuiButton-outlinedSecondary {
+      color: #a20000;
+      border-color: #a20000;
+      &:hover {
+        background-color: rgba(162, 0, 0, 0.05);
+      }
     }
   }
-  
+
+  &__filterTitle {
+    color: #a20000;
+    margin-bottom: 1rem;
+  }
+
+  &__filterItem {
+    margin-bottom: 1.5rem;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  &__title {
+    margin: 0;
+    color: #a20000;
+    font-weight: 600;
+  }
+
+  &__viewButtons {
+    display: flex;
+    gap: 0.5rem;
+
+    .MuiSvgIcon-root {
+      font-size: 1.5rem;
+      /* Можно глобально перекрасить иконки */
+      fill: #a20000 !important;
+    }
+  }
+
+  &__gridView {
+    .MuiGrid-item {
+      display: flex;
+      flex: 1;
+    }
+  }
+
+  &__listView {
+    .MuiGrid-item {
+      width: 100%;
+      display: flex;
+    }
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease-in-out;
+    height: 100%;
+    &:hover {
+      box-shadow: 0 4px 8px rgba(162, 0, 0, 0.1);
+      border-color: #a20000;
+    }
+  }
+
+  &__cardContent {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-bottom: 16px !important;
+  }
+
+  &__cardHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    img {
+      width: 48px;
+      height: 48px;
+      margin-right: 12px;
+      object-fit: contain;
+    }
+  }
+
+  &__companyLink {
+    color: #a20000;
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__desc {
+    margin-top: auto;
+    color: #444;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+  }
+
+  &__pagination {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    .MuiPagination-root {
+      .Mui-selected {
+        background-color: #a20000 !important;
+        color: #fff !important;
+      }
+      .MuiPaginationItem-root:hover {
+        background-color: rgba(162, 0, 0, 0.05);
+      }
+    }
+  }
+}
+
+.css-1umw9bq-MuiSvgIcon-root {
+  fill: #a20000 !important;
+}
