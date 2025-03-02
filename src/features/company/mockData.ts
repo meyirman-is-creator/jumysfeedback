@@ -1,3 +1,31 @@
+export interface IInterview {
+  id: string;
+  position: string;
+  difficulty: number;
+  experience: "Положительный" | "Нейтральный" | "Негативный";
+  outcome: "Offer" | "No offer" | "In progress";
+  date: string;
+  location: string;
+  application: string;
+  details: string;
+  interviewQuestions: {
+    question: string;
+    answer: string;
+  }[];
+}
+
+export interface ISalary {
+  id: string;
+  position: string;
+  amount: string;
+  min: number;
+  max: number;
+  median: number;
+  additionalPay: number;
+  currency: string;
+  experienceLevel: string;
+}
+
 export interface ICompany {
   id: string;
   name: string;
@@ -15,21 +43,13 @@ export interface ICompany {
     competitors: string[];
   };
   benefits: { title: string; description: string }[];
-  interviews: {
-    position: string;
-    difficulty: number;
-    experience: "Положительный" | "Нейтральный" | "Негативный";
-    details: string;
-  }[];
+  interviews: IInterview[];
+  salaries: ISalary[];
   reviews: {
     title: string;
     body: string;
     rating: number;
     author: string;
-  }[];
-  salaries: {
-    position: string;
-    amount: string;
   }[];
   recommended: { id: string; name: string; logoUrl: string; rating: number }[];
   topCompanies: { id: string; name: string; rating: number }[];
@@ -65,19 +85,368 @@ export const mockCompanies: ICompany[] = [
         description: "Стандартный отпуск 28 дней + больничные.",
       },
     ],
+    /** ----------------
+     *  10 интервью
+     * ---------------*/
     interviews: [
       {
+        id: "i1.3",
         position: "Software Engineer",
         difficulty: 3.2,
         experience: "Положительный",
-        details: "Три раунда: телефон, технический и HR.",
+        outcome: "No offer",
+        date: "2025-02-25",
+        location: "Bangalore Rural",
+        application: "I interviewed at IBM (Bangalore Rural)",
+        details:
+          "2 раунда: технический и управленческий. Вопросы по ABAP, odata, cds view.",
+        interviewQuestions: [
+          {
+            question: "What is code push down?",
+            answer:
+              "Перенос части логики в базу данных для оптимизации производительности.",
+          },
+        ],
       },
       {
-        position: "Advisory Engineer",
+        id: "i2",
+        position: "Data Scientist",
         difficulty: 3.5,
         experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-01-10",
+        location: "Online",
+        application: "I interviewed at IBM (Remote)",
         details:
-          "Вопросы о предыдущем опыте, взаимодействии с менеджментом и гибкость графика.",
+          "Три собеседования: скрининг, алгоритмы, общение с менеджером. Спрашивали про ML и Python.",
+        interviewQuestions: [
+          {
+            question: "Explain overfitting?",
+            answer:
+              "Overfitting — когда модель слишком точно подстраивается под обучающую выборку...",
+          },
+          {
+            question: "Python vs R?",
+            answer: "Обсудил преимущества Python для production.",
+          },
+        ],
+      },
+      {
+        id: "i3",
+        position: "DevOps Engineer",
+        difficulty: 3.8,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-01-28",
+        location: "New York",
+        application: "I interviewed at IBM",
+        details:
+          "Основной упор был на CI/CD, Jenkins, Kubernetes. Два этапа: тех и HR.",
+        interviewQuestions: [
+          {
+            question: "Опишите процедуру деплоя в Kubernetes",
+            answer: "Helm чарты, манифесты YAML, пайплайн Jenkins.",
+          },
+        ],
+      },
+      {
+        id: "i4",
+        position: "Project Manager",
+        difficulty: 3.0,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-05",
+        location: "Remote",
+        application: "HeadHunter/LinkedIn",
+        details:
+          "HR-скрининг, затем собеседование с руководителем, обсуждали Agile, работу с рисками.",
+        interviewQuestions: [
+          {
+            question: "Расскажите про конфликт в команде и как вы его решали?",
+            answer:
+              "Привёл пример разрешения конфликтов с помощью ретроспективы.",
+          },
+        ],
+      },
+      {
+        id: "i5",
+        position: "Business Analyst",
+        difficulty: 2.8,
+        experience: "Негативный",
+        outcome: "No offer",
+        date: "2025-03-01",
+        location: "New York",
+        application: "Напрямую через сайт IBM",
+        details:
+          "Собеседование длилось 30 минут, казалось, что интервьюеру неинтересно. Вопросы поверхностные.",
+        interviewQuestions: [
+          {
+            question: "Как анализировать требования стейкхолдеров?",
+            answer:
+              "Общий ответ без особых подробностей, собеседующий не уточнял.",
+          },
+        ],
+      },
+      {
+        id: "i6",
+        position: "SAP Consultant",
+        difficulty: 3.2,
+        experience: "Положительный",
+        outcome: "In progress",
+        date: "2025-03-02",
+        location: "Bangalore",
+        application: "Referral",
+        details:
+          "2 раунда: функционал SAP, ABAP, вопросы про модули FI/CO. Жду финального ответа.",
+        interviewQuestions: [
+          {
+            question: "Что такое BAPI в SAP?",
+            answer: "BAPI — это интерфейс доступа к бизнес-объектам SAP.",
+          },
+        ],
+      },
+      {
+        id: "i7",
+        position: "UX Designer",
+        difficulty: 3.5,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-01-15",
+        location: "Remote",
+        application: "I interviewed at IBM",
+        details:
+          "Портфолио, тестовое задание, финал с арт-директором. Вопросы про user flows, wireframes.",
+        interviewQuestions: [
+          {
+            question: "Опишите метод Design Thinking",
+            answer:
+              "Прояснение проблемы, эмпатия к пользователю, прототипирование, тестирование...",
+          },
+        ],
+      },
+      {
+        id: "i8",
+        position: "HR Specialist",
+        difficulty: 2.5,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-02-12",
+        location: "New York",
+        application: "По рекомендации",
+        details:
+          "Пара общих вопросов об опыте, методах подбора, оценке кандидатов. Без технических деталей.",
+        interviewQuestions: [
+          {
+            question: "Как проводите телефонный скрининг?",
+            answer: "Рассказываю, что важно узнать мотивацию и базовые навыки.",
+          },
+        ],
+      },
+      {
+        id: "i9",
+        position: "QA Engineer",
+        difficulty: 3.7,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-05",
+        location: "Online",
+        application: "Через рекрутера",
+        details:
+          "Основная часть — тестовое на тест-дизайн и работу с API. Пару вопросов про автоматизацию.",
+        interviewQuestions: [
+          {
+            question: "Что такое Smoke-тест?",
+            answer: "Быстрая проверка критической функциональности.",
+          },
+        ],
+      },
+      {
+        id: "i10",
+        position: "Intern",
+        difficulty: 2.0,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-20",
+        location: "Remote",
+        application: "Университетская ярмарка вакансий",
+        details:
+          "Простые вопросы про учебные проекты и знание основ CS. HR сразу предложил стажировку.",
+        interviewQuestions: [
+          {
+            question: "Какие проекты делали в универе?",
+            answer: "Система управления библиотекой, сайт на React.",
+          },
+        ],
+      },
+    ],
+    /** ----------------
+     *  15 зарплат
+     * ---------------*/
+    salaries: [
+      {
+        id: "s1",
+        position: "Software Engineer",
+        amount: "4000 USD/мес",
+        min: 3500,
+        max: 5000,
+        median: 4300,
+        additionalPay: 3000, // годовой бонус, к примеру
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s2",
+        position: "Data Scientist",
+        amount: "4500 USD/мес",
+        min: 4000,
+        max: 5500,
+        median: 4600,
+        additionalPay: 4500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s3",
+        position: "Senior Consultant",
+        amount: "5000 USD/мес",
+        min: 4500,
+        max: 6000,
+        median: 5200,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s4",
+        position: "DevOps Engineer",
+        amount: "4700 USD/мес",
+        min: 4000,
+        max: 5500,
+        median: 4800,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s5",
+        position: "Project Manager",
+        amount: "5300 USD/мес",
+        min: 4800,
+        max: 6500,
+        median: 5400,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s6",
+        position: "Business Analyst",
+        amount: "3800 USD/мес",
+        min: 3500,
+        max: 4500,
+        median: 4000,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s7",
+        position: "SAP Consultant",
+        amount: "5000 USD/мес",
+        min: 4200,
+        max: 6000,
+        median: 5100,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s8",
+        position: "UX Designer",
+        amount: "4500 USD/мес",
+        min: 4000,
+        max: 5200,
+        median: 4600,
+        additionalPay: 2500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s9",
+        position: "HR Specialist",
+        amount: "3500 USD/мес",
+        min: 3000,
+        max: 4200,
+        median: 3500,
+        additionalPay: 1000,
+        currency: "USD",
+        experienceLevel: "Entry",
+      },
+      {
+        id: "s10",
+        position: "QA Engineer",
+        amount: "4100 USD/мес",
+        min: 3500,
+        max: 4800,
+        median: 4000,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s11",
+        position: "Intern",
+        amount: "2000 USD/мес",
+        min: 1800,
+        max: 2200,
+        median: 2000,
+        additionalPay: 0,
+        currency: "USD",
+        experienceLevel: "Intern",
+      },
+      {
+        id: "s12",
+        position: "Technical Sales",
+        amount: "4200 USD/мес",
+        min: 3500,
+        max: 5000,
+        median: 4200,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s13",
+        position: "Security Engineer",
+        amount: "4800 USD/мес",
+        min: 4200,
+        max: 5500,
+        median: 4700,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s14",
+        position: "Systems Architect",
+        amount: "6000 USD/мес",
+        min: 5500,
+        max: 7000,
+        median: 6000,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s15",
+        position: "Database Administrator",
+        amount: "4200 USD/мес",
+        min: 3700,
+        max: 5000,
+        median: 4300,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Mid",
       },
     ],
     reviews: [
@@ -99,11 +468,6 @@ export const mockCompanies: ICompany[] = [
         rating: 3,
         author: "DevOps",
       },
-    ],
-    salaries: [
-      { position: "Software Engineer", amount: "4000 USD/мес" },
-      { position: "Data Scientist", amount: "4500 USD/мес" },
-      { position: "Senior Consultant", amount: "5000 USD/мес" },
     ],
     recommended: [
       { id: "2", name: "Google", logoUrl: "/images/google.png", rating: 4.3 },
@@ -150,18 +514,365 @@ export const mockCompanies: ICompany[] = [
         description: "Программы для студентов и выпускников.",
       },
     ],
+    // 10 интервью для Google
     interviews: [
       {
-        position: "Product Manager",
-        difficulty: 4.0,
+        id: "i1.1",
+        position: "Software Engineer",
+        difficulty: 3.9,
         experience: "Положительный",
-        details: "Сложные вопросы по продукту и стратегии.",
+        outcome: "Offer",
+        date: "2025-02-05",
+        location: "Маунтин-Вью, США",
+        application: "Applied via Google Careers",
+        details:
+          "Техническое собеседование по алгоритмам, структурам данных и системному дизайну.",
+        interviewQuestions: [
+          {
+            question: "How do you optimize a binary search tree?",
+            answer:
+              "Обсудили самобалансирующиеся деревья, такие как AVL или Red-Black.",
+          },
+        ],
       },
       {
-        position: "Software Engineer",
-        difficulty: 4.2,
+        id: "i2",
+        position: "Data Scientist",
+        difficulty: 3.7,
         experience: "Положительный",
-        details: "Алгоритмы, структуры данных, вопросы о масштабируемости.",
+        outcome: "Offer",
+        date: "2025-01-20",
+        location: "Remote",
+        application: "Applied via online portal",
+        details:
+          "Вопросы по статистике, машинному обучению и Python. Всего 3 раунда.",
+        interviewQuestions: [
+          {
+            question: "What is overfitting and how to prevent it?",
+            answer:
+              "Объяснил методы регуляризации, кросс-валидацию и использование dropout.",
+          },
+        ],
+      },
+      {
+        id: "i3",
+        position: "Product Manager",
+        difficulty: 3.5,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-03-01",
+        location: "Маунтин-Вью, США",
+        application: "Referred by employee",
+        details:
+          "Обсуждение стратегии продукта, приоритезация фич и анализ рынка.",
+        interviewQuestions: [
+          {
+            question: "How do you prioritize product features?",
+            answer:
+              "Привёл пример использования RICE и анализа бизнес-ценности.",
+          },
+        ],
+      },
+      {
+        id: "i4",
+        position: "UX Designer",
+        difficulty: 3.4,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-10",
+        location: "Remote",
+        application: "Portfolio review",
+        details:
+          "Оценка портфолио, тестовое задание по редизайну интерфейса для мобильных приложений.",
+        interviewQuestions: [
+          {
+            question: "What is your design process?",
+            answer:
+              "Объяснил этапы исследований, создания wireframe, прототипирования и тестирования.",
+          },
+        ],
+      },
+      {
+        id: "i5",
+        position: "DevOps Engineer",
+        difficulty: 4.1,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-01-28",
+        location: "Маунтин-Вью, США",
+        application: "Applied via employee referral",
+        details:
+          "Собеседование по CI/CD, Docker, Kubernetes и оптимизации пайплайнов.",
+        interviewQuestions: [
+          {
+            question: "How do you implement zero-downtime deployments?",
+            answer:
+              "Обсудили blue-green deployment и canary releases для минимизации простоя.",
+          },
+        ],
+      },
+      {
+        id: "i6",
+        position: "Security Engineer",
+        difficulty: 4.3,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-02-15",
+        location: "Remote",
+        application: "Applied via Google Careers",
+        details:
+          "Вопросы по кибербезопасности, шифрованию, оценке уязвимостей и безопасности API.",
+        interviewQuestions: [
+          {
+            question: "What is SSL and how does it work?",
+            answer:
+              "Объяснил процесс SSL handshake, использование сертификатов и шифрование данных.",
+          },
+        ],
+      },
+      {
+        id: "i7",
+        position: "Technical Program Manager",
+        difficulty: 3.6,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-03",
+        location: "Маунтин-Вью, США",
+        application: "Referral",
+        details:
+          "Обсуждались вопросы управления проектами, координация команд и agile-подходы.",
+        interviewQuestions: [
+          {
+            question: "How do you manage cross-functional teams?",
+            answer:
+              "Рассказывал о важности прозрачной коммуникации и регулярных стендапах.",
+          },
+        ],
+      },
+      {
+        id: "i8",
+        position: "Business Analyst",
+        difficulty: 3.2,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-20",
+        location: "Маунтин-Вью, США",
+        application: "Applied via online application",
+        details:
+          "Вопросы по анализу данных, построению отчетности и оптимизации бизнес-процессов.",
+        interviewQuestions: [
+          {
+            question: "How do you gather requirements from stakeholders?",
+            answer:
+              "Объяснил методы интервью, анкетирования и наблюдения за рабочими процессами.",
+          },
+        ],
+      },
+      {
+        id: "i9",
+        position: "Site Reliability Engineer",
+        difficulty: 4.0,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-01-30",
+        location: "Remote",
+        application: "Applied via company website",
+        details:
+          "Сосредоточено на мониторинге, отказоустойчивости и управлении инцидентами.",
+        interviewQuestions: [
+          {
+            question: "What are SLIs and SLOs?",
+            answer:
+              "Определил показатели уровня сервиса и цели, которых необходимо достигать.",
+          },
+        ],
+      },
+      {
+        id: "i10",
+        position: "Intern",
+        difficulty: 2.0,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-05",
+        location: "Remote",
+        application: "University job fair",
+        details:
+          "Обсудили академические проекты, навыки программирования и базовые принципы разработки.",
+        interviewQuestions: [
+          {
+            question: "What projects have you worked on?",
+            answer:
+              "Рассказывал о нескольких учебных проектах, включая веб-приложения на JavaScript.",
+          },
+        ],
+      },
+    ],
+    // 15 зарплат для Google
+    salaries: [
+      {
+        id: "s1",
+        position: "Software Engineer",
+        amount: "6000 USD/мес",
+        min: 5500,
+        max: 7000,
+        median: 6200,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s2",
+        position: "Data Scientist",
+        amount: "5800 USD/мес",
+        min: 5300,
+        max: 6800,
+        median: 5600,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s3",
+        position: "Product Manager",
+        amount: "6500 USD/мес",
+        min: 6000,
+        max: 7500,
+        median: 6300,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s4",
+        position: "UX Designer",
+        amount: "5500 USD/мес",
+        min: 5000,
+        max: 6200,
+        median: 5600,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s5",
+        position: "DevOps Engineer",
+        amount: "6200 USD/мес",
+        min: 5800,
+        max: 7000,
+        median: 6300,
+        additionalPay: 4500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s6",
+        position: "Security Engineer",
+        amount: "6400 USD/мес",
+        min: 6000,
+        max: 7200,
+        median: 6500,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s7",
+        position: "Technical Program Manager",
+        amount: "7000 USD/мес",
+        min: 6500,
+        max: 8000,
+        median: 6800,
+        additionalPay: 5500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s8",
+        position: "Business Analyst",
+        amount: "5800 USD/мес",
+        min: 5400,
+        max: 6300,
+        median: 5700,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s9",
+        position: "Site Reliability Engineer",
+        amount: "6600 USD/мес",
+        min: 6200,
+        max: 7500,
+        median: 6400,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s10",
+        position: "Intern",
+        amount: "3000 USD/мес",
+        min: 2800,
+        max: 3200,
+        median: 3000,
+        additionalPay: 0,
+        currency: "USD",
+        experienceLevel: "Intern",
+      },
+      {
+        id: "s11",
+        position: "Sales Engineer",
+        amount: "6300 USD/мес",
+        min: 6000,
+        max: 7200,
+        median: 6400,
+        additionalPay: 4500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s12",
+        position: "Customer Success Manager",
+        amount: "6000 USD/мес",
+        min: 5500,
+        max: 6800,
+        median: 6100,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s13",
+        position: "Marketing Specialist",
+        amount: "5700 USD/мес",
+        min: 5300,
+        max: 6300,
+        median: 5600,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s14",
+        position: "Operations Manager",
+        amount: "6800 USD/мес",
+        min: 6300,
+        max: 7500,
+        median: 6600,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s15",
+        position: "Security Consultant",
+        amount: "6500 USD/мес",
+        min: 6000,
+        max: 7200,
+        median: 6400,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Senior",
       },
     ],
     reviews: [
@@ -178,11 +889,6 @@ export const mockCompanies: ICompany[] = [
         author: "Разработчик",
       },
     ],
-    salaries: [
-      { position: "Software Engineer", amount: "5000 USD/мес" },
-      { position: "Data Analyst", amount: "4200 USD/мес" },
-      { position: "UX Designer", amount: "4800 USD/мес" },
-    ],
     recommended: [
       { id: "1", name: "IBM", logoUrl: "/images/ibm.png", rating: 4.0 },
       {
@@ -197,6 +903,7 @@ export const mockCompanies: ICompany[] = [
       { id: "15", name: "Honeywell Int", rating: 3.9 },
     ],
   },
+
   {
     id: "3",
     name: "Microsoft",
@@ -230,18 +937,366 @@ export const mockCompanies: ICompany[] = [
         description: "ESPP и RSU программы для сотрудников.",
       },
     ],
+    // 10 интервью для Microsoft
     interviews: [
       {
-        position: "Data Analyst",
-        difficulty: 3.5,
+        id: "i1.4",
+        position: "Software Engineer",
+        difficulty: 4.0,
         experience: "Положительный",
-        details: "Вопросы по SQL, Power BI и бизнес-логике.",
+        outcome: "Offer",
+        date: "2025-02-07",
+        location: "Редмонд, США",
+        application: "Applied via Microsoft Careers",
+        details:
+          "Техническое собеседование по алгоритмам, системному дизайну и C#.",
+        interviewQuestions: [
+          {
+            question: "What are SOLID principles?",
+            answer:
+              "Объяснил принципы единственной ответственности, открытости/закрытости и т.д.",
+          },
+        ],
       },
       {
-        position: "Software Developer",
-        difficulty: 3.8,
+        id: "i2",
+        position: "Cloud Solutions Architect",
+        difficulty: 4.2,
         experience: "Положительный",
-        details: "Технические задачи на алгоритмы, вопросы по C# и Azure.",
+        outcome: "Offer",
+        date: "2025-02-15",
+        location: "Редмонд, США",
+        application: "Referred by employee",
+        details:
+          "Вопросы по архитектуре облачных решений, Azure и масштабируемости.",
+        interviewQuestions: [
+          {
+            question: "How do you design a scalable cloud architecture?",
+            answer:
+              "Использовал микросервисную архитектуру с авто-масштабированием и load balancer.",
+          },
+        ],
+      },
+      {
+        id: "i3",
+        position: "Data Analyst",
+        difficulty: 3.7,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-01-25",
+        location: "Редмонд, США",
+        application: "Applied via online portal",
+        details:
+          "Вопросы по SQL, Power BI, анализу данных и визуализации отчетов.",
+        interviewQuestions: [
+          {
+            question: "How do you optimize SQL queries?",
+            answer:
+              "Обсудил важность индексов, оптимизацию запросов и анализ execution plan.",
+          },
+        ],
+      },
+      {
+        id: "i4",
+        position: "Product Manager",
+        difficulty: 3.5,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-02",
+        location: "Редмонд, США",
+        application: "Referral",
+        details:
+          "Обсуждал опыт управления продуктами, составление roadmaps и agile-подходы.",
+        interviewQuestions: [
+          {
+            question: "How do you balance technical and business requirements?",
+            answer:
+              "Подчеркнул важность приоритизации и тесного взаимодействия с командами разработки.",
+          },
+        ],
+      },
+      {
+        id: "i5",
+        position: "DevOps Engineer",
+        difficulty: 3.9,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-20",
+        location: "Редмонд, США",
+        application: "Applied via LinkedIn",
+        details:
+          "Собеседование по CI/CD, Docker, Kubernetes и автоматизации процессов.",
+        interviewQuestions: [
+          {
+            question: "What is blue-green deployment?",
+            answer:
+              "Объяснил концепцию, позволяющую минимизировать downtime при релизе.",
+          },
+        ],
+      },
+      {
+        id: "i6",
+        position: "QA Engineer",
+        difficulty: 3.3,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-01-30",
+        location: "Редмонд, США",
+        application: "Applied via Microsoft Careers",
+        details:
+          "Вопросы по автоматизации тестирования, написанию тестовых сценариев и ручному тестированию.",
+        interviewQuestions: [
+          {
+            question:
+              "What is the difference between regression and smoke testing?",
+            answer:
+              "Разъяснил цели и особенности каждого вида тестирования с примерами.",
+          },
+        ],
+      },
+      {
+        id: "i7",
+        position: "Technical Support Engineer",
+        difficulty: 3.5,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-10",
+        location: "Редмонд, США",
+        application: "Internal referral",
+        details:
+          "Сосредоточено на диагностике проблем, поддержке клиентов и решении инцидентов.",
+        interviewQuestions: [
+          {
+            question: "How do you troubleshoot system errors?",
+            answer:
+              "Рассказывал о системном подходе к диагностике и использовании логов.",
+          },
+        ],
+      },
+      {
+        id: "i8",
+        position: "Security Engineer",
+        difficulty: 4.1,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-04",
+        location: "Редмонд, США",
+        application: "Applied via Microsoft Careers",
+        details:
+          "Фокус на кибербезопасности, шифровании и методах защиты инфраструктуры.",
+        interviewQuestions: [
+          {
+            question: "What is multi-factor authentication?",
+            answer:
+              "Объяснил принцип добавления второго уровня проверки, помимо пароля.",
+          },
+        ],
+      },
+      {
+        id: "i9",
+        position: "Intern",
+        difficulty: 2.0,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-06",
+        location: "Редмонд, США",
+        application: "University career fair",
+        details:
+          "Обсудили базовые навыки программирования, академические проекты и корпоративную культуру.",
+        interviewQuestions: [
+          {
+            question: "What programming projects have you completed?",
+            answer:
+              "Поделился опытом разработки небольших веб-приложений и учебных проектов.",
+          },
+        ],
+      },
+      {
+        id: "i10",
+        position: "Solutions Consultant",
+        difficulty: 3.8,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-02-25",
+        location: "Редмонд, США",
+        application: "Applied via referral",
+        details:
+          "Обсуждались интеграционные решения, клиентские кейсы и консультативные услуги.",
+        interviewQuestions: [
+          {
+            question: "How do you handle client requirements?",
+            answer:
+              "Опишу процесс сбора требований, анализа и разработки решения с учетом обратной связи.",
+          },
+        ],
+      },
+    ],
+    // 15 зарплат для Microsoft
+    salaries: [
+      {
+        id: "s1",
+        position: "Software Engineer",
+        amount: "6200 USD/мес",
+        min: 5800,
+        max: 7000,
+        median: 6300,
+        additionalPay: 4500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s2",
+        position: "Cloud Solutions Architect",
+        amount: "7500 USD/мес",
+        min: 7000,
+        max: 8500,
+        median: 7300,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s3",
+        position: "Data Analyst",
+        amount: "6000 USD/мес",
+        min: 5500,
+        max: 6800,
+        median: 6100,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s4",
+        position: "Product Manager",
+        amount: "6800 USD/мес",
+        min: 6300,
+        max: 7600,
+        median: 6500,
+        additionalPay: 5500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s5",
+        position: "DevOps Engineer",
+        amount: "6400 USD/мес",
+        min: 6000,
+        max: 7200,
+        median: 6500,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s6",
+        position: "QA Engineer",
+        amount: "5800 USD/мес",
+        min: 5400,
+        max: 6300,
+        median: 5700,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s7",
+        position: "Technical Support Engineer",
+        amount: "6000 USD/мес",
+        min: 5600,
+        max: 6800,
+        median: 6100,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s8",
+        position: "Security Engineer",
+        amount: "6800 USD/мес",
+        min: 6300,
+        max: 7200,
+        median: 6500,
+        additionalPay: 4500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s9",
+        position: "Intern",
+        amount: "3200 USD/мес",
+        min: 3000,
+        max: 3500,
+        median: 3200,
+        additionalPay: 0,
+        currency: "USD",
+        experienceLevel: "Intern",
+      },
+      {
+        id: "s10",
+        position: "Solutions Consultant",
+        amount: "7000 USD/мес",
+        min: 6500,
+        max: 8000,
+        median: 6800,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s11",
+        position: "Cloud Engineer",
+        amount: "6600 USD/мес",
+        min: 6200,
+        max: 7300,
+        median: 6400,
+        additionalPay: 4500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s12",
+        position: "Business Analyst",
+        amount: "6000 USD/мес",
+        min: 5500,
+        max: 6700,
+        median: 6100,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s13",
+        position: "Marketing Specialist",
+        amount: "5900 USD/мес",
+        min: 5500,
+        max: 6300,
+        median: 5700,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s14",
+        position: "Operations Manager",
+        amount: "6800 USD/мес",
+        min: 6300,
+        max: 7500,
+        median: 6600,
+        additionalPay: 5000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s15",
+        position: "Security Consultant",
+        amount: "6500 USD/мес",
+        min: 6000,
+        max: 7200,
+        median: 6400,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Senior",
       },
     ],
     reviews: [
@@ -257,11 +1312,6 @@ export const mockCompanies: ICompany[] = [
         rating: 5,
         author: "Разработчик",
       },
-    ],
-    salaries: [
-      { position: "Data Analyst", amount: "4200 USD/мес" },
-      { position: "Backend Developer", amount: "4500 USD/мес" },
-      { position: "Solution Architect", amount: "6000 USD/мес" },
     ],
     recommended: [
       { id: "2", name: "Google", logoUrl: "/images/google.png", rating: 4.3 },
@@ -300,16 +1350,188 @@ export const mockCompanies: ICompany[] = [
     ],
     interviews: [
       {
+        id: "i1.5",
         position: "UI/UX Designer",
         difficulty: 3.7,
         experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-01",
+        location: "Купертино, США",
+        application: "Applied via Apple Careers",
         details: "Тестовое задание и оценка портфолио.",
+        interviewQuestions: [
+          {
+            question: "Какие принципы лежат в основе вашего дизайна?",
+            answer:
+              "Использую простоту, удобство и соответствие фирменному стилю Apple.",
+          },
+        ],
       },
       {
+        id: "i2",
         position: "Hardware Engineer",
         difficulty: 4.0,
         experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-03",
+        location: "Купертино, США",
+        application: "Referral",
         details: "Глубокие вопросы по схемотехнике и системному дизайну.",
+        interviewQuestions: [
+          {
+            question: "Как вы подходите к оптимизации схемотехники?",
+            answer:
+              "Использую симуляции и оптимизирую компоненты для снижения энергопотребления.",
+          },
+        ],
+      },
+      {
+        id: "i3",
+        position: "Software Engineer",
+        difficulty: 4.2,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-05",
+        location: "Купертино, США",
+        application: "Applied via Apple Careers",
+        details:
+          "Техническое собеседование по алгоритмам, OOP и системному дизайну.",
+        interviewQuestions: [
+          {
+            question: "Расскажите о вашем опыте оптимизации алгоритмов.",
+            answer:
+              "Привёл пример оптимизации поиска с использованием хэш-таблиц.",
+          },
+        ],
+      },
+      {
+        id: "i4",
+        position: "Project Manager",
+        difficulty: 3.5,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-02-07",
+        location: "Купертино, США",
+        application: "Online application",
+        details: "HR-интервью, вопросы по agile и управлению проектами.",
+        interviewQuestions: [
+          {
+            question: "Как вы мотивируете команду в условиях дедлайна?",
+            answer:
+              "Использую четкое планирование и регулярную обратную связь.",
+          },
+        ],
+      },
+      {
+        id: "i5",
+        position: "Data Scientist",
+        difficulty: 3.8,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-10",
+        location: "Купертино, США",
+        application: "Referred by employee",
+        details: "Вопросы по статистике, машинному обучению и Python.",
+        interviewQuestions: [
+          {
+            question: "Что такое overfitting и как его избежать?",
+            answer: "Применяю регуляризацию, кросс-валидацию и dropout.",
+          },
+        ],
+      },
+      {
+        id: "i6",
+        position: "DevOps Engineer",
+        difficulty: 3.9,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-12",
+        location: "Купертино, США",
+        application: "Applied via referral",
+        details:
+          "Вопросы по CI/CD, Docker, Kubernetes и оптимизации пайплайнов.",
+        interviewQuestions: [
+          {
+            question: "Как настроить zero-downtime deployment?",
+            answer: "Использую blue-green deployment и canary releases.",
+          },
+        ],
+      },
+      {
+        id: "i7",
+        position: "Security Engineer",
+        difficulty: 4.1,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-02-14",
+        location: "Купертино, США",
+        application: "Online application",
+        details:
+          "Собеседование по вопросам безопасности, шифрования и защиты данных.",
+        interviewQuestions: [
+          {
+            question: "Что такое secure enclave?",
+            answer:
+              "Аппаратно изолированная область для хранения конфиденциальных данных.",
+          },
+        ],
+      },
+      {
+        id: "i8",
+        position: "Intern",
+        difficulty: 2.5,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-16",
+        location: "Купертино, США",
+        application: "University job fair",
+        details:
+          "Обсудили академические проекты и базовые навыки программирования.",
+        interviewQuestions: [
+          {
+            question: "Какие проекты вы реализовывали в университете?",
+            answer: "Разрабатывал небольшие веб-приложения на React и Node.js.",
+          },
+        ],
+      },
+      {
+        id: "i9",
+        position: "Technical Writer",
+        difficulty: 3.0,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-02-18",
+        location: "Купертино, США",
+        application: "Applied via Apple Careers",
+        details:
+          "Вопросы по написанию технической документации и описанию продуктов.",
+        interviewQuestions: [
+          {
+            question: "Как вы структурируете техническую документацию?",
+            answer:
+              "Использую четкую структуру, разделяя введение, описание и примеры.",
+          },
+        ],
+      },
+      {
+        id: "i10",
+        position: "Customer Support Specialist",
+        difficulty: 2.8,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-20",
+        location: "Купертино, США",
+        application: "Referral",
+        details:
+          "Собеседование по коммуникационным навыкам и решению клиентских проблем.",
+        interviewQuestions: [
+          {
+            question:
+              "Как вы справляетесь с конфликтными ситуациями с клиентами?",
+            answer:
+              "Стараюсь сохранять спокойствие, выслушивать и искать компромисс.",
+          },
+        ],
       },
     ],
     reviews: [
@@ -327,518 +1549,171 @@ export const mockCompanies: ICompany[] = [
       },
     ],
     salaries: [
-      { position: "UI/UX Designer", amount: "4500 USD/мес" },
-      { position: "Hardware Engineer", amount: "5500 USD/мес" },
-    ],
-    recommended: [
       {
-        id: "3",
-        name: "Microsoft",
-        logoUrl: "/images/microsoft.png",
-        rating: 4.2,
+        id: "s1",
+        position: "UI/UX Designer",
+        amount: "4500 USD/мес",
+        min: 4000,
+        max: 5000,
+        median: 4500,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Mid",
       },
       {
-        id: "5",
-        name: "JPMorganChase",
-        logoUrl: "/images/jpmc.png",
-        rating: 4.0,
-      },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "5",
-    name: "JPMorganChase",
-    logoUrl:
-      "https://logos-world.net/wp-content/uploads/2024/10/JPMorgan-Chase-Symbol-500x281.png",
-    bannerImg:
-      "https://www.boldbusiness.com/wp-content/uploads/2019/02/JPMorgan-Chase_Featured-Image.jpg",
-    rating: 4.0,
-    location: "Нью-Йорк, США",
-    industries: ["Финансы", "Банковское дело"],
-    size: "10000+",
-    description:
-      "JPMorganChase — один из крупнейших финансовых конгломератов мира.",
-    overallInfo: {
-      founded: "1799",
-      revenue: ">$100 млрд",
-      mission:
-        "Инновации в банковской сфере и обслуживание глобальных клиентов.",
-      competitors: ["Bank of America", "Wells Fargo", "Goldman Sachs"],
-    },
-    benefits: [
-      {
-        title: "Пенсионные накопления",
-        description: "Программа 401(k) + бонусы.",
+        id: "s2",
+        position: "Hardware Engineer",
+        amount: "5500 USD/мес",
+        min: 5000,
+        max: 6000,
+        median: 5500,
+        additionalPay: 2500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
       },
       {
-        title: "Страхование жизни",
-        description: "Групповое страхование для сотрудников.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Associate Consultant",
-        difficulty: 3.0,
-        experience: "Положительный",
-        details: "Три раунда: резюме-скрининг, технический и HR.",
-      },
-      {
-        position: "Investment Analyst",
-        difficulty: 3.5,
-        experience: "Нейтральный",
-        details: "Вопросы по финансовому анализу и кейсы по рынку капитала.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Хороший банк",
-        body: "Надёжная структура, но много бюрократии.",
-        rating: 4,
-        author: "Консультант",
-      },
-      {
-        title: "Карьерный рост",
-        body: "Продвижение внутри компании требует больших усилий.",
-        rating: 4,
-        author: "Аналитик",
-      },
-    ],
-    salaries: [
-      { position: "Associate Consultant", amount: "3800 USD/мес" },
-      { position: "Investment Analyst", amount: "5000 USD/мес" },
-    ],
-    recommended: [
-      { id: "6", name: "Cisco", logoUrl: "/images/cisco.png", rating: 4.1 },
-      { id: "7", name: "Meta", logoUrl: "/images/meta.png", rating: 4.0 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "6",
-    name: "Cisco",
-    logoUrl:
-      "https://1000logos.net/wp-content/uploads/2016/11/Cisco-logo-1024x540.png",
-    bannerImg:
-      "http://stevehardie.com/wp-content/uploads/2016/02/cisco-banner.jpg",
-    rating: 4.1,
-    location: "Сан-Хосе, США",
-    industries: ["Сетевые технологии"],
-    size: "10000+",
-    description:
-      "Cisco — мировой лидер в сфере сетевых и коммуникационных решений.",
-    overallInfo: {
-      founded: "1984",
-      revenue: ">$40 млрд",
-      mission: "Развитие интернета и коммуникаций для всех.",
-      competitors: ["Juniper", "Huawei", "Arista"],
-    },
-    benefits: [
-      {
-        title: "Удалённая работа",
-        description: "Возможность работать из любой точки мира.",
-      },
-      {
-        title: "Субсидия на обучение",
-        description: "Возмещение части расходов на курсы.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Network Engineer",
-        difficulty: 3.4,
-        experience: "Положительный",
-        details: "Вопросы по протоколам и настройке оборудования.",
-      },
-      {
-        position: "DevOps Engineer",
-        difficulty: 3.6,
-        experience: "Положительный",
-        details: "Кейсы по CI/CD, Docker, Kubernetes.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Отличная компания",
-        body: "Внимание к развитию сотрудников, гибкие условия труда.",
-        rating: 5,
-        author: "Инженер",
-      },
-      {
-        title: "Сложные задачи",
-        body: "Иногда приходится работать в выходные, если есть срочные проекты.",
-        rating: 4,
-        author: "DevOps",
-      },
-    ],
-    salaries: [
-      { position: "Network Engineer", amount: "4000 USD/мес" },
-      { position: "DevOps Engineer", amount: "4500 USD/мес" },
-    ],
-    recommended: [
-      {
-        id: "5",
-        name: "JPMorganChase",
-        logoUrl: "/images/jpmc.png",
-        rating: 4.0,
-      },
-      { id: "7", name: "Meta", logoUrl: "/images/meta.png", rating: 4.0 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "7",
-    name: "Meta",
-    logoUrl:
-      "https://static.dezeen.com/uploads/2021/11/meta-facebook-rebranding-name-news_dezeen_2364_col_hero2-1704x735.jpg",
-    bannerImg:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-6/250030516_10165060777571337_4513794379224036627_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=ma6WL9bSt4gQ7kNvgEL1GlR&_nc_oc=Adhdj91FJjIndJ6ISPliCA_ejRqbRrwtyKYZ3yVsK4XPD3WOJVebHH9RH1MtafXxG9c&_nc_zt=23&_nc_ht=scontent.fala4-1.fna&_nc_gid=AzyLS3Jo6qUXaOw4vz7S1m2&oh=00_AYA0CTf0b-_zX40vmsWI7D1S9IVT6oIuI026m7m70Xnu5w&oe=67BF9C2F",
-    rating: 4.0,
-    location: "Менло-Парк, США",
-    industries: ["Социальные сети", "Реклама"],
-    size: "10000+",
-    description: "Meta — компания, стоящая за Facebook, Instagram и WhatsApp.",
-    overallInfo: {
-      founded: "2004",
-      revenue: ">$100 млрд",
-      mission: "Соединять людей и сообщества по всему миру.",
-      competitors: ["Google", "Snap", "TikTok"],
-    },
-    benefits: [
-      {
-        title: "Оплата обедов",
-        description: "Кофейни и рестораны с бесплатными блюдами.",
-      },
-      {
-        title: "Поддержка семей",
-        description: "Отпуск по уходу за ребёнком и бонусы.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Frontend Engineer",
-        difficulty: 3.9,
-        experience: "Положительный",
-        details: "Алгоритмы, структуры данных и вопросы по React.",
-      },
-      {
-        position: "Data Scientist",
-        difficulty: 3.8,
-        experience: "Положительный",
-        details: "Вопросы по статистике, Machine Learning и A/B тестам.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Динамично и интересно",
-        body: "Очень быстро развивающаяся среда, стрессоустойчивость обязательна.",
-        rating: 4,
-        author: "Разработчик",
-      },
-      {
-        title: "Хорошие льготы",
-        body: "Компенсации отличные, но много переработок.",
-        rating: 4,
-        author: "Аналитик",
-      },
-    ],
-    salaries: [
-      { position: "Frontend Engineer", amount: "4800 USD/мес" },
-      { position: "Data Scientist", amount: "5200 USD/мес" },
-    ],
-    recommended: [
-      { id: "2", name: "Google", logoUrl: "/images/google.png", rating: 4.3 },
-      {
-        id: "3",
-        name: "Microsoft",
-        logoUrl: "/images/microsoft.png",
-        rating: 4.2,
-      },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "8",
-    name: "Amazon",
-    logoUrl:
-      "https://www.hatchwise.com/wp-content/uploads/2022/05/amazon-logo-1024x683.png-1.webp",
-    bannerImg:
-      "https://businessreviewlive.com/wp-content/uploads/2022/05/Untitled-design-min-29.png",
-    rating: 3.6,
-    location: "Сиэтл, США",
-    industries: ["Электронная коммерция", "Облачные сервисы"],
-    size: "10000+",
-    description: "Amazon — крупнейший онлайн-ритейлер и лидер в AWS-области.",
-    overallInfo: {
-      founded: "1994",
-      revenue: ">$450 млрд",
-      mission: "Быть самой клиентоориентированной компанией в мире.",
-      competitors: ["Microsoft", "Google", "Alibaba"],
-    },
-    benefits: [
-      {
-        title: "Складские скидки",
-        description: "Специальные цены для сотрудников.",
-      },
-      {
-        title: "Расширенные бенефиты",
-        description: "Дополнительное покрытие здоровья.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Operations Manager",
-        difficulty: 3.8,
-        experience: "Нейтральный",
-        details: "Поведенческие вопросы по Leadership Principles.",
-      },
-      {
+        id: "s3",
         position: "Software Engineer",
-        difficulty: 4.0,
-        experience: "Положительный",
-        details: "Много вопросов о микросервисах, AWS, масштабировании.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Высокие темпы работы",
-        body: "Много задач, быстрый ритм, но хорошая оплата.",
-        rating: 4,
-        author: "Менеджер",
+        amount: "6000 USD/мес",
+        min: 5500,
+        max: 6500,
+        median: 6000,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
       },
       {
-        title: "Давление на результат",
-        body: "Могут быть долгие смены, но карьерные возможности огромны.",
-        rating: 3,
-        author: "Сотрудник",
-      },
-    ],
-    salaries: [
-      { position: "Operations Manager", amount: "4600 USD/мес" },
-      { position: "Software Engineer", amount: "4800 USD/мес" },
-    ],
-    recommended: [
-      { id: "1", name: "IBM", logoUrl: "/images/ibm.png", rating: 4.0 },
-      { id: "2", name: "Google", logoUrl: "/images/google.png", rating: 4.3 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "9",
-    name: "Oracle",
-    logoUrl:
-      "https://1000logos.net/wp-content/uploads/2017/04/Oracle-Logo-1-1536x864.png",
-    bannerImg:
-      "https://imageio.forbes.com/specials-images/imageserve/6202af41f8def65659f919e8/Oracle/960x0.jpg?format=jpg&width=1440",
-    rating: 3.8,
-    location: "Остин, США",
-    industries: ["Базы данных", "Облачные решения"],
-    size: "10000+",
-    description: "Oracle — разработчик СУБД и поставщик корпоративного ПО.",
-    overallInfo: {
-      founded: "1977",
-      revenue: ">$40 млрд",
-      mission: "Создавать инновации в сфере управления данными и облаков.",
-      competitors: ["SAP", "IBM", "Microsoft"],
-    },
-    benefits: [
-      {
-        title: "Стабильность",
-        description: "Крупная компания с долгой историей.",
-      },
-      {
-        title: "Корпоративное обучение",
-        description: "Доступ к Oracle Academy и др. платформам.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Database Administrator",
-        difficulty: 3.6,
-        experience: "Положительный",
-        details: "Вопросы по SQL, Oracle DB и оптимизации.",
-      },
-      {
-        position: "Cloud Architect",
-        difficulty: 3.8,
-        experience: "Положительный",
-        details: "Архитектура облачных решений, Terraform, Ansible.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Хороший соцпакет",
-        body: "Есть возможности для развития, но менее гибко, чем в стартапах.",
-        rating: 4,
-        author: "Администратор",
-      },
-      {
-        title: "Стабильный рост",
-        body: "Компания не очень быстрая, но даёт хорошую базу.",
-        rating: 4,
-        author: "Архитектор",
-      },
-    ],
-    salaries: [
-      { position: "Database Administrator", amount: "4100 USD/мес" },
-      { position: "Cloud Architect", amount: "5500 USD/мес" },
-    ],
-    recommended: [
-      {
-        id: "3",
-        name: "Microsoft",
-        logoUrl: "/images/microsoft.png",
-        rating: 4.2,
-      },
-      { id: "1", name: "IBM", logoUrl: "/images/ibm.png", rating: 4.0 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "10",
-    name: "HP Inc.",
-    logoUrl:
-      "https://1000logos.net/wp-content/uploads/2017/02/HP-Logo-1954.jpg",
-    bannerImg:
-      "https://www.ict-news.org/wp-content/uploads/2017/02/banner1.jpg",
-    rating: 3.6,
-    location: "Пало-Альто, США",
-    industries: ["Аппаратное обеспечение", "ПО"],
-    size: "10000+",
-    description:
-      "HP — производитель персональных компьютеров, принтеров и решений для бизнеса.",
-    overallInfo: {
-      founded: "1939",
-      revenue: ">$50 млрд",
-      mission: "Упрощать технологии и улучшать жизнь пользователей.",
-      competitors: ["Dell", "Lenovo", "Canon"],
-    },
-    benefits: [
-      {
-        title: "Скидки на продукцию",
-        description: "Принтеры и лэптопы по специальной цене.",
-      },
-      {
-        title: "Здоровье и спорт",
-        description: "Частичная оплата спортзала и страховки.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Sales Specialist",
-        difficulty: 3.2,
-        experience: "Нейтральный",
-        details: "Вопросы по продажам и пониманию рынка.",
-      },
-      {
-        position: "Software Developer",
-        difficulty: 3.5,
-        experience: "Положительный",
-        details:
-          "C++, Java, вопросы про драйвера и системное программирование.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Дружелюбная атмосфера",
-        body: "Коллеги всегда помогают, но карьерный рост может быть медленным.",
-        rating: 3,
-        author: "Специалист",
-      },
-      {
-        title: "Стабильная компания",
-        body: "Неплохие бенефиты, но мало инноваций.",
-        rating: 4,
-        author: "Разработчик",
-      },
-    ],
-    salaries: [
-      { position: "Sales Specialist", amount: "3500 USD/мес" },
-      { position: "Software Developer", amount: "4000 USD/мес" },
-    ],
-    recommended: [
-      { id: "9", name: "Oracle", logoUrl: "/images/oracle.png", rating: 3.8 },
-      { id: "1", name: "IBM", logoUrl: "/images/ibm.png", rating: 4.0 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "11",
-    name: "Akvelon",
-    logoUrl: "https://old.roi4cio.com/fileadmin/user_upload/Akvelon__logo_.png",
-    bannerImg:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-6/300026171_454455083362988_8579564377298983445_n.png?_nc_cat=102&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=acbBuFtWAEoQ7kNvgFeHqM_&_nc_oc=Adhb4IEQj8WFco4446Q7xI1HsJEIs1Hp-ZWpzgxt-tVsx7pZbRHJ-EQlmU_oNfaJSvE&_nc_zt=23&_nc_ht=scontent.fala4-1.fna&_nc_gid=AfsJhiFKeuiJrn6d9csfjNR&oh=00_AYDx28LvWz09ykiWfvKFjgUYo6ej1A3kCeX62QgsEQEdXA&oe=67BF9FF4",
-    rating: 3.7,
-    location: "Сиэтл, США",
-    industries: ["Консалтинг", "Разработка ПО"],
-    size: "1001-5000",
-    description:
-      "Akvelon — IT-консалтинг, помогающий клиентам решать бизнес-задачи.",
-    overallInfo: {
-      founded: "2000",
-      revenue: "$200 млн",
-      mission: "Помогать предприятиям масштабировать разработки и инновации.",
-      competitors: ["Avanade", "Accenture"],
-    },
-    benefits: [
-      {
-        title: "Гибкая система отпусков",
-        description: "Обсуждается индивидуально.",
-      },
-      { title: "English courses", description: "Занятия с носителями языка." },
-    ],
-    interviews: [
-      {
-        position: "Consultant",
-        difficulty: 3.0,
-        experience: "Нейтральный",
-        details: "Стандартные вопросы о прошлом опыте и технологиях.",
-      },
-      {
+        id: "s4",
         position: "Project Manager",
-        difficulty: 3.2,
-        experience: "Положительный",
-        details: "Кейсы по управлению командами, Scrum, Kanban.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Разноплановые проекты",
-        body: "Хорошо для стартовой позиции, но много аутсорса.",
-        rating: 3,
-        author: "Консультант",
+        amount: "6500 USD/мес",
+        min: 6000,
+        max: 7000,
+        median: 6500,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Senior",
       },
       {
-        title: "Удалённая работа",
-        body: "Можно работать из дома, главное — соблюдать дедлайны.",
-        rating: 4,
-        author: "PM",
+        id: "s5",
+        position: "Data Scientist",
+        amount: "6200 USD/мес",
+        min: 5800,
+        max: 6800,
+        median: 6200,
+        additionalPay: 3200,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
       },
-    ],
-    salaries: [
-      { position: "Consultant", amount: "3000 USD/мес" },
-      { position: "Project Manager", amount: "4200 USD/мес" },
+      {
+        id: "s6",
+        position: "DevOps Engineer",
+        amount: "6300 USD/мес",
+        min: 5900,
+        max: 6800,
+        median: 6300,
+        additionalPay: 3300,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s7",
+        position: "Security Engineer",
+        amount: "6400 USD/мес",
+        min: 6000,
+        max: 6900,
+        median: 6400,
+        additionalPay: 3400,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s8",
+        position: "Intern",
+        amount: "3000 USD/мес",
+        min: 2800,
+        max: 3200,
+        median: 3000,
+        additionalPay: 0,
+        currency: "USD",
+        experienceLevel: "Intern",
+      },
+      {
+        id: "s9",
+        position: "Technical Writer",
+        amount: "4200 USD/мес",
+        min: 4000,
+        max: 4500,
+        median: 4200,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s10",
+        position: "Customer Support Specialist",
+        amount: "4000 USD/мес",
+        min: 3800,
+        max: 4200,
+        median: 4000,
+        additionalPay: 1000,
+        currency: "USD",
+        experienceLevel: "Entry",
+      },
+      {
+        id: "s11",
+        position: "Marketing Specialist",
+        amount: "5500 USD/мес",
+        min: 5200,
+        max: 6000,
+        median: 5500,
+        additionalPay: 2500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s12",
+        position: "Operations Manager",
+        amount: "7000 USD/мес",
+        min: 6500,
+        max: 7500,
+        median: 7000,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s13",
+        position: "Product Manager",
+        amount: "6800 USD/мес",
+        min: 6400,
+        max: 7200,
+        median: 6800,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s14",
+        position: "Cloud Engineer",
+        amount: "6600 USD/мес",
+        min: 6200,
+        max: 7000,
+        median: 6600,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s15",
+        position: "Business Analyst",
+        amount: "6000 USD/мес",
+        min: 5600,
+        max: 6400,
+        median: 6000,
+        additionalPay: 2800,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
     ],
     recommended: [
       {
@@ -846,460 +1721,6 @@ export const mockCompanies: ICompany[] = [
         name: "Microsoft",
         logoUrl: "/images/microsoft.png",
         rating: 4.2,
-      },
-      { id: "1", name: "IBM", logoUrl: "/images/ibm.png", rating: 4.0 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "12",
-    name: "Robert Bosch",
-    logoUrl:
-      "https://1000logos.net/wp-content/uploads/2016/10/Bosch-Logo-1024x640.png",
-    bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/468209014_10162394936887359_5550146038813800460_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=2285d6&_nc_ohc=ObYK6AwnYkIQ7kNvgHBHXDC&_nc_oc=Adj0md_qLKnJ2kAxmwS3yTPuq_nHJPnV8vqt584-YNgvqgKTmYH7KDidZVebrZ4ApFY&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=AYf3OAnHUjn_IxecPfpDfIe&oh=00_AYAflr3cBAC3vidT8Kp-h6ztMK4GSL0YPgFXSQNleXkuhQ&oe=67BFAC4F",
-    rating: 3.8,
-    location: "Герлинген, Германия",
-    industries: ["Инжиниринг", "Производство"],
-    size: "10000+",
-    description: "Bosch — международный поставщик технологий и услуг.",
-    overallInfo: {
-      founded: "1886",
-      revenue: ">$80 млрд",
-      mission: "Развитие инженерных решений, улучшающих качество жизни.",
-      competitors: ["Siemens", "Honeywell"],
-    },
-    benefits: [
-      {
-        title: "Корпоративная культура",
-        description: "Сильный акцент на R&D.",
-      },
-      {
-        title: "Стажировки за рубежом",
-        description: "Возможность работать в офисах по всему миру.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Mechanical Engineer",
-        difficulty: 3.3,
-        experience: "Положительный",
-        details: "Технические вопросы по проектированию и механике.",
-      },
-      {
-        position: "Embedded Developer",
-        difficulty: 3.6,
-        experience: "Положительный",
-        details: "C, C++, RTOS, вопросы по автомобильным стандартам.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Отличная инженерная школа",
-        body: "Хорошие проекты, много обучающих программ.",
-        rating: 4,
-        author: "Инженер",
-      },
-      {
-        title: "Распределённые команды",
-        body: "Много международных команд, нужно часто общаться на английском.",
-        rating: 4,
-        author: "Developer",
-      },
-    ],
-    salaries: [
-      { position: "Mechanical Engineer", amount: "3800 USD/мес" },
-      { position: "Embedded Developer", amount: "4000 USD/мес" },
-    ],
-    recommended: [
-      {
-        id: "15",
-        name: "Honeywell Int",
-        logoUrl: "/images/honeywell.png",
-        rating: 3.9,
-      },
-      { id: "1", name: "IBM", logoUrl: "/images/ibm.png", rating: 4.0 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "13",
-    name: "Honeywell",
-    logoUrl:
-      "https://1000logos.net/wp-content/uploads/2017/12/Honeywell-Logo.png",
-    bannerImg:
-      "https://peigroup.com/wp-content/uploads/Honeywell-Banner-768x360.jpg",
-    rating: 3.9,
-    location: "Шарлотт, США",
-    industries: ["Инжиниринг", "Авионика", "Автоматизация"],
-    size: "10000+",
-    description:
-      "Honeywell — глобальная компания с широким портфелем технологий и решений.",
-    overallInfo: {
-      founded: "1906",
-      revenue: ">$30 млрд",
-      mission: "Интеллектуальные решения в области авиации и автоматизации.",
-      competitors: ["Siemens", "Bosch", "GE"],
-    },
-    benefits: [
-      {
-        title: "Страховка и бонусы",
-        description: "Полный пакет медстраховки и бонусная система.",
-      },
-      {
-        title: "Корпоративное обучение",
-        description: "Курсы по промышленной автоматизации.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Automation Engineer",
-        difficulty: 3.5,
-        experience: "Положительный",
-        details: "Вопросы по контроллерам, системам автоматизации и PLC.",
-      },
-      {
-        position: "Project Engineer",
-        difficulty: 3.7,
-        experience: "Положительный",
-        details: "Расскажите о проектах по оптимизации, Lean, Six Sigma.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Сильная техподдержка",
-        body: "Хорошие возможности для инженеров, иногда много бюрократии.",
-        rating: 4,
-        author: "Автоматизатор",
-      },
-      {
-        title: "Инновации в автоматизации",
-        body: "Есть интересные решения, но проекты могут затягиваться.",
-        rating: 4,
-        author: "Инженер",
-      },
-    ],
-    salaries: [
-      { position: "Automation Engineer", amount: "4000 USD/мес" },
-      { position: "Project Engineer", amount: "4500 USD/мес" },
-    ],
-    recommended: [
-      {
-        id: "12",
-        name: "Robert Bosch",
-        logoUrl: "/images/bosch.png",
-        rating: 3.8,
-      },
-      { id: "4", name: "Apple", logoUrl: "/images/apple.png", rating: 4.1 },
-    ],
-    topCompanies: [
-      { id: "14", name: "Bosch Mobility", rating: 3.8 },
-      { id: "15", name: "Honeywell Int", rating: 3.9 },
-    ],
-  },
-  {
-    id: "14",
-    name: "Bosch Mobility",
-    logoUrl:
-      "https://1000logos.net/wp-content/uploads/2016/10/Bosch-Logo-1024x640.png",
-    bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/468209014_10162394936887359_5550146038813800460_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=2285d6&_nc_ohc=ObYK6AwnYkIQ7kNvgHBHXDC&_nc_oc=Adj0md_qLKnJ2kAxmwS3yTPuq_nHJPnV8vqt584-YNgvqgKTmYH7KDidZVebrZ4ApFY&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=AYf3OAnHUjn_IxecPfpDfIe&oh=00_AYAflr3cBAC3vidT8Kp-h6ztMK4GSL0YPgFXSQNleXkuhQ&oe=67BFAC4F",
-    rating: 3.8,
-    location: "Штутгарт, Германия",
-    industries: ["Инжиниринг", "Электромобильность"],
-    size: "10000+",
-    description:
-      "Bosch Mobility — новое подразделение фокусируется на решениях для транспорта.",
-    overallInfo: {
-      founded: "1886",
-      revenue: ">$80 млрд",
-      mission: "Продвинутые инженерные решения для мобильности.",
-      competitors: ["Siemens", "Conti"],
-    },
-    benefits: [
-      { title: "Гибкий график", description: "Частичная удалённая работа." },
-      {
-        title: "Корпоративный транспорт",
-        description: "Электробусы для сотрудников.",
-      },
-    ],
-    interviews: [
-      {
-        position: "R&D Engineer",
-        difficulty: 3.4,
-        experience: "Нейтральный",
-        details: "Вопросы о предыдущих проектах, научном подходе.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Инновационные проекты",
-        body: "Есть ограничения из-за большой структуры, но много R&D.",
-        rating: 4,
-        author: "Инженер",
-      },
-    ],
-    salaries: [{ position: "R&D Engineer", amount: "3700 USD/мес" }],
-    recommended: [
-      { id: "1", name: "IBM", logoUrl: "/images/ibm.png", rating: 4.0 },
-      {
-        id: "3",
-        name: "Microsoft",
-        logoUrl: "/images/microsoft.png",
-        rating: 4.2,
-      },
-    ],
-    topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "8", name: "Amazon", rating: 3.6 },
-    ],
-  },
-  {
-    id: "15",
-    name: "Honeywell Int",
-    logoUrl:
-      "https://1000logos.net/wp-content/uploads/2017/12/Honeywell-Logo.png",
-    bannerImg:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/480447123_2773672296172626_4629679993227193274_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=oD2xJMwChFMQ7kNvgFHjVFU&_nc_oc=AdjhvPhgYDc72GhpDGS9N_otXcigFM6L2mWv4sit09CE2Q6uh2Ldohg4WTNhYsor3Gk&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=AIjOpO_Xs9PEkzQjP2zlKvD&oh=00_AYD3uH4tKWiCLjwm7k5nhsrsfgey9RBdxtf41pYOXovzoQ&oe=67BF8D51",
-    rating: 3.9,
-    location: "Финикс, США",
-    industries: ["Автоматизация", "Авионика"],
-    size: "10000+",
-    description:
-      "Honeywell Int — фокус на авиационном и промышленном оборудовании.",
-    overallInfo: {
-      founded: "1906",
-      revenue: ">$30 млрд",
-      mission: "Решения в области автоматизации и авиации.",
-      competitors: ["Bosch", "GE"],
-    },
-    benefits: [
-      {
-        title: "Компенсация питания",
-        description: "Частичное покрытие расходов на обеды.",
-      },
-      {
-        title: "Отпуск по уходу",
-        description: "Увеличенный декретный отпуск.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Automation Tester",
-        difficulty: 3.2,
-        experience: "Нейтральный",
-        details: "Несколько задач по тестированию и сценариям QA.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Есть перспективы",
-        body: "Можно вырасти, но нужно приложить усилия. Множество процессов.",
-        rating: 4,
-        author: "Тестировщик",
-      },
-    ],
-    salaries: [{ position: "Automation Tester", amount: "3200 USD/мес" }],
-    recommended: [
-      {
-        id: "13",
-        name: "Honeywell",
-        logoUrl: "/images/honeywell.png",
-        rating: 3.9,
-      },
-      { id: "4", name: "Apple", logoUrl: "/images/apple.png", rating: 4.1 },
-    ],
-    topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "3", name: "Microsoft", rating: 4.2 },
-    ],
-  },
-  {
-    id: "16",
-    name: "Dell",
-    logoUrl:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/460813983_1069666871481812_2251301434273760488_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=tBZpXgUuw-4Q7kNvgFlze_3&_nc_oc=AdgkMcIOOJNpdFHPs9W2dUa81-Xt82F3AP3oD_Pi5w_3G-ovQPaitau2xGvei1_ubpU&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=AIzOqEXbp_kbIXgzI7F-S-f&oh=00_AYAqZD57kUzF6hw1HleOHSrmjKj6LmxwQ022_BKRIC923Q&oe=67BFABF3",
-    bannerImg:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/354225230_807039181077917_8721795076188734823_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=KTqzXMK4zjoQ7kNvgEzITJT&_nc_oc=Adjh2PgAQRBIKj61kWcB3V6jvf2v5p1t2-PoPQFzmgHLhPSOJRwdjE04MzVuLMhOhJQ&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=AIzOqEXbp_kbIXgzI7F-S-f&oh=00_AYDF8_R3cjoB_22tOaac03cLVdCkd7VJ0f-CrvFKMIyF2w&oe=67BF8729",
-    rating: 3.9,
-    location: "Раунд-Рок, США",
-    industries: ["Аппаратное обеспечение", "ПО"],
-    size: "10000+",
-    description:
-      "Dell — один из крупнейших производителей компьютеров и серверов.",
-    overallInfo: {
-      founded: "1984",
-      revenue: ">$90 млрд",
-      mission: "Создавать доступные и надёжные компьютерные решения.",
-      competitors: ["HP", "Lenovo", "Asus"],
-    },
-    benefits: [
-      {
-        title: "Скидки на устройства",
-        description: "Специальные цены для сотрудников.",
-      },
-      {
-        title: "Гибридный график",
-        description: "Можно работать в офисе или удалённо.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Technical Support Engineer",
-        difficulty: 3.2,
-        experience: "Положительный",
-        details: "Проверка навыков в диагностике и обслуживании компьютеров.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Хорошая техника",
-        body: "Дает доступ к современному “железу” и ПО.",
-        rating: 4,
-        author: "Инженер",
-      },
-      {
-        title: "Служба поддержки",
-        body: "Бывает много рутины, но есть возможность расти.",
-        rating: 3,
-        author: "Support",
-      },
-    ],
-    salaries: [
-      { position: "Technical Support Engineer", amount: "3000 USD/мес" },
-      { position: "Sales Manager", amount: "3500 USD/мес" },
-    ],
-    recommended: [
-      { id: "10", name: "HP Inc.", logoUrl: "/images/hp.png", rating: 3.6 },
-      {
-        id: "3",
-        name: "Microsoft",
-        logoUrl: "/images/microsoft.png",
-        rating: 4.2,
-      },
-    ],
-    topCompanies: [
-      { id: "1", name: "IBM", rating: 4.0 },
-      { id: "2", name: "Google", rating: 4.3 },
-    ],
-  },
-  {
-    id: "17",
-    name: "Lenovo",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/296223397_10159166034734635_1898927931736557324_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=7lP89buw7jMQ7kNvgF641oH&_nc_oc=Adjt-x-9mQGAFdeDO9oPszp9IXkPZy04AB6XbQLsEMJmzjQ7w5eb8r-yddpazIiv7lY&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=AMriylVXHke8QtmmfXr910B&oh=00_AYCfhFgwZ_SqeBhUIWNeP7hlf50n9mWwDJYCbZIFNHy31A&oe=67BF7BC8",
-    bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/480966072_1115379360614973_1894125425525758874_n.jpg?stp=dst-jpg_s2048x2048_tt6&_nc_cat=108&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=eBoFnyzbEnIQ7kNvgGghZ8f&_nc_oc=Adg8ZDCzlX7FCA6VjahZKpahWZCUMk-lQiquRVuUGX8oitCZELE95Dnu4eUY3E3vuJk&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=AMriylVXHke8QtmmfXr910B&oh=00_AYA8DEev0zIIwSHL39JeU2PjZeTvmjl9iWiwwOP9Ozg58w&oe=67BF9B24",
-    rating: 3.7,
-    location: "Пекин, Китай",
-    industries: ["Аппаратное обеспечение", "Смартфоны"],
-    size: "10000+",
-    description:
-      "Lenovo — глобальный производитель ПК, ноутбуков и смартфонов.",
-    overallInfo: {
-      founded: "1984",
-      revenue: ">$60 млрд",
-      mission:
-        "Инновации в области персональных устройств и корпоративных решений.",
-      competitors: ["Dell", "HP", "Acer"],
-    },
-    benefits: [
-      {
-        title: "Страховка",
-        description: "Расширенное покрытие для сотрудников.",
-      },
-      { title: "Купоны на питание", description: "Внутренняя система скидок." },
-    ],
-    interviews: [
-      {
-        position: "Firmware Engineer",
-        difficulty: 3.5,
-        experience: "Нейтральный",
-        details: "Прошивки BIOS/UEFI, вопросы по архитектуре х86.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Развитие в Китае",
-        body: "Международная компания, можно путешествовать.",
-        rating: 4,
-        author: "Инженер",
-      },
-      {
-        title: "Культурные различия",
-        body: "Требуется адаптация к корпоративной политике.",
-        rating: 3,
-        author: "Сотрудник",
-      },
-    ],
-    salaries: [{ position: "Firmware Engineer", amount: "3800 USD/мес" }],
-    recommended: [
-      { id: "10", name: "HP Inc.", logoUrl: "/images/hp.png", rating: 3.6 },
-      { id: "16", name: "Dell", logoUrl: "/images/dell.png", rating: 3.9 },
-    ],
-    topCompanies: [
-      { id: "1", name: "IBM", rating: 4.0 },
-      { id: "4", name: "Apple", rating: 4.1 },
-    ],
-  },
-  {
-    id: "18",
-    name: "Accenture",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/359453892_597778089149141_4521339302675636379_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=zXaNJqeEX9EQ7kNvgHbBRYf&_nc_oc=Adj20E5w-7b5gyEwcGLqglItL0SKI3HLJwfybWBxRfoTacNzPkOQZwHskY9IddPNE8k&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=A1GtU_FMMNhESl2fXdIpo7l&oh=00_AYANTSZmvIvenyiEsEYmpycFJea-xMXjea5sY_Rqdz4CFQ&oe=67BFAAB1",
-    bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/439338580_750104900583125_3957351619102499158_n.png?_nc_cat=110&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=unGVKIujLBkQ7kNvgFi6nN0&_nc_oc=Adhut4Y7oCz2ePx1j-wSKL2VvDluQY2JzYLuGC3Id3uD27vW6_etcRsNo6LdgnuBtmE&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=A1GtU_FMMNhESl2fXdIpo7l&oh=00_AYC8yaG5GokVOsKdXsGgFV-DMSWiT9Yum5Cj0X75aJy-Qg&oe=67BF7D74",
-    rating: 3.8,
-    location: "Дублин, Ирландия",
-    industries: ["Консалтинг", "Аутсорсинг"],
-    size: "10000+",
-    description:
-      "Accenture — ведущая консалтинговая и аутсорсинговая компания.",
-    overallInfo: {
-      founded: "1989",
-      revenue: ">$40 млрд",
-      mission: "Помогать клиентам внедрять инновации и повышать эффективность.",
-      competitors: ["Deloitte", "PwC", "Avanade"],
-    },
-    benefits: [
-      {
-        title: "Корпоративная культура",
-        description: "Эффективные тренинги и тимбилдинги.",
-      },
-      {
-        title: "Международные проекты",
-        description: "Возможность работать с клиентами по всему миру.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Consultant",
-        difficulty: 3.3,
-        experience: "Положительный",
-        details: "Кейс-интервью, решение бизнес-задач.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Большие клиенты",
-        body: "Интересно решать крупные бизнес-проблемы.",
-        rating: 4,
-        author: "Консультант",
-      },
-    ],
-    salaries: [{ position: "Consultant", amount: "3800 USD/мес" }],
-    recommended: [
-      {
-        id: "11",
-        name: "Akvelon",
-        logoUrl: "/images/akvelon.png",
-        rating: 3.7,
       },
       {
         id: "5",
@@ -1309,522 +1730,8 @@ export const mockCompanies: ICompany[] = [
       },
     ],
     topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "3", name: "Microsoft", rating: 4.2 },
-    ],
-  },
-  {
-    id: "19",
-    name: "SAP",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/449667369_916525133848884_6740279834876316728_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=Ebtof_55GQAQ7kNvgFk8-CH&_nc_oc=Adj3Z6xEa8-iAACF2Ar5vFSHcJOPXanQ0I0m4-LL7YepOT5x03RwnH5h_sYVBj6HT_Q&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=APeaH_3wrOOTGfyeYsCy8o3&oh=00_AYDRIU-22wADYlfbJfRiT7zgIkVt12Nknopi13HlPRRVgg&oe=67BF964D",
-    bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/480086568_1082637450570984_2117019105676567568_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=AciG-AuKojsQ7kNvgFexNBA&_nc_oc=AdjC905Y5AnuG2Xzd_dbsZrmvQ_1MstAm_GgXBkkGqDHV7rcS0oR1kJYLmGdN3Ryf3U&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=APeaH_3wrOOTGfyeYsCy8o3&oh=00_AYCcr0WvsyM5p1psLwjxHuaKRdi8gp5bsY68b9KwVj1u2w&oe=67BF90AE",
-    rating: 4.0,
-    location: "Вальдорф, Германия",
-    industries: ["ERP", "Корпоративное ПО"],
-    size: "10000+",
-    description:
-      "SAP — мировой лидер в разработке ERP-систем и корпоративных решений.",
-    overallInfo: {
-      founded: "1972",
-      revenue: ">$30 млрд",
-      mission: "Помогать предприятиям работать эффективнее и прозрачнее.",
-      competitors: ["Oracle", "Microsoft", "Salesforce"],
-    },
-    benefits: [
-      {
-        title: "Work-life balance",
-        description: "Гибкое расписание, культура “без переработок”.",
-      },
-      {
-        title: "Курсы по ERP",
-        description: "Внутренние тренинги по продуктам SAP.",
-      },
-    ],
-    interviews: [
-      {
-        position: "SAP Consultant",
-        difficulty: 3.2,
-        experience: "Положительный",
-        details: "ABAP, модули FI/CO, тест на логику.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Отличная ERP-база",
-        body: "Можно стать узкопрофильным специалистом и хорошо зарабатывать.",
-        rating: 4,
-        author: "SAP-консультант",
-      },
-    ],
-    salaries: [{ position: "SAP Consultant", amount: "4000 USD/мес" }],
-    recommended: [
-      { id: "9", name: "Oracle", logoUrl: "/images/oracle.png", rating: 3.8 },
-      {
-        id: "3",
-        name: "Microsoft",
-        logoUrl: "/images/microsoft.png",
-        rating: 4.2,
-      },
-    ],
-    topCompanies: [
-      { id: "1", name: "IBM", rating: 4.0 },
-      { id: "2", name: "Google", rating: 4.3 },
-    ],
-  },
-  {
-    id: "20",
-    name: "Salesforce",
-    logoUrl:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/352296368_975909216941719_4853739021789044429_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=Vouulp_Fka8Q7kNvgE1AZ98&_nc_oc=AdihcvmYfuyG4XohebemrOLyPfMj0zcEBM4Cqd-_l6koj-UU-V8y6uDyLUsP8ma-qo4&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=ASswanbd6iBXBkmZuwrORrZ&oh=00_AYARfXCZcKkhb4TxLfpCW1CiDmMZTm54hiXBuP1e9qdCsQ&oe=67BF98DE",
-    bannerImg:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-6/383321545_713354250835368_2181100368892587865_n.png?stp=dst-png_s2048x2048&_nc_cat=101&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=zK4sP_mbmmMQ7kNvgHkNacT&_nc_oc=Adh6eezJ_lWMRvuIYy8j0kKT8VoqmsFINhzBecPshowE-_9QPil9MuvHxyLdsmpsrys&_nc_zt=23&_nc_ht=scontent.fala4-1.fna&_nc_gid=ASswanbd6iBXBkmZuwrORrZ&oh=00_AYAjpUqtqDRbs34Hg2uXfud4eaWliwU8r9cYZn_JdP-Jiw&oe=67BF8BCD",
-    rating: 4.2,
-    location: "Сан-Франциско, США",
-    industries: ["Облачные решения", "CRM"],
-    size: "10000+",
-    description:
-      "Salesforce — мировой лидер в сфере CRM и облачных бизнес-платформ.",
-    overallInfo: {
-      founded: "1999",
-      revenue: ">$20 млрд",
-      mission:
-        "Помогать компаниям выстраивать отношения с клиентами с помощью облака.",
-      competitors: ["Microsoft Dynamics", "Oracle", "SAP"],
-    },
-    benefits: [
-      {
-        title: "Volunteering Time Off",
-        description: "Уплачиваемое время для волонтёрских проектов.",
-      },
-      { title: "Wellness", description: "Покрытие психологической помощи." },
-    ],
-    interviews: [
-      {
-        position: "Salesforce Developer",
-        difficulty: 3.7,
-        experience: "Положительный",
-        details: "Apex, Lightning, интеграции API.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Ценность культуры “Ohana”",
-        body: "Компания дорожит ценностями, отличная командная атмосфера.",
-        rating: 5,
-        author: "Developer",
-      },
-    ],
-    salaries: [{ position: "Salesforce Developer", amount: "4500 USD/мес" }],
-    recommended: [
-      {
-        id: "3",
-        name: "Microsoft",
-        logoUrl: "/images/microsoft.png",
-        rating: 4.2,
-      },
-      { id: "19", name: "SAP", logoUrl: "/images/sap.png", rating: 4.0 },
-    ],
-    topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "8", name: "Amazon", rating: 3.6 },
-    ],
-  },
-  {
-    id: "21",
-    name: "Twitter",
-    logoUrl:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-1/348556241_557828136548523_5326881297993320119_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=iJ7U-k8ojqgQ7kNvgFjKRpS&_nc_oc=Adhh3YaECmi752IkYRUJ7SViTYUCIsigICrcp7y4k4s_kzviy3WlpfliartD81znvUE&_nc_zt=24&_nc_ht=scontent.fala4-2.fna&_nc_gid=Av7VCrJLuu9EZ2dt5Brt8nL&oh=00_AYCXcObQYFt5tUG375Ocn2D6bfvPg7gqwBRnHGPi7pEm1g&oe=67BF7935",
-    bannerImg:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-6/480175635_1204779724345375_8648142861837738921_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=b39J4ZjmzdoQ7kNvgEj_Reo&_nc_oc=AdjXCk5P-Pvo3E-125tVwITAFGHkC-Vvhlg1378Q6EjvHs4cxxANyPGYa28OWgdR6Ww&_nc_zt=23&_nc_ht=scontent.fala4-1.fna&_nc_gid=Av7VCrJLuu9EZ2dt5Brt8nL&oh=00_AYDXGVnG6ofwEXFNOttaE0K5haCJjVFPYdKbO2jgf-kBoA&oe=67BF7BE2",
-    rating: 3.5,
-    location: "Сан-Франциско, США",
-    industries: ["Социальные сети"],
-    size: "10000+",
-    description: "Twitter — популярная платформа микроблогов и соцсеть.",
-    overallInfo: {
-      founded: "2006",
-      revenue: ">$4 млрд",
-      mission: "Дать возможность обмена короткими сообщениями по всему миру.",
-      competitors: ["Meta", "TikTok", "Snap"],
-    },
-    benefits: [
-      {
-        title: "Свободный график",
-        description: "Можно договариваться о гибком времени.",
-      },
-      {
-        title: "Бонусы по KPI",
-        description: "Зависят от вовлечённости пользователей.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Backend Engineer",
-        difficulty: 3.8,
-        experience: "Негативный",
-        details:
-          "Сложные задачи по распределённым системам, интервью длилось 5 этапов.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Стрессовая работа",
-        body: "Высокая динамика, много изменений, нужно быстро адаптироваться.",
-        rating: 3,
-        author: "Инженер",
-      },
-    ],
-    salaries: [{ position: "Backend Engineer", amount: "4600 USD/мес" }],
-    recommended: [
-      { id: "7", name: "Meta", logoUrl: "/images/meta.png", rating: 4.0 },
-      { id: "2", name: "Google", logoUrl: "/images/google.png", rating: 4.3 },
-    ],
-    topCompanies: [
-      { id: "3", name: "Microsoft", rating: 4.2 },
-      { id: "4", name: "Apple", rating: 4.1 },
-    ],
-  },
-  {
-    id: "22",
-    name: "Tesla",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/422246029_937710134819984_7865127798603499606_n.jpg?stp=c0.135.1080.1080a_dst-jpg_s480x480_tt6&_nc_cat=102&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=Vw2bp6kzCYAQ7kNvgGRQhiq&_nc_oc=AdjfDrEprSYvDLbuz6bt8YZR_p24fMAGQpbl9CXDhpwNdTEpUdbJPlqLfUhzudzFpSA&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=AWqPWI_nyKjM9stQACnsmC3&oh=00_AYB3RI5yUK3Ri0nCgtjMzgezUDYC02p1VgiBtayxxmcsrg&oe=67BF88A9",
-    bannerImg:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/474501896_1189780369612958_2562844042251586735_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=M2zlbt5b43gQ7kNvgExAaUz&_nc_oc=Adjy7ZXQUihDcL8QiMFFUIo-nMMwLmfof6i4s8o6Psu10XjUAtiETW-6Rr81PYTCCzA&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=AWqPWI_nyKjM9stQACnsmC3&oh=00_AYCAzjO36Y4VtunYABI7ySLJbRSaOQt4nXnPwU-oI0cddw&oe=67BFA1AB",
-    rating: 4.1,
-    location: "Пало-Альто, США",
-    industries: ["Автомобилестроение", "Энергетика"],
-    size: "10000+",
-    description:
-      "Tesla — производитель электромобилей и решений для хранения энергии.",
-    overallInfo: {
-      founded: "2003",
-      revenue: ">$80 млрд",
-      mission: "Ускорить переход мира к устойчивой энергетике.",
-      competitors: ["Ford", "GM", "Lucid"],
-    },
-    benefits: [
-      {
-        title: "Скидки на электромобили",
-        description: "Специальные лизинговые условия.",
-      },
-      { title: "Опционы", description: "Возможность получать акции Tesla." },
-    ],
-    interviews: [
-      {
-        position: "Mechanical Engineer",
-        difficulty: 3.9,
-        experience: "Положительный",
-        details: "Вопросы по проектированию электромоторов, термодинамике.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Инновации и драйв",
-        body: "Проекты меняют мир, но нагрузка очень высокая.",
-        rating: 4,
-        author: "Инженер",
-      },
-    ],
-    salaries: [{ position: "Mechanical Engineer", amount: "5000 USD/мес" }],
-    recommended: [
-      { id: "8", name: "Amazon", logoUrl: "/images/amazon.png", rating: 3.6 },
-      { id: "4", name: "Apple", logoUrl: "/images/apple.png", rating: 4.1 },
-    ],
-    topCompanies: [
-      { id: "3", name: "Microsoft", rating: 4.2 },
-      { id: "2", name: "Google", rating: 4.3 },
-    ],
-  },
-  {
-    id: "23",
-    name: "SpaceX",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/371834446_307795905188539_1891928832272990551_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=101&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=USsfOeuPyS0Q7kNvgGbcikJ&_nc_oc=AdhtinxJimErDLXwkeXYiXWMkEpmyhNYdsNhUJqO588c0QFyLLbTUPE4qCa7_Qzerwc&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=A5j8xQM7RRLrnv8lbBYSh0C&oh=00_AYC5IWQinp6jdZmCXFcjK6x43g9pr-v_NS7ErJ_LVaudjg&oe=67BF9CFE",
-    bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t1.6435-9/60357370_308961263347376_697231453095723008_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=2285d6&_nc_ohc=dpWUIFWiriMQ7kNvgENUZG9&_nc_oc=AdiUwT4Gv8cvzSyUIinNXKxjJ4u-HTubSb-hj74aKOAxA-KAXvWztba5zD7TRlnQc0A&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=A_fGA2SA0l3Z4yydLupbKcy&oh=00_AYAA3hT90VTt5VYXAjWMK82KApwlQNkrwaDqiJh3CvcUag&oe=67E145A0",
-    rating: 4.2,
-    location: "Хоторн, США",
-    industries: ["Аэрокосмическая"],
-    size: "10000+",
-    description:
-      "SpaceX — частная космическая компания, занимающаяся ракетостроением и полётами.",
-    overallInfo: {
-      founded: "2002",
-      revenue: ">$2 млрд",
-      mission: "Сделать космические полёты доступными, колонизировать Марс.",
-      competitors: ["Blue Origin", "ULA"],
-    },
-    benefits: [
-      {
-        title: "Акции компании",
-        description: "Опционы, зависящие от проектов.",
-      },
-      {
-        title: "Внутренние кафе",
-        description: "Питание для сотрудников на площадке.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Propulsion Engineer",
-        difficulty: 4.5,
-        experience: "Положительный",
-        details:
-          "Сложные технические задачи по двигателям, вопросы по физике плазмы.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Работа мечты",
-        body: "Настоящие ракеты, крутая миссия, но приходится работать 24/7.",
-        rating: 5,
-        author: "Инженер",
-      },
-    ],
-    salaries: [{ position: "Propulsion Engineer", amount: "6000 USD/мес" }],
-    recommended: [
-      { id: "22", name: "Tesla", logoUrl: "/images/tesla.png", rating: 4.1 },
-      { id: "4", name: "Apple", logoUrl: "/images/apple.png", rating: 4.1 },
-    ],
-    topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "3", name: "Microsoft", rating: 4.2 },
-    ],
-  },
-  {
-    id: "24",
-    name: "Netflix",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/352235145_618708150215768_1913373511794735820_n.png?stp=dst-png_s480x480&_nc_cat=101&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=NTkdr4A4tXYQ7kNvgG2Brjl&_nc_oc=Adg9oqAbDXWVP0XcMC44CuH0AzBU3hR3F6JYlqQX9wUb6OvrmA2aPFFjXVKTSO-RfXM&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=AMPLZAa_tHFeFBIeMjRvbSH&oh=00_AYCqYeF1X_Fk_E_3inuJwTMwmHZ7vuv8lEMSWy2j9I9V2A&oe=67BF7F3E",
-    bannerImg:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-6/480084566_941503498100125_7329151167471224952_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=uS66O3cipgAQ7kNvgFo_wDU&_nc_oc=AdhC0a7h0Pd4YiL9WyCQRvQJqa2Yo4-VKCPompO3PCrhO8coWW_zI5Nq6yMKOiT3_dw&_nc_zt=23&_nc_ht=scontent.fala4-1.fna&_nc_gid=AMPLZAa_tHFeFBIeMjRvbSH&oh=00_AYAfzLV_uLlmtL-SmuHxSqleTVEdVSkN1Moq5zM9N9AQiQ&oe=67BF7DC0",
-    rating: 4.0,
-    location: "Лос-Гатос, США",
-    industries: ["Стриминг", "Развлечения"],
-    size: "5001-10000",
-    description:
-      "Netflix — ведущая платформа потокового видео, производит собственные фильмы и сериалы.",
-    overallInfo: {
-      founded: "1997",
-      revenue: ">$25 млрд",
-      mission: "Развлекать весь мир, предоставляя качественный контент онлайн.",
-      competitors: ["Amazon Prime", "Disney+", "HBO"],
-    },
-    benefits: [
-      {
-        title: "Неограниченный отпуск",
-        description: "Trust-based policy на отпуск и больничные.",
-      },
-      {
-        title: "Отсутствие бюрократии",
-        description: "Минимум правил, максимальная свобода.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Backend Developer",
-        difficulty: 4.0,
-        experience: "Положительный",
-        details: "Java, Scala, микросервисы, вопросы по AWS.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Культура свободы",
-        body: "Мало процессов, но нужна самодисциплина.",
-        rating: 5,
-        author: "Разработчик",
-      },
-    ],
-    salaries: [{ position: "Backend Developer", amount: "5500 USD/мес" }],
-    recommended: [
-      { id: "4", name: "Apple", logoUrl: "/images/apple.png", rating: 4.1 },
-      { id: "2", name: "Google", logoUrl: "/images/google.png", rating: 4.3 },
-    ],
-    topCompanies: [
-      { id: "3", name: "Microsoft", rating: 4.2 },
-      { id: "8", name: "Amazon", rating: 3.6 },
-    ],
-  },
-  {
-    id: "25",
-    name: "Airbnb",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/289840534_10160185317062458_71839744288889599_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=-N_76YWQgLIQ7kNvgEjT4_E&_nc_oc=Adj8BAvv5yS5xJmYg-jswOB6k7y-tEFMDjropEE4CHnsDZQEEi1airWFqChrTrvxOpA&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=AMjbYuSanPdZpQdBEU1TT5T&oh=00_AYC1q-PLgeHW5PsPXaMWqh6Osp82EZLueUBBSny4lWINJA&oe=67BF8F24",
-    bannerImg:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/355485542_659676602865219_3357551211323296273_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=juh0I30X48gQ7kNvgFLLB8R&_nc_oc=Adi0dHOOzC5e_vKH0zcJ4PHxxYE98DMkL-gZzdTr3VqELHk5W_v1Go6nAPPEwfm81X8&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=AMjbYuSanPdZpQdBEU1TT5T&oh=00_AYDrPfKH2EVed836hIcQvO3GcPJA-4KLzNy7SjCkTu4MOg&oe=67BF8E1B",
-    rating: 4.1,
-    location: "Сан-Франциско, США",
-    industries: ["Онлайн-платформа", "Туризм"],
-    size: "5001-10000",
-    description:
-      "Airbnb — онлайн-площадка для аренды жилья и поиска уникальных путешествий.",
-    overallInfo: {
-      founded: "2008",
-      revenue: ">$5 млрд",
-      mission:
-        "Создавать чувство общности и уникальные впечатления в путешествиях.",
-      competitors: ["Booking.com", "Expedia"],
-    },
-    benefits: [
-      {
-        title: "Гибридная работа",
-        description: "Можно работать из офиса или из любого места.",
-      },
-      {
-        title: "Кредиты на поездки",
-        description: "Бонусы на проживание через Airbnb.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Data Scientist",
-        difficulty: 3.8,
-        experience: "Положительный",
-        details: "Вопросы по аналитике, A/B тестам, продуктовым метрикам.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Классная атмосфера",
-        body: "Люди увлечены путешествиями, дружелюбные коллеги.",
-        rating: 4,
-        author: "Data Scientist",
-      },
-    ],
-    salaries: [{ position: "Data Scientist", amount: "5000 USD/мес" }],
-    recommended: [
-      {
-        id: "24",
-        name: "Netflix",
-        logoUrl: "/images/netflix.png",
-        rating: 4.0,
-      },
-      { id: "10", name: "HP Inc.", logoUrl: "/images/hp.png", rating: 3.6 },
-    ],
-    topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "1", name: "IBM", rating: 4.0 },
-    ],
-  },
-  {
-    id: "26",
-    name: "Deloitte",
-    logoUrl:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/361097317_775831400842490_179110507208738487_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=wiuJ939wrBwQ7kNvgG0JPtl&_nc_oc=AdhQDnvbj6iojjsPoeN64lHQcZBZtHisSBL-Yg5vruc0Ar3r4ETobGloqUud-YWjym4&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=AzfeNPlMxrvYj6F-9ykZRY5&oh=00_AYBnOFEdiMvXfDjlikGagIRV-lVusdUi0iJBO4Dcnuxafg&oe=67BF85D0",
-    bannerImg:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/289451284_10159007257772689_3472615280117932482_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=0apMH1Wv-scQ7kNvgFiSygt&_nc_oc=Adh90gBRRHI3jrCIB9bEcDVOt4uZOb5qrGsw14AIRRXcTaKl2z0781B_cgflbTj8sIE&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=AzfeNPlMxrvYj6F-9ykZRY5&oh=00_AYDcnkjJK8OkFoyjLnaVAIiVi6-GVemWYnAM35F4gjXhnQ&oe=67BF7FDE",
-    rating: 3.8,
-    location: "Лондон, Великобритания",
-    industries: ["Консалтинг", "Аудит"],
-    size: "10000+",
-    description:
-      "Deloitte — одна из крупнейших в мире сетей консультационных и аудиторских компаний.",
-    overallInfo: {
-      founded: "1845",
-      revenue: ">$40 млрд",
-      mission:
-        "Помогать организациям достигать целей посредством высококачественных консультаций.",
-      competitors: ["PwC", "EY", "KPMG"],
-    },
-    benefits: [
-      {
-        title: "Корпоративный рост",
-        description: "Чёткие карьерные лестницы.",
-      },
-      {
-        title: "Международная мобильность",
-        description: "Возможность перевода в офисы других стран.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Consultant",
-        difficulty: 3.4,
-        experience: "Положительный",
-        details: "Кейсы, финансовый анализ, поведенческие вопросы.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Много работы",
-        body: "Проекты сложные и долгие, но опыт бесценен.",
-        rating: 4,
-        author: "Консультант",
-      },
-    ],
-    salaries: [{ position: "Consultant", amount: "3600 USD/мес" }],
-    recommended: [
-      { id: "27", name: "KPMG", logoUrl: "/images/kpmg.png", rating: 3.7 },
-      { id: "28", name: "EY", logoUrl: "/images/ey.png", rating: 3.8 },
-    ],
-    topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "3", name: "Microsoft", rating: 4.2 },
-    ],
-  },
-  {
-    id: "27",
-    name: "KPMG",
-    logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/299812574_370014488640757_8078108454472283730_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=AZg_cDh7YV8Q7kNvgHWmjoZ&_nc_oc=Adgx37ZxlHThX9WO61gtEyKaurt3dBSuuELq9wZzSPKzFqDb_ZsVL-S_Rd0LRny_Iac&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=AWXd-wQrFxobYVFW0_p2lk2&oh=00_AYCYzlXo4YXVpxmd87SUZCxd0fdUyOSlOQL2KHPrUyN7aQ&oe=67BFAA10",
-    bannerImg:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/460442975_829519069356961_3486595101990867608_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=ODNTgwgelZ8Q7kNvgF0A2pI&_nc_oc=AdgIzGtMkDQGgL1Atm5_mKD9dtq4Ul7Vjo55gfQzgptmrp7ztoDc16uXovp4LIkGRm4&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=AWXd-wQrFxobYVFW0_p2lk2&oh=00_AYAnchVMsKQtAFueIQNuxlqqMURBfdlRelC8wUMB6ObR5g&oe=67BFA4E5",
-    rating: 3.7,
-    location: "Амстелвен, Нидерланды",
-    industries: ["Аудит", "Консалтинг"],
-    size: "10000+",
-    description:
-      "KPMG — международная сеть фирм, оказывающих аудиторские и консалтинговые услуги.",
-    overallInfo: {
-      founded: "1987",
-      revenue: ">$29 млрд",
-      mission:
-        "Вести бизнес честно и прозрачно, помогая клиентам в сложных задачах.",
-      competitors: ["Deloitte", "PwC", "EY"],
-    },
-    benefits: [
-      {
-        title: "Страховка путешествий",
-        description: "Для сотрудников и их семей.",
-      },
-      {
-        title: "Корпоративная SIM-карта",
-        description: "Оплачиваются деловые звонки.",
-      },
-    ],
-    interviews: [
-      {
-        position: "Audit Associate",
-        difficulty: 3.1,
-        experience: "Нейтральный",
-        details: "Проверка знаний по МСФО, кейсы аудит отчетности.",
-      },
-    ],
-    reviews: [
-      {
-        title: "Хороший старт карьеры",
-        body: "Можно быстро научиться аудиту и перейти в другой сектор.",
-        rating: 4,
-        author: "Аудитор",
-      },
-    ],
-    salaries: [{ position: "Audit Associate", amount: "3200 USD/мес" }],
-    recommended: [
-      {
-        id: "26",
-        name: "Deloitte",
-        logoUrl: "/images/deloitte.png",
-        rating: 3.8,
-      },
-      { id: "28", name: "EY", logoUrl: "/images/ey.png", rating: 3.8 },
-    ],
-    topCompanies: [
-      { id: "2", name: "Google", rating: 4.3 },
-      { id: "3", name: "Microsoft", rating: 4.2 },
+      { id: "14", name: "Bosch Mobility", rating: 3.8 },
+      { id: "15", name: "Honeywell Int", rating: 3.9 },
     ],
   },
   {
@@ -1858,10 +1765,363 @@ export const mockCompanies: ICompany[] = [
     ],
     interviews: [
       {
+        id: "i1.6",
         position: "Tax Consultant",
         difficulty: 3.3,
         experience: "Положительный",
-        details: "Знание налогового законодательства, тесты на внимательность.",
+        outcome: "Offer",
+        date: "2025-02-10",
+        location: "Лондон, Великобритания",
+        application: "Applied via EY Careers",
+        details:
+          "Обсуждение налогового законодательства, кейс на внимательность и знание международного налогообложения.",
+        interviewQuestions: [
+          {
+            question: "Какие налоговые режимы вам знакомы?",
+            answer:
+              "Расскажу о налоговых вычетах, льготах и международном налогообложении в разных юрисдикциях.",
+          },
+        ],
+      },
+      {
+        id: "i2",
+        position: "Audit Associate",
+        difficulty: 3.4,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-12",
+        location: "Лондон, Великобритания",
+        application: "Applied via онлайн-портал",
+        details:
+          "Собеседование по технике аудита, оценке рисков и проверке финансовой отчетности.",
+        interviewQuestions: [
+          {
+            question: "Как вы проводите аудит финансовой отчетности?",
+            answer:
+              "Следую международным стандартам аудита, детально анализирую документы и сопоставляю показатели с отраслевыми нормами.",
+          },
+        ],
+      },
+      {
+        id: "i3",
+        position: "Consultant",
+        difficulty: 3.6,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-15",
+        location: "Лондон, Великобритания",
+        application: "Referred by employee",
+        details:
+          "Вопросы по стратегии бизнеса, оптимизации процессов и консультированию клиентов в крупных проектах.",
+        interviewQuestions: [
+          {
+            question: "Как вы решаете сложные бизнес-задачи?",
+            answer:
+              "Применяю аналитический подход, структурированный анализ и рекомендации, основанные на данных.",
+          },
+        ],
+      },
+      {
+        id: "i4",
+        position: "Risk Manager",
+        difficulty: 3.8,
+        experience: "Нейтральный",
+        outcome: "Offer",
+        date: "2025-02-18",
+        location: "Лондон, Великобритания",
+        application: "Applied via EY Careers",
+        details:
+          "Обсуждение методов оценки и минимизации корпоративных рисков с использованием качественных и количественных методов.",
+        interviewQuestions: [
+          {
+            question: "Как вы оцениваете риски в организации?",
+            answer:
+              "Использую SWOT-анализ, количественные модели и экспертную оценку для определения приоритетов рисков.",
+          },
+        ],
+      },
+      {
+        id: "i5",
+        position: "Internal Auditor",
+        difficulty: 3.5,
+        experience: "Положительный",
+        outcome: "No offer",
+        date: "2025-02-20",
+        location: "Лондон, Великобритания",
+        application: "Applied via онлайн-портал",
+        details:
+          "Вопросы по аудиту внутренних процессов, выявлению несоответствий и оптимизации процедур.",
+        interviewQuestions: [
+          {
+            question:
+              "Какие шаги вы предпринимаете для проведения внутреннего аудита?",
+            answer:
+              "Провожу предварительный анализ, разрабатываю план аудита и тщательно проверяю документацию.",
+          },
+        ],
+      },
+      {
+        id: "i6",
+        position: "Forensic Accountant",
+        difficulty: 4.0,
+        experience: "Нейтральный",
+        outcome: "In progress",
+        date: "2025-02-22",
+        location: "Лондон, Великобритания",
+        application: "Applied via EY Careers",
+        details:
+          "Кейс на выявление финансовых нарушений, анализ документов и поиск аномалий в отчетности.",
+        interviewQuestions: [
+          {
+            question: "Как выявить признаки мошенничества в отчетности?",
+            answer:
+              "Использую сравнительный анализ, статистические методы и детальную проверку транзакций.",
+          },
+        ],
+      },
+      {
+        id: "i7",
+        position: "Business Analyst",
+        difficulty: 3.6,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-25",
+        location: "Лондон, Великобритания",
+        application: "Applied via EY Careers",
+        details:
+          "Обсуждение методов анализа бизнес-процессов, сбора требований и построения отчетности.",
+        interviewQuestions: [
+          {
+            question: "Какие инструменты вы используете для анализа данных?",
+            answer:
+              "Работаю с Excel, Power BI и специализированными аналитическими программами.",
+          },
+        ],
+      },
+      {
+        id: "i8",
+        position: "Senior Auditor",
+        difficulty: 3.9,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-27",
+        location: "Лондон, Великобритания",
+        application: "Applied via EY Careers",
+        details:
+          "Сложное собеседование по аудиторским стандартам, внутреннему контролю и управлению процессами.",
+        interviewQuestions: [
+          {
+            question: "Как улучшить эффективность аудита?",
+            answer:
+              "Рекомендую автоматизировать процессы, использовать IT-решения и регулярно повышать квалификацию команды.",
+          },
+        ],
+      },
+      {
+        id: "i9",
+        position: "Financial Analyst",
+        difficulty: 3.7,
+        experience: "Нейтральный",
+        outcome: "Offer",
+        date: "2025-03-01",
+        location: "Лондон, Великобритания",
+        application: "Applied via онлайн-портал",
+        details:
+          "Обсуждение методов прогнозирования, анализа финансовых данных и оценки инвестиционных проектов.",
+        interviewQuestions: [
+          {
+            question: "Как вы прогнозируете финансовые показатели?",
+            answer:
+              "Использую исторические данные, трендовый анализ и финансовые модели для точного прогнозирования.",
+          },
+        ],
+      },
+      {
+        id: "i10",
+        position: "Management Consultant",
+        difficulty: 3.8,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-03",
+        location: "Лондон, Великобритания",
+        application: "Applied via EY Careers",
+        details:
+          "Кейс по стратегии, анализу рыночных трендов и разработке рекомендаций для клиента.",
+        interviewQuestions: [
+          {
+            question:
+              "Как вы разрабатываете стратегические рекомендации для клиента?",
+            answer:
+              "Провожу детальный анализ рынка, использую SWOT-анализ и строю модели для определения оптимальной стратегии.",
+          },
+        ],
+      },
+    ],
+    salaries: [
+      {
+        id: "s1",
+        position: "Tax Consultant",
+        amount: "3400 USD/мес",
+        min: 3100,
+        max: 3700,
+        median: 3400,
+        additionalPay: 1200,
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s2",
+        position: "Audit Associate",
+        amount: "3600 USD/мес",
+        min: 3300,
+        max: 3900,
+        median: 3600,
+        additionalPay: 1300,
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s3",
+        position: "Consultant",
+        amount: "4000 USD/мес",
+        min: 3700,
+        max: 4300,
+        median: 4000,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s4",
+        position: "Risk Manager",
+        amount: "4200 USD/мес",
+        min: 3900,
+        max: 4500,
+        median: 4200,
+        additionalPay: 1600,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s5",
+        position: "Forensic Accountant",
+        amount: "4400 USD/мес",
+        min: 4100,
+        max: 4700,
+        median: 4400,
+        additionalPay: 1700,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s6",
+        position: "Business Analyst",
+        amount: "4000 USD/мес",
+        min: 3700,
+        max: 4300,
+        median: 4000,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s7",
+        position: "Senior Auditor",
+        amount: "4600 USD/мес",
+        min: 4300,
+        max: 4900,
+        median: 4600,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s8",
+        position: "Internal Auditor",
+        amount: "4200 USD/мес",
+        min: 3900,
+        max: 4500,
+        median: 4200,
+        additionalPay: 1800,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s9",
+        position: "Financial Analyst",
+        amount: "4400 USD/мес",
+        min: 4100,
+        max: 4700,
+        median: 4400,
+        additionalPay: 1900,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s10",
+        position: "Audit Manager",
+        amount: "4800 USD/мес",
+        min: 4500,
+        max: 5100,
+        median: 4800,
+        additionalPay: 2100,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s11",
+        position: "Tax Manager",
+        amount: "5000 USD/мес",
+        min: 4700,
+        max: 5300,
+        median: 5000,
+        additionalPay: 2200,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s12",
+        position: "Consulting Manager",
+        amount: "5200 USD/мес",
+        min: 4900,
+        max: 5500,
+        median: 5200,
+        additionalPay: 2300,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s13",
+        position: "Risk Director",
+        amount: "5500 USD/мес",
+        min: 5200,
+        max: 5800,
+        median: 5500,
+        additionalPay: 2500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s14",
+        position: "Financial Director",
+        amount: "5700 USD/мес",
+        min: 5400,
+        max: 6000,
+        median: 5700,
+        additionalPay: 2600,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s15",
+        position: "Management Consultant",
+        amount: "6000 USD/мес",
+        min: 5700,
+        max: 6300,
+        median: 6000,
+        additionalPay: 2800,
+        currency: "USD",
+        experienceLevel: "Senior",
       },
     ],
     reviews: [
@@ -1872,7 +2132,6 @@ export const mockCompanies: ICompany[] = [
         author: "Tax Specialist",
       },
     ],
-    salaries: [{ position: "Tax Consultant", amount: "3400 USD/мес" }],
     recommended: [
       { id: "27", name: "KPMG", logoUrl: "/images/kpmg.png", rating: 3.7 },
       { id: "29", name: "PwC", logoUrl: "/images/pwc.png", rating: 3.9 },
@@ -1882,13 +2141,14 @@ export const mockCompanies: ICompany[] = [
       { id: "2", name: "Google", rating: 4.3 },
     ],
   },
+  
   {
     id: "29",
     name: "PwC",
     logoUrl:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/348217806_635062528476692_6951285755683255524_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=heMhK8gw4qYQ7kNvgEQkwsV&_nc_oc=AdjiMjuB_6OwAwtdZGrVCSl1aUOKKjXaSZjYmPRuFc-Fj3qTY0kMEErk1UY4QxTnix0&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=ApiQjiA4VWTZbF0rYHUrzzU&oh=00_AYCi4OMMa7y3kkkOVmnKWHEfwYtfHshiXpVpjhgjF6ocFQ&oe=67BFA58E",
+      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/180311311_4444913438875449_117212782360460240_n.png?_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ow5W0w-iXCcQ7kNvgHGSRbY&_nc_oc=Adib5MOwu_Rm8TXdDPpG1jHme0enNFLlTH1hykhf9iDF9SIGOyUyM2HkFZ5hyF92UCU&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAz7z7iFgNpUyOpfj1CDoHU8_fDwL03QeDuU03u-hAeYg&oe=67BFA4B6",
     bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/348237812_602402781844787_1359937235991094660_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=bHdQ5eIKs8cQ7kNvgGTSgXB&_nc_oc=Adj1Gm99kK949WoCmnU6S_3tsmc_Kon11EdeE9_wrVxlWkniZKVtoLEVf5PgYiuaSx8&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=ApiQjiA4VWTZbF0rYHUrzzU&oh=00_AYCdhu44uZiZczxNre6MtTwdDCH7Hcwt0plm1Lf93WW7Xg&oe=67BF8096",
+      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/472711780_1027399376096208_7513469530974593198_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=DD9hlMYk75EQ7kNvgExSKYk&_nc_oc=Adim4uUFX9fvJ0-rQx4tj2d76GTyEzK-jcCZzDIg1MXPtL9o4Ap8yQ47d8Z_Tp52C6s&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAyqA7OKZSIF_rpjNO2hwt6jLa0dt5gzHU5Fr1fo1HgxQ&oe=67BFA6C0",
     rating: 3.9,
     location: "Лондон, Великобритания",
     industries: ["Аудит", "Консалтинг"],
@@ -1911,12 +2171,367 @@ export const mockCompanies: ICompany[] = [
         description: "Возможность командировок за рубеж.",
       },
     ],
+    // 10 интервью для PwC
     interviews: [
       {
+        id: "i1.7",
         position: "Advisory Associate",
         difficulty: 3.5,
         experience: "Положительный",
-        details: "Тесты на критическое мышление и бизнес-кейсы.",
+        outcome: "Offer",
+        date: "2025-02-10",
+        location: "Лондон, Великобритания",
+        application: "Applied via PwC Careers",
+        details:
+          "Собеседование включало кейс-стади на критическое мышление и бизнес-анализ.",
+        interviewQuestions: [
+          {
+            question: "Как вы оцениваете бизнес-показатели компании?",
+            answer:
+              "Использую комбинацию финансового анализа и сравнительного анализа для оценки эффективности.",
+          },
+        ],
+      },
+      {
+        id: "i2",
+        position: "Audit Associate",
+        difficulty: 3.2,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-12",
+        location: "Лондон, Великобритания",
+        application: "Applied via PwC Careers",
+        details:
+          "Фокус на технические вопросы аудита, оценку рисков и контроль за финансовой отчетностью.",
+        interviewQuestions: [
+          {
+            question: "Как вы проводите аудит финансовой отчетности?",
+            answer:
+              "Следую стандартам аудита, провожу детальный анализ документов и сопоставляю с отраслевыми показателями.",
+          },
+        ],
+      },
+      {
+        id: "i3",
+        position: "Tax Consultant",
+        difficulty: 3.8,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-15",
+        location: "Лондон, Великобритания",
+        application: "Referred by employee",
+        details:
+          "Вопросы по налоговому законодательству, оптимизации налоговой нагрузки и стратегическому планированию.",
+        interviewQuestions: [
+          {
+            question:
+              "Какие налоговые стратегии вы бы предложили крупной корпорации?",
+            answer:
+              "Обсудил оптимизацию налоговых обязательств через льготные режимы и структурирование бизнеса.",
+          },
+        ],
+      },
+      {
+        id: "i4",
+        position: "Consultant",
+        difficulty: 3.6,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-02-18",
+        location: "Лондон, Великобритания",
+        application: "Applied via online portal",
+        details:
+          "Собеседование включало кейс-стади по оптимизации бизнес-процессов и внедрению изменений.",
+        interviewQuestions: [
+          {
+            question: "Как вы внедряете изменения в крупных организациях?",
+            answer:
+              "Использую структурированный подход с акцентом на коммуникацию и управление изменениями.",
+          },
+        ],
+      },
+      {
+        id: "i5",
+        position: "Risk Manager",
+        difficulty: 4.0,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-20",
+        location: "Лондон, Великобритания",
+        application: "Applied via PwC Careers",
+        details:
+          "Обсуждались методы оценки и минимизации корпоративных рисков, разработка стратегий по снижению воздействия.",
+        interviewQuestions: [
+          {
+            question: "Как вы оцениваете и управляете корпоративными рисками?",
+            answer:
+              "Провожу анализ вероятности и воздействия рисков, разрабатываю планы по их смягчению.",
+          },
+        ],
+      },
+      {
+        id: "i6",
+        position: "Forensic Accountant",
+        difficulty: 4.2,
+        experience: "Нейтральный",
+        outcome: "In progress",
+        date: "2025-02-22",
+        location: "Лондон, Великобритания",
+        application: "Applied via referral",
+        details:
+          "Тестирование аналитических способностей, выявление финансовых аномалий и анализ документов.",
+        interviewQuestions: [
+          {
+            question: "Как выявить признаки мошенничества в отчетности?",
+            answer:
+              "Использую сравнительный анализ, статистические методы и экспертную оценку.",
+          },
+        ],
+      },
+      {
+        id: "i7",
+        position: "Business Analyst",
+        difficulty: 3.4,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-25",
+        location: "Лондон, Великобритания",
+        application: "Applied via PwC Careers",
+        details:
+          "Фокус на сборе требований, анализе бизнес-процессов и построении аналитических отчетов.",
+        interviewQuestions: [
+          {
+            question: "Какие методы вы используете для сбора требований?",
+            answer:
+              "Провожу интервью, анкеты и наблюдения для детального понимания процессов.",
+          },
+        ],
+      },
+      {
+        id: "i8",
+        position: "Senior Auditor",
+        difficulty: 3.9,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-02-27",
+        location: "Лондон, Великобритания",
+        application: "Referred by employee",
+        details:
+          "Сложное собеседование по аудиторским стандартам, внутреннему контролю и оценке эффективности процессов.",
+        interviewQuestions: [
+          {
+            question: "Как улучшить внутренний контроль в организации?",
+            answer:
+              "Рекомендую автоматизировать процессы и проводить регулярные внутренние аудиты.",
+          },
+        ],
+      },
+      {
+        id: "i9",
+        position: "Internal Auditor",
+        difficulty: 3.3,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-03-01",
+        location: "Лондон, Великобритания",
+        application: "Applied via online portal",
+        details:
+          "Вопросы по аудиту внутренних процессов, выявлению нарушений и оптимизации процедур.",
+        interviewQuestions: [
+          {
+            question:
+              "Что является ключевым фактором успешного внутреннего аудита?",
+            answer:
+              "Объективность, системность и тщательный анализ всех бизнес-процессов.",
+          },
+        ],
+      },
+      {
+        id: "i10",
+        position: "Financial Analyst",
+        difficulty: 3.7,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-03",
+        location: "Лондон, Великобритания",
+        application: "Applied via PwC Careers",
+        details:
+          "Обсуждались методы анализа финансовых данных, прогнозирование и оценка эффективности инвестиций.",
+        interviewQuestions: [
+          {
+            question: "Как вы прогнозируете финансовые результаты компании?",
+            answer:
+              "Использую исторические данные, трендовый анализ и финансовые модели для точного прогнозирования.",
+          },
+        ],
+      },
+    ],
+    // 15 зарплат для PwC
+    salaries: [
+      {
+        id: "s1",
+        position: "Advisory Associate",
+        amount: "3500 USD/мес",
+        min: 3200,
+        max: 3800,
+        median: 3500,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s2",
+        position: "Audit Associate",
+        amount: "3800 USD/мес",
+        min: 3500,
+        max: 4100,
+        median: 3800,
+        additionalPay: 1600,
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s3",
+        position: "Tax Consultant",
+        amount: "4200 USD/мес",
+        min: 3900,
+        max: 4500,
+        median: 4200,
+        additionalPay: 1800,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s4",
+        position: "Consultant",
+        amount: "4500 USD/мес",
+        min: 4200,
+        max: 4800,
+        median: 4500,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s5",
+        position: "Risk Manager",
+        amount: "5000 USD/мес",
+        min: 4600,
+        max: 5400,
+        median: 5000,
+        additionalPay: 2200,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s6",
+        position: "Forensic Accountant",
+        amount: "5200 USD/мес",
+        min: 4800,
+        max: 5600,
+        median: 5200,
+        additionalPay: 2300,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s7",
+        position: "Business Analyst",
+        amount: "4800 USD/мес",
+        min: 4400,
+        max: 5200,
+        median: 4800,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s8",
+        position: "Senior Auditor",
+        amount: "5500 USD/мес",
+        min: 5100,
+        max: 5900,
+        median: 5500,
+        additionalPay: 2500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s9",
+        position: "Internal Auditor",
+        amount: "5000 USD/мес",
+        min: 4600,
+        max: 5400,
+        median: 5000,
+        additionalPay: 2200,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s10",
+        position: "Financial Analyst",
+        amount: "5300 USD/мес",
+        min: 4900,
+        max: 5700,
+        median: 5300,
+        additionalPay: 2400,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s11",
+        position: "Audit Manager",
+        amount: "6000 USD/мес",
+        min: 5600,
+        max: 6400,
+        median: 6000,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s12",
+        position: "Tax Manager",
+        amount: "6200 USD/мес",
+        min: 5800,
+        max: 6600,
+        median: 6200,
+        additionalPay: 3200,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s13",
+        position: "Consulting Manager",
+        amount: "6500 USD/мес",
+        min: 6100,
+        max: 6900,
+        median: 6500,
+        additionalPay: 3500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s14",
+        position: "Risk Director",
+        amount: "7000 USD/мес",
+        min: 6600,
+        max: 7400,
+        median: 7000,
+        additionalPay: 4000,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s15",
+        position: "Financial Director",
+        amount: "7200 USD/мес",
+        min: 6800,
+        max: 7600,
+        median: 7200,
+        additionalPay: 4200,
+        currency: "USD",
+        experienceLevel: "Senior",
       },
     ],
     reviews: [
@@ -1927,7 +2542,6 @@ export const mockCompanies: ICompany[] = [
         author: "Advisory",
       },
     ],
-    salaries: [{ position: "Advisory Associate", amount: "3500 USD/мес" }],
     recommended: [
       { id: "28", name: "EY", logoUrl: "/images/ey.png", rating: 3.8 },
       {
@@ -1946,7 +2560,7 @@ export const mockCompanies: ICompany[] = [
     id: "30",
     name: "Epic Games",
     logoUrl:
-      "https://scontent.fala4-1.fna.fbcdn.net/v/t39.30808-1/476800636_1050883003745374_8480727607216342337_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=1&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=FhbyR_paupIQ7kNvgFMpJiJ&_nc_oc=AdiQqGE6KPi0fWEQPDWwt4fXAfIFYl-bqa-jg47xQeeLS-0xcxCker-0d4LAFljYnh0&_nc_zt=24&_nc_ht=scontent.fala4-1.fna&_nc_gid=Ab1zd6M9xXtntmN1ehyqzYS&oh=00_AYBWlu1PcQnJO2qxf2PAcoqui87wtk_pk_rfS_8ziPd2iQ&oe=67BF7DEE",
+      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/180311311_4444913438875449_117212782360460240_n.png?_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ow5W0w-iXCcQ7kNvgHGSRbY&_nc_oc=Adib5MOwu_Rm8TXdDPpG1jHme0enNFLlTH1hykhf9iDF9SIGOyUyM2HkFZ5hyF92UCU&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAz7z7iFgNpUyOpfj1CDoHU8_fDwL03QeDuU03u-hAeYg&oe=67BFA4B6",
     bannerImg:
       "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/476872199_1050836347083373_139352602116227694_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=GI036YgfS7IQ7kNvgGZXtLW&_nc_oc=AdinSnkPs65CTQRwnMtj2bK7XKnHAlHcGTka7zs_TMrutlL_xKxzCt4DNQt0NnRTUfM&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=Ab1zd6M9xXtntmN1ehyqzYS&oh=00_AYCrfmdsm4u-CCicwbyX7DT3QPbYoGd_0HckmFCi7Fk2Cg&oe=67BFA226",
     rating: 4.0,
@@ -1973,11 +2587,363 @@ export const mockCompanies: ICompany[] = [
     ],
     interviews: [
       {
+        id: "i1.2",
         position: "Gameplay Programmer",
         difficulty: 4.0,
         experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-01",
+        location: "Кэри, США",
+        application: "Applied via Epic Games Careers",
         details:
           "C++ тест, задачи по оптимизации рендера, вопросы по игровым механикам.",
+        interviewQuestions: [
+          {
+            question: "How do you optimize game rendering performance?",
+            answer:
+              "Использовал профилирование и оптимизацию шейдеров для снижения задержек.",
+          },
+        ],
+      },
+      {
+        id: "i2",
+        position: "Engine Developer",
+        difficulty: 4.2,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-03",
+        location: "Кэри, США",
+        application: "Referred by employee",
+        details:
+          "Вопросы по архитектуре игрового движка, оптимизации памяти и CPU.",
+        interviewQuestions: [
+          {
+            question: "Опишите основные компоненты игрового движка.",
+            answer:
+              "Рендеринг, физика, аудио, скрипты и оптимизация потоков данных.",
+          },
+        ],
+      },
+      {
+        id: "i3",
+        position: "Graphics Programmer",
+        difficulty: 4.1,
+        experience: "Нейтральный",
+        outcome: "No offer",
+        date: "2025-03-05",
+        location: "Кэри, США",
+        application: "Applied via website",
+        details:
+          "Техническое собеседование по оптимизации графики и работе с GPU.",
+        interviewQuestions: [
+          {
+            question: "Как вы оптимизируете использование GPU?",
+            answer:
+              "Применяю техники batch rendering и оптимизацию draw calls для повышения эффективности.",
+          },
+        ],
+      },
+      {
+        id: "i4",
+        position: "AI Programmer",
+        difficulty: 3.9,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-07",
+        location: "Кэри, США",
+        application: "Applied via referral",
+        details:
+          "Обсуждение алгоритмов ИИ, поведения NPC и оптимизации логики в играх.",
+        interviewQuestions: [
+          {
+            question: "Какие алгоритмы ИИ вы использовали в играх?",
+            answer:
+              "Использовал A*, state machines и алгоритмы машинного обучения для адаптивного поведения.",
+          },
+        ],
+      },
+      {
+        id: "i5",
+        position: "Technical Artist",
+        difficulty: 3.8,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-09",
+        location: "Кэри, США",
+        application: "Applied via Epic Games Careers",
+        details:
+          "Оценка портфолио, вопросы по оптимизации визуальных эффектов и производительности.",
+        interviewQuestions: [
+          {
+            question:
+              "Как вы оптимизируете визуальные эффекты для мобильных игр?",
+            answer:
+              "Использую LOD, батчинг и оптимизированные шейдеры для снижения нагрузки на GPU.",
+          },
+        ],
+      },
+      {
+        id: "i6",
+        position: "Level Designer",
+        difficulty: 3.5,
+        experience: "Нейтральный",
+        outcome: "In progress",
+        date: "2025-03-11",
+        location: "Кэри, США",
+        application: "Applied via company website",
+        details:
+          "Обсуждение креативных концепций, баланса сложности уровней и дизайна окружения.",
+        interviewQuestions: [
+          {
+            question: "Как вы балансируете сложность уровней?",
+            answer:
+              "Использую A/B тестирование и постоянную обратную связь от игроков для корректировки дизайна.",
+          },
+        ],
+      },
+      {
+        id: "i7",
+        position: "QA Tester",
+        difficulty: 3.0,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-13",
+        location: "Кэри, США",
+        application: "Internal referral",
+        details:
+          "Проверка навыков автоматизации тестирования, написание сценариев и обнаружение багов.",
+        interviewQuestions: [
+          {
+            question: "Какие инструменты тестирования вы используете?",
+            answer:
+              "Использую Selenium, JIRA и собственные скрипты для автоматизации тестовых кейсов.",
+          },
+        ],
+      },
+      {
+        id: "i8",
+        position: "Network Engineer",
+        difficulty: 4.0,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-15",
+        location: "Кэри, США",
+        application: "Applied via referral",
+        details:
+          "Вопросы по оптимизации сетевой инфраструктуры, задержкам и стабильности в онлайн играх.",
+        interviewQuestions: [
+          {
+            question:
+              "Как вы решаете проблемы с высокой задержкой в онлайн играх?",
+            answer:
+              "Оптимизирую протоколы, использую edge-сервера и load balancing для минимизации задержек.",
+          },
+        ],
+      },
+      {
+        id: "i9",
+        position: "VR Developer",
+        difficulty: 4.2,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-17",
+        location: "Кэри, США",
+        application: "Applied via Epic Games Careers",
+        details:
+          "Собеседование по разработке для VR, оптимизации производительности и созданию комфортного UX.",
+        interviewQuestions: [
+          {
+            question: "Как вы решаете проблемы motion sickness в VR?",
+            answer:
+              "Оптимизирую frame rate и корректно настраиваю FOV для уменьшения дискомфорта.",
+          },
+        ],
+      },
+      {
+        id: "i10",
+        position: "Game Designer",
+        difficulty: 3.6,
+        experience: "Положительный",
+        outcome: "Offer",
+        date: "2025-03-19",
+        location: "Кэри, США",
+        application: "Applied via company website",
+        details:
+          "Обсуждение концепций геймплея, сценариев и механик взаимодействия в играх.",
+        interviewQuestions: [
+          {
+            question: "Как вы определяете ключевые механики игры?",
+            answer:
+              "Анализ рынка, тестирование прототипов и сбор обратной связи от игроков помогают определить основное направление.",
+          },
+        ],
+      },
+    ],
+    salaries: [
+      {
+        id: "s1",
+        position: "Gameplay Programmer",
+        amount: "4800 USD/мес",
+        min: 4400,
+        max: 5200,
+        median: 4800,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s2",
+        position: "Engine Developer",
+        amount: "5200 USD/мес",
+        min: 4800,
+        max: 5600,
+        median: 5200,
+        additionalPay: 1800,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s3",
+        position: "Graphics Programmer",
+        amount: "5400 USD/мес",
+        min: 5000,
+        max: 5800,
+        median: 5400,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s4",
+        position: "AI Programmer",
+        amount: "5000 USD/мес",
+        min: 4600,
+        max: 5400,
+        median: 5000,
+        additionalPay: 1700,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s5",
+        position: "Technical Artist",
+        amount: "5100 USD/мес",
+        min: 4700,
+        max: 5500,
+        median: 5100,
+        additionalPay: 1600,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s6",
+        position: "Level Designer",
+        amount: "4800 USD/мес",
+        min: 4500,
+        max: 5100,
+        median: 4800,
+        additionalPay: 1400,
+        currency: "USD",
+        experienceLevel: "Entry-Mid",
+      },
+      {
+        id: "s7",
+        position: "QA Tester",
+        amount: "4300 USD/мес",
+        min: 4000,
+        max: 4600,
+        median: 4300,
+        additionalPay: 1200,
+        currency: "USD",
+        experienceLevel: "Entry",
+      },
+      {
+        id: "s8",
+        position: "Network Engineer",
+        amount: "5500 USD/мес",
+        min: 5100,
+        max: 5900,
+        median: 5500,
+        additionalPay: 2000,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s9",
+        position: "VR Developer",
+        amount: "6000 USD/мес",
+        min: 5600,
+        max: 6400,
+        median: 6000,
+        additionalPay: 2500,
+        currency: "USD",
+        experienceLevel: "Senior",
+      },
+      {
+        id: "s10",
+        position: "Game Designer",
+        amount: "5000 USD/мес",
+        min: 4600,
+        max: 5400,
+        median: 5000,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s11",
+        position: "Technical Scripter",
+        amount: "4800 USD/мес",
+        min: 4400,
+        max: 5200,
+        median: 4800,
+        additionalPay: 1300,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s12",
+        position: "Audio Programmer",
+        amount: "4700 USD/мес",
+        min: 4300,
+        max: 5100,
+        median: 4700,
+        additionalPay: 1200,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s13",
+        position: "UI/UX Developer",
+        amount: "4900 USD/мес",
+        min: 4500,
+        max: 5300,
+        median: 4900,
+        additionalPay: 1400,
+        currency: "USD",
+        experienceLevel: "Mid",
+      },
+      {
+        id: "s14",
+        position: "Motion Capture Specialist",
+        amount: "5200 USD/мес",
+        min: 4800,
+        max: 5600,
+        median: 5200,
+        additionalPay: 1500,
+        currency: "USD",
+        experienceLevel: "Mid-Senior",
+      },
+      {
+        id: "s15",
+        position: "Technical Director",
+        amount: "7000 USD/мес",
+        min: 6500,
+        max: 7500,
+        median: 7000,
+        additionalPay: 3000,
+        currency: "USD",
+        experienceLevel: "Senior",
       },
     ],
     reviews: [
@@ -1988,7 +2954,6 @@ export const mockCompanies: ICompany[] = [
         author: "Программист",
       },
     ],
-    salaries: [{ position: "Gameplay Programmer", amount: "4800 USD/мес" }],
     recommended: [
       { id: "4", name: "Apple", logoUrl: "/images/apple.png", rating: 4.1 },
       { id: "22", name: "Tesla", logoUrl: "/images/tesla.png", rating: 4.1 },

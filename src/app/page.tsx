@@ -14,7 +14,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import styles from "./Main.module.scss";
 
 export default function Home() {
-  // Управляем вкладками (Companies, Salaries, Interviews)
   const [tabValue, setTabValue] = React.useState(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -24,7 +23,6 @@ export default function Home() {
   return (
     <div className={styles.mainBackground}>
       <Container maxWidth="md" className={styles.heroContainer}>
-        {/* Заголовок */}
         <Typography variant="h4" className={styles.title}>
           Are you paid fairly? Find out.
         </Typography>
@@ -32,7 +30,6 @@ export default function Home() {
           Know your worth and calculate your salary
         </Typography>
 
-        {/* Вкладки (Companies, Salaries, Interviews) */}
         <Tabs
           value={tabValue}
           onChange={handleChange}
@@ -46,7 +43,6 @@ export default function Home() {
           <Tab label="Interviews" />
         </Tabs>
 
-        {/* По желанию можно динамически менять placeholder в зависимости от выбранной вкладки */}
         <Box className={styles.searchBox}>
           <TextField
             variant="outlined"
