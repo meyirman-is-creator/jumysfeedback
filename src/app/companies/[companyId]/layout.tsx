@@ -40,6 +40,8 @@ export default function CompanyLayout({
     { label: "Salaries", path: "salaries" },
     { label: "Interviews", path: "interviews" },
     { label: "Benefits", path: "benefits" },
+    { label: "Taxes", path: "taxes" },
+    { label: "Stockes", path: "stockes" }
   ];
 
   const isActiveTab = (tabPath: string) => {
