@@ -1,67 +1,15 @@
 'use client';
 import React from 'react';
-import { useParams } from 'next/navigation';
-import {
-  Container,
-  Typography,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
-} from '@mui/material';
+import Chart from 'react-apexcharts';
+import { Container, Typography } from '@mui/material';
 import styles from './CompanyTaxesPage.module.scss';
 
-interface CompanyData {
-  id: number;
-  name: string;
-  is_public: boolean;
-  industry: string;
-  tax_data: {
-    company_name: string;
-    cik?: string;
-    yearly_taxes: Array<{
-      year: number | string;
-      amount: number;
-      formatted_amount: string;
-      source: string;
-    }>;
-    data_source: string;
-    retrieved_at: string;
-  };
-  annual_revenue: number;
-  annual_revenue_formatted: string;
-  revenue_trend: Array<{
-    year: number;
-    revenue: number;
-    revenue_formatted: string;
-  }>;
-  key_metrics: {
-    market_cap: number;
-    market_cap_formatted: string;
-    pe_ratio: number;
-    dividend_yield: number | null;
-    fifty_two_week_high: number;
-    fifty_two_week_low: number;
-  };
-  industry_comparison: Array<{
-    id: number;
-    name: string;
-    stock_symbol: string;
-    market_cap: number;
-    market_cap_formatted: string;
-    pe_ratio: number;
-    dividend_yield: number;
-  }>;
-}
-
-// Default mock data (using your provided Adobe Inc. JSON)
-const defaultCompanyData: CompanyData = {
+const defaultCompanyData = {
   id: 15,
-  name: "Company",
+  name: "Adobe Inc.",
   is_public: true,
-
+  stock_symbol: "ADBE",
+  sec_cik: "0000796343",
   industry: "Технологии",
   tax_data: {
     company_name: "ADOBE INC.",
@@ -187,141 +135,92 @@ const defaultCompanyData: CompanyData = {
   ]
 };
 
-const CompanyTaxesPage: React.FC<{ companyData?: CompanyData }> = ({
-  companyData = defaultCompanyData,
-}) => {
-  // Optionally extract companyId from the URL (if using dynamic routes)
-  const { companyId } = useParams() as { companyId: string };
+const CompanyTaxesPage = () => {
+  // Chart 1: Total Yearly Taxes (Bar Chart)
+  const taxEntries = defaultCompanyData.tax_data.yearly_taxes;
+  const aggregatedTaxes = taxEntries.reduce((acc, tax) => {
+    const year = tax.year;
+    if (!acc[year]) acc[year] = 0;
+    acc[year] += tax.amount;
+    return acc;
+  }, {});
+  const taxCategories = Object.keys(aggregatedTaxes).sort();
+  const taxSeriesData = taxCategories.map(year => aggregatedTaxes[year]);
+
+  const taxChartOptions = {
+    chart: { id: 'tax-bar-chart' },
+    xaxis: { categories: taxCategories, title: { text: 'Year' } },
+    yaxis: {
+      
+      labels: { formatter: (value) => `$${(value / 1e6).toFixed(2)}M` }
+    },
+   
+    tooltip: { y: { formatter: (value) => `$${(value / 1e6).toFixed(2)} million` } }
+  };
+  const taxSeries = [{ name: 'Total Tax', data: taxSeriesData }];
+
+  // Chart 2: Average Revenue Trend (Line Chart)
+  const revenueTrendEntries = defaultCompanyData.revenue_trend;
+  const aggregatedRevenueTrend = revenueTrendEntries.reduce((acc, entry) => {
+    const year = entry.year;
+    if (!acc[year]) acc[year] = { sum: 0, count: 0 };
+    acc[year].sum += entry.revenue;
+    acc[year].count += 1;
+    return acc;
+  }, {});
+  const revenueTrendCategories = Object.keys(aggregatedRevenueTrend).sort();
+  const revenueTrendSeriesData = revenueTrendCategories.map(
+    year => aggregatedRevenueTrend[year].sum / aggregatedRevenueTrend[year].count
+  );
+  const revenueChartOptions = {
+    chart: { id: 'revenue-line-chart' },
+    xaxis: { categories: revenueTrendCategories, title: { text: 'Year' } },
+    yaxis: {
+      
+      labels: { formatter: (value) => `$${(value / 1e9).toFixed(2)}B` }
+    },
+    
+    tooltip: { y: { formatter: (value) => `$${(value / 1e9).toFixed(2)} billion` } }
+  };
+  const revenueSeries = [{ name: 'Avg Revenue', data: revenueTrendSeriesData }];
+
+  // Chart 3: Industry Comparison – Market Cap (Bar Chart)
+  const industryComparison = defaultCompanyData.industry_comparison;
+  const industryCategories = industryComparison.map(item => item.name);
+  const industrySeriesData = industryComparison.map(item => item.market_cap / 1e9);
+  const industryChartOptions = {
+    chart: { id: 'industry-bar-chart' },
+    xaxis: { categories: industryCategories, title: { text: 'Company' } },
+    yaxis: {
+      labels: { formatter: (value) => `${value.toFixed(2)}B` }
+    },
+    tooltip: { y: { formatter: (value) => `${value.toFixed(2)} billion USD` } }
+  };
+  const industrySeries = [{ name: 'Market Cap', data: industrySeriesData }];
 
   return (
     <Container maxWidth="md" className={styles.container}>
-      {/* Company Basic Information */}
-      <Typography variant="h4" className={styles.title}>
-        {companyData.name} Taxes 
-      </Typography>
-     
 
-      {/* Tax Data Section */}
-      <Paper className={styles.section}>
-        <Typography variant="h5" className={styles.sectionTitle}>
-          Tax Data
+      <div className={styles.chartSection}>
+        <Typography variant="h6" className={styles.chartTitle}>
+            Total Tax Data
         </Typography>
-        <Typography variant="body2" className={styles.note}>
-          Data Source: {companyData.tax_data.data_source} | Retrieved at:{" "}
-          {new Date(companyData.tax_data.retrieved_at).toLocaleString()}
-        </Typography>
-        <Table className={styles.table}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Year</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Source</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {companyData.tax_data.yearly_taxes.map((tax, idx) => (
-              <TableRow key={idx}>
-                <TableCell>{tax.year}</TableCell>
-                <TableCell>{tax.formatted_amount}</TableCell>
-                <TableCell>{tax.source}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
+        <Chart options={taxChartOptions} series={taxSeries} type="bar" height={350} />
+      </div>
 
-      {/* Annual Revenue Section */}
-      <Paper className={styles.section}>
-        <Typography variant="h5" className={styles.sectionTitle}>
-          Annual Revenue
+      <div className={styles.chartSection}>
+      <Typography variant="h6" className={styles.chartTitle}>
+            Total Tax Data
         </Typography>
-        <Typography variant="h6" className={styles.revenue}>
-          {companyData.annual_revenue_formatted}
-        </Typography>
-      </Paper>
+        <Chart options={revenueChartOptions} series={revenueSeries} type="line" height={350} />
+      </div>
 
-      {/* Revenue Trend Section */}
-      <Paper className={styles.section}>
-        <Typography variant="h5" className={styles.sectionTitle}>
-          Revenue Trend
+      <div className={styles.chartSection}>
+        <Typography variant="h6" className={styles.chartTitle}>
+          Industry Comparison – Market Cap
         </Typography>
-        <Table className={styles.table}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Year</TableCell>
-              <TableCell>Revenue</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {companyData.revenue_trend.map((trend, idx) => (
-              <TableRow key={idx}>
-                <TableCell>{trend.year}</TableCell>
-                <TableCell>{trend.revenue_formatted}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
-
-      {/* Key Metrics Section */}
-      <Paper className={styles.section}>
-        <Typography variant="h5" className={styles.sectionTitle}>
-          Key Metrics
-        </Typography>
-        <Table className={styles.infoTable}>
-          <TableBody>
-            <TableRow>
-              <TableCell>Market Cap</TableCell>
-              <TableCell>{companyData.key_metrics.market_cap_formatted}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>P/E Ratio</TableCell>
-              <TableCell>{companyData.key_metrics.pe_ratio}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Dividend Yield</TableCell>
-              <TableCell>{companyData.key_metrics.dividend_yield !== null ? companyData.key_metrics.dividend_yield : 'N/A'}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>52 Week High</TableCell>
-              <TableCell>{companyData.key_metrics.fifty_two_week_high}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>52 Week Low</TableCell>
-              <TableCell>{companyData.key_metrics.fifty_two_week_low}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </Paper>
-
-      {/* Industry Comparison Section */}
-      <Paper className={styles.section}>
-        <Typography variant="h5" className={styles.sectionTitle}>
-          Industry Comparison
-        </Typography>
-        <Table className={styles.table}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Stock Symbol</TableCell>
-              <TableCell>Market Cap</TableCell>
-              <TableCell>P/E Ratio</TableCell>
-              <TableCell>Dividend Yield</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {companyData.industry_comparison.map((comp, idx) => (
-              <TableRow key={idx}>
-                <TableCell>{comp.name}</TableCell>
-                <TableCell>{comp.stock_symbol}</TableCell>
-                <TableCell>{comp.market_cap_formatted}</TableCell>
-                <TableCell>{comp.pe_ratio}</TableCell>
-                <TableCell>{comp.dividend_yield}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
+        <Chart options={industryChartOptions} series={industrySeries} type="bar" height={350} />
+      </div>
     </Container>
   );
 };

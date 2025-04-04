@@ -4,52 +4,24 @@
   }
   
   .title {
-    margin-bottom: 1.5rem;
-    text-align: center;
-    font-weight: bold;
-    color: #333;
-  }
-  
-  .section {
     margin-bottom: 2rem;
-    padding: 1.5rem;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .sectionTitle {
-    margin-bottom: 1rem;
-    color: #333;
-    font-size: 1.5rem;
-  }
-  
-  .infoTable,
-  .dataTable {
-    width: 100%;
-    border-collapse: collapse;
-  
-    th,
-    td {
-      padding: 0.75rem;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
-  
-    th {
-      background-color: #f1f1f1;
-      font-weight: 600;
-    }
-  }
-  
-  .note {
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-    color: #666;
-  }
-  
-  .revenue {
-    color: #2e7d32;
+    text-align: start;
     font-weight: bold;
+    color: #333;
+  }
+  
+  .chartSection {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  .chartTitle {
     text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    color: #333;
   }
   
