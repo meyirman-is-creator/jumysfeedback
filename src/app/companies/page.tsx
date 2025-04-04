@@ -485,7 +485,7 @@ const CompaniesPage = () => {
               </Grid>
             ))}
           </Grid>
-
+          
           <Box className={styles.companiesPage__pagination}>
             <Pagination count={totalPages} page={page} onChange={handleChangePage}/>
           </Box>
