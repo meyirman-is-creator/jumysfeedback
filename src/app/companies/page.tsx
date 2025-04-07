@@ -483,6 +483,7 @@ const CompaniesPage = () => {
                   </CardContent>
                 </Card>
               </Grid>
+              
             ))}
           </Grid>
           
