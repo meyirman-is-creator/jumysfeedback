@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Button,
   TextField,
@@ -9,6 +9,8 @@ import {
   Box,
   InputAdornment,
   IconButton,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import {
   AccountCircle,
@@ -16,19 +18,24 @@ import {
   Lock,
   Visibility,
   VisibilityOff,
+  Person,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import styles from "./RegisterPage.module.scss";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register, isAuthenticated, isLoading, error, clearAuthError } = useAuth();
 
-  const [username, setUsername] = React.useState("");
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
 
-  const [usernameError, setUsernameError] = React.useState("");
+  const [firstNameError, setFirstNameError] = React.useState("");
+  const [lastNameError, setLastNameError] = React.useState("");
   const [emailError, setEmailError] = React.useState("");
   const [passwordError, setPasswordError] = React.useState("");
   const [confirmPasswordError, setConfirmPasswordError] = React.useState("");
@@ -36,16 +43,37 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
+
+  // Clear errors when component unmounts
+  useEffect(() => {
+    return () => {
+      clearAuthError();
+    };
+  }, [clearAuthError]);
+
+  const validateForm = () => {
     let isValid = true;
 
-    // Validation for username
-    if (username.trim() === "") {
-      setUsernameError("Username is required");
+    // Validation for first name
+    if (firstName.trim() === "") {
+      setFirstNameError("First name is required");
       isValid = false;
     } else {
-      setUsernameError("");
+      setFirstNameError("");
+    }
+
+    // Validation for last name
+    if (lastName.trim() === "") {
+      setLastNameError("Last name is required");
+      isValid = false;
+    } else {
+      setLastNameError("");
     }
 
     // Validation for email
@@ -90,11 +118,21 @@ export default function RegisterPage() {
       setConfirmPasswordError("");
     }
 
-    if (!isValid) return;
+    return isValid;
+  };
 
-    // Registration logic (e.g., API call) goes here
-    // After successful registration, navigate to the home page
-    router.push("/");
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    // Registration logic
+    await register({
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      password: password,
+    });
   };
 
   return (
@@ -106,33 +144,69 @@ export default function RegisterPage() {
         Customer Registration
       </Typography>
 
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          onClose={clearAuthError}
+        >
+          {typeof error === 'string' ? error : 'Registration failed. Please try again.'}
+        </Alert>
+      )}
+
       <Box
         component="form"
         className={styles["register-page__form"]}
         onSubmit={handleSubmit}
       >
         <TextField
-          label="Username"
+          label="First Name"
           variant="outlined"
           required
           fullWidth
           className={styles["register-page__input"]}
-          value={username}
+          value={firstName}
           onChange={(e) => {
-            setUsername(e.target.value);
+            setFirstName(e.target.value);
             if (e.target.value.trim() !== "") {
-              setUsernameError("");
+              setFirstNameError("");
             }
           }}
-          error={Boolean(usernameError)}
-          helperText={usernameError}
+          error={Boolean(firstNameError)}
+          helperText={firstNameError}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <AccountCircle />
+                <Person />
               </InputAdornment>
             ),
           }}
+          disabled={isLoading}
+        />
+
+        <TextField
+          label="Last Name"
+          variant="outlined"
+          required
+          fullWidth
+          className={styles["register-page__input"]}
+          value={lastName}
+          onChange={(e) => {
+            setLastName(e.target.value);
+            if (e.target.value.trim() !== "") {
+              setLastNameError("");
+            }
+          }}
+          error={Boolean(lastNameError)}
+          helperText={lastNameError}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Person />
+              </InputAdornment>
+            ),
+          }}
+          disabled={isLoading}
         />
 
         <TextField
@@ -157,6 +231,7 @@ export default function RegisterPage() {
               </InputAdornment>
             ),
           }}
+          disabled={isLoading}
         />
 
         <TextField
@@ -192,6 +267,7 @@ export default function RegisterPage() {
               </InputAdornment>
             ),
           }}
+          disabled={isLoading}
         />
 
         <TextField
@@ -229,20 +305,23 @@ export default function RegisterPage() {
               </InputAdornment>
             ),
           }}
+          disabled={isLoading}
         />
 
         <Button
           variant="contained"
           type="submit"
           className={styles["register-page__submit"]}
+          disabled={isLoading}
         >
-          Sign Up
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "Sign Up"}
         </Button>
 
         <Button
           variant="outlined"
           onClick={() => router.push("/auth/login")}
           className={styles["register-page__signin"]}
+          disabled={isLoading}
         >
           Sign In
         </Button>

@@ -1,0 +1,92 @@
+.verification-page {
+    background-color: #f9f9f9;
+    margin-top: 2rem;
+    padding: 2rem;
+    border-radius: 16px;
+  
+    &__title {
+      color: #800000;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+  
+    &__subtitle {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #333;
+    }
+  
+    &__form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+  
+    &__code-container {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+  
+    &__code-input {
+      width: 3rem;
+      height: 3.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      border: 1px solid #800000;
+      border-radius: 8px;
+  
+      &:focus {
+        outline: none;
+        border-color: #800000;
+        box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.2);
+      }
+    }
+  
+    &__verify-button {
+      background-color: #800000 !important;
+      color: #fff !important;
+      font-weight: bold;
+      padding: 0.75rem 0;
+      margin-top: 1rem !important;
+  
+      &:hover {
+        background-color: #660000 !important;
+      }
+    }
+  
+    &__resend-container {
+      text-align: center;
+      margin-top: 1rem;
+    }
+  
+    &__resend-button {
+      color: #800000 !important;
+      font-weight: bold;
+      text-transform: none !important;
+  
+      &:disabled {
+        color: #ccc !important;
+      }
+    }
+  
+    &__timer {
+      color: #666;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+  
+    &__back-button {
+      border-color: #800000 !important;
+      color: #800000 !important;
+      font-weight: bold;
+      padding: 0.75rem 0;
+      margin-top: 1rem !important;
+  
+      &:hover {
+        background-color: #ffe6e6 !important;
+        border-color: #800000 !important;
+      }
+    }
+  }

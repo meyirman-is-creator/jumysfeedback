@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Button,
   TextField,
@@ -11,23 +11,40 @@ import {
   Checkbox,
   FormControlLabel,
   IconButton,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import { AccountCircle, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import styles from "./LoginPage.module.scss";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isAuthenticated, isLoading, error, clearAuthError } = useAuth();
 
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [usernameError, setUsernameError] = React.useState(false);
   const [passwordError, setPasswordError] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [rememberMe, setRememberMe] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
+  // Clear errors when component unmounts
+  useEffect(() => {
+    return () => {
+      clearAuthError();
+    };
+  }, [clearAuthError]);
+
+  const validateForm = () => {
     let valid = true;
 
     if (username.trim() === "") {
@@ -44,12 +61,16 @@ export default function LoginPage() {
       setPasswordError(false);
     }
 
-    if (!valid) return;
+    return valid;
+  };
 
-    // Логика входа (например, запрос к серверу)
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    // После успешного входа делаем редирект на главную страницу "/"
-    router.push("/");
+    if (!validateForm()) return;
+
+    // Handle login logic
+    await login(username, password);
   };
 
   return (
@@ -60,6 +81,16 @@ export default function LoginPage() {
       <Typography variant="h6" className={styles["login-page__subtitle"]}>
         Customer Login
       </Typography>
+
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          onClose={clearAuthError}
+        >
+          {typeof error === 'string' ? error : 'Invalid login credentials'}
+        </Alert>
+      )}
 
       <Box
         component="form"
@@ -88,6 +119,7 @@ export default function LoginPage() {
               </InputAdornment>
             ),
           }}
+          disabled={isLoading}
         />
 
         <TextField
@@ -123,10 +155,18 @@ export default function LoginPage() {
               </InputAdornment>
             ),
           }}
+          disabled={isLoading}
         />
 
         <FormControlLabel
-          control={<Checkbox className={styles["login-page__checkbox"]} />}
+          control={
+            <Checkbox 
+              className={styles["login-page__checkbox"]} 
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={isLoading}
+            />
+          }
           label="Remember me"
           className={styles["login-page__remember"]}
         />
@@ -135,17 +175,36 @@ export default function LoginPage() {
           variant="contained"
           type="submit"
           className={styles["login-page__submit"]}
+          disabled={isLoading}
         >
-          LOGIN
+          {isLoading ? <CircularProgress size={24} color="inherit" /> : "LOGIN"}
         </Button>
 
         <Button
           variant="outlined"
           onClick={() => router.push("/auth/register")}
           className={styles["login-page__signup"]}
+          disabled={isLoading}
         >
           SIGN UP
         </Button>
+
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              cursor: 'pointer', 
+              textDecoration: 'underline',
+              color: '#800000',
+              '&:hover': {
+                color: '#660000'
+              }
+            }}
+            onClick={() => router.push('/auth/forgot-password')}
+          >
+            Forgot Password?
+          </Typography>
+        </Box>
       </Box>
     </Container>
   );
