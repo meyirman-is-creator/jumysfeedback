@@ -1,5 +1,5 @@
 // src/hooks/useAuth.ts
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from './reduxHooks';
 import { 
@@ -11,11 +11,13 @@ import {
   clearError,
   setVerificationEmail
 } from '../features/auth/authSlice';
+import { saveAuthTokens, removeAuthTokens, redirectAfterAuth } from '../utils/helpers';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  
+  const [isClient, setIsClient] = useState(false);
+
   const { 
     user, 
     isAuthenticated, 
@@ -25,22 +27,30 @@ export const useAuth = () => {
     verificationEmail
   } = useAppSelector((state) => state.auth);
   
-  // Check if user is authenticated when component mounts
   useEffect(() => {
-    if (isAuthenticated && !user) {
+    if (isClient && isAuthenticated && !user) {
       dispatch(getUserProfile());
     }
-  }, [isAuthenticated, user, dispatch]);
+  }, [isAuthenticated, user, dispatch, isClient]);
   
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, rememberMe: boolean = false) => {
+    if (!isClient) return false;
+    
     try {
       await dispatch(loginUser({ username: email, password })).unwrap();
-      router.push('/');
+      
+      // Сохраняем токены только на клиенте
+      if (isClient) {
+        // localStorage логика
+      }
+      
+      router.push("/");
       return true;
     } catch (error) {
       return false;
     }
   };
+
   
   const register = async (userData: { 
     email: string; 
@@ -51,7 +61,7 @@ export const useAuth = () => {
     try {
       await dispatch(registerUser(userData)).unwrap();
       dispatch(setVerificationEmail(userData.email));
-      router.push('/auth/verify');
+      router.push(`/auth/verify-email?email=${encodeURIComponent(userData.email)}`);
       return true;
     } catch (error) {
       return false;
@@ -61,9 +71,16 @@ export const useAuth = () => {
   const logout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
+      
+      // Удаляем токены из localStorage и cookie
+      removeAuthTokens();
+      
       router.push('/auth/login');
       return true;
     } catch (error) {
+      // Даже в случае ошибки, удаляем токены
+      removeAuthTokens();
+      router.push('/auth/login');
       return false;
     }
   };
@@ -71,7 +88,6 @@ export const useAuth = () => {
   const verify = async (token: string) => {
     try {
       await dispatch(verifyEmail(token)).unwrap();
-      router.push('/auth/login');
       return true;
     } catch (error) {
       return false;
@@ -84,7 +100,7 @@ export const useAuth = () => {
   
   return {
     user,
-    isAuthenticated,
+    isAuthenticated: isClient && isAuthenticated, 
     isLoading,
     error,
     verificationRequired,

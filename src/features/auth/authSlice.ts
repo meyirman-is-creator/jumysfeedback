@@ -1,4 +1,4 @@
-// src/features/auth/authSlice.ts
+
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authAPI } from '../../services/apiClient';
 import { AxiosError } from 'axios';
@@ -138,6 +138,39 @@ export const getUserProfile = createAsyncThunk(
   }
 );
 
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.forgotPassword(email);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response && axiosError.response.data) {
+        return rejectWithValue(axiosError.response.data);
+      }
+      return rejectWithValue('Password reset request failed. Please try again.');
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async (credentials: { token: string; new_password: string }, { rejectWithValue }) => {
+    try {
+      const response = await authAPI.resetPassword(credentials.token, credentials.new_password);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response && axiosError.response.data) {
+        return rejectWithValue(axiosError.response.data);
+      }
+      return rejectWithValue('Password reset failed. Please try again.');
+    }
+  }
+);
+
+
 // Slice
 const authSlice = createSlice({
   name: 'auth',
@@ -244,8 +277,33 @@ const authSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload as string;
     });
+
+    builder.addCase(forgotPassword.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(forgotPassword.fulfilled, (state) => {
+      state.isLoading = false;
+    });
+    builder.addCase(forgotPassword.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload as string;
+    });
+    
+    builder.addCase(resetPassword.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(resetPassword.fulfilled, (state) => {
+      state.isLoading = false;
+    });
+    builder.addCase(resetPassword.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload as string;
+    });
   },
 });
+
 
 export const { clearError, setVerificationEmail, clearAuth } = authSlice.actions;
 export default authSlice.reducer;

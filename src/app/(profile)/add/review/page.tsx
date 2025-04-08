@@ -1,4 +1,3 @@
-// src/app/profile/add/review/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -26,13 +25,35 @@ import {
 } from "@mui/material";
 import { ChevronLeft, ChevronRight, Save, X } from "lucide-react";
 import styles from "./AddReviewPage.module.scss";
-import './AddReviewPage.scss'
+import "./AddReviewPage.scss";
+import { SelectChangeEvent } from "@mui/material/Select";
+
+interface FormData {
+  companyName: string;
+  position: string;
+  employmentStatus: "current" | "former";
+  employmentType: "full-time" | "part-time" | "contract" | "internship" | "freelance";
+  overallRating: number;
+  careerOpportunities: number;
+  workLifeBalance: number;
+  compensation: number;
+  jobSecurity: number;
+  management: number;
+  title: string;
+  pros: string;
+  cons: string;
+  advice: string;
+  recommendToFriend: "yes" | "no";
+  anonymous: boolean;
+  confirmTruthful: boolean;
+}
+
 export default function AddReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEditing = searchParams.has("id");
 
-  // State for stepper
+  // State для stepper'а
   const [activeStep, setActiveStep] = useState(0);
   const steps = [
     "Компания и должность",
@@ -41,12 +62,12 @@ export default function AddReviewPage() {
     "Подтверждение",
   ];
 
-  // Form state
-  const [formData, setFormData] = useState({
+  // Состояние формы
+  const [formData, setFormData] = useState<FormData>({
     companyName: "",
     position: "",
-    employmentStatus: "current", // 'current' or 'former'
-    employmentType: "full-time", // 'full-time', 'part-time', 'contract', etc.
+    employmentStatus: "current", // "current" или "former"
+    employmentType: "full-time", // "full-time", "part-time", "contract", "internship", "freelance"
     overallRating: 3,
     careerOpportunities: 3,
     workLifeBalance: 3,
@@ -62,7 +83,7 @@ export default function AddReviewPage() {
     confirmTruthful: false,
   });
 
-  // Form validation
+  // Состояние ошибок формы
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateStep = (step: number) => {
@@ -94,6 +115,8 @@ export default function AddReviewPage() {
             "Необходимо подтвердить достоверность информации";
         }
         break;
+      default:
+        break;
     }
 
     setErrors(newErrors);
@@ -110,14 +133,17 @@ export default function AddReviewPage() {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
+  // Универсальный обработчик для TextField, Select и RadioGroup
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | SelectChangeEvent<string>
   ) => {
     const { name, value } = e.target;
     if (name) {
       setFormData((prev) => ({ ...prev, [name]: value }));
 
-      // Clear error when field is changed
+      // Очистка ошибки при изменении поля
       if (errors[name]) {
         setErrors((prev) => {
           const newErrors = { ...prev };
@@ -132,7 +158,7 @@ export default function AddReviewPage() {
     const { name, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: checked }));
 
-    // Clear error when field is changed
+    // Очистка ошибки при изменении поля
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -148,7 +174,7 @@ export default function AddReviewPage() {
 
   const handleSubmit = () => {
     if (validateStep(activeStep)) {
-      // Handle submission logic here
+      // Здесь можно добавить логику отправки данных
       console.log("Form submitted:", formData);
       router.push("/reviews");
     }
@@ -158,7 +184,7 @@ export default function AddReviewPage() {
     router.back();
   };
 
-  // Render steps
+  // Рендеринг контента для каждого шага
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
@@ -453,15 +479,13 @@ export default function AddReviewPage() {
                       ? "Текущий сотрудник"
                       : "Бывший сотрудник"}{" "}
                     |{" "}
-                    {
-                      {
-                        "full-time": "Полная занятость",
-                        "part-time": "Частичная занятость",
-                        contract: "Контракт",
-                        internship: "Стажировка",
-                        freelance: "Фриланс",
-                      }[formData.employmentType]
-                    }
+                    {{
+                      "full-time": "Полная занятость",
+                      "part-time": "Частичная занятость",
+                      contract: "Контракт",
+                      internship: "Стажировка",
+                      freelance: "Фриланс",
+                    }[formData.employmentType]}
                   </Typography>
                 </Box>
 
@@ -540,8 +564,7 @@ export default function AddReviewPage() {
           {isEditing ? "Редактирование отзыва" : "Добавление отзыва"}
         </Typography>
         <Typography variant="body1" className={styles.subtitle}>
-          Ваш отзыв поможет другим соискателям принять осознанное решение о
-          трудоустройстве
+          Ваш отзыв поможет другим соискателям принять осознанное решение о трудоустройстве
         </Typography>
       </Box>
 

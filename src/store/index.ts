@@ -1,38 +1,47 @@
-// src/store/index.ts
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../features/auth/authSlice';
 
-// Safely access localStorage
 const getInitialAuthState = () => {
-  if (typeof window === 'undefined') {
-    return {
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-      verificationRequired: false,
-      verificationEmail: null,
-    };
-  }
-  
-  return {
+
+  const baseState = {
     user: null,
-    accessToken: localStorage.getItem('accessToken'),
-    refreshToken: localStorage.getItem('refreshToken'),
-    isAuthenticated: !!localStorage.getItem('accessToken'),
+    accessToken: null,
+    refreshToken: null,
+    isAuthenticated: false,
     isLoading: false,
     error: null,
     verificationRequired: false,
     verificationEmail: null,
   };
+
+  if (typeof window === 'undefined') {
+    return baseState;
+  }
+  
+ 
+
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+  
+    return {
+      ...baseState,
+      accessToken,
+      refreshToken,
+      isAuthenticated: !!accessToken,
+    };
+  } catch (e) {
+    // В случае ошибки доступа к localStorage возвращаем базовое состояние
+    console.warn('Could not access localStorage', e);
+    return baseState;
+  }
 };
+
+
 
 const store = configureStore({
   reducer: {
     auth: authReducer,
-    // Add other reducers as needed
   },
   preloadedState: {
     auth: getInitialAuthState(),
@@ -40,7 +49,6 @@ const store = configureStore({
   devTools: process.env.NODE_ENV !== 'production',
 });
 
-// Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 

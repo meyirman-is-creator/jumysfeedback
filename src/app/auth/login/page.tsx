@@ -17,11 +17,12 @@ import {
 import { AccountCircle, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import styles from "./LoginPage.module.scss";
-import { useAuth } from "@/hooks/useAuth";
+import { useLogin } from "@/hooks/useAuthQuery";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading, error, clearAuthError } = useAuth();
+  const { mutate: login, isLoading, error: loginError, isSuccess } = useLogin();
 
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -30,19 +31,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [rememberMe, setRememberMe] = React.useState(false);
 
-  // Redirect if already authenticated
+  // Если логин успешен, перенаправляем на главную
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isSuccess) {
       router.push("/");
     }
-  }, [isAuthenticated, router]);
-
-  // Clear errors when component unmounts
-  useEffect(() => {
-    return () => {
-      clearAuthError();
-    };
-  }, [clearAuthError]);
+  }, [isSuccess, router]);
 
   const validateForm = () => {
     let valid = true;
@@ -69,8 +63,17 @@ export default function LoginPage() {
 
     if (!validateForm()) return;
 
-    // Handle login logic
-    await login(username, password);
+    // Используем хук для логина
+    login({ username, password });
+  };
+
+  // Обработчики для OAuth
+  const handleGoogleSignIn = () => {
+    signIn('google', { callbackUrl: '/' });
+  };
+
+  const handleLinkedInSignIn = () => {
+    signIn('linkedin', { callbackUrl: '/' });
   };
 
   return (
@@ -82,13 +85,12 @@ export default function LoginPage() {
         Customer Login
       </Typography>
 
-      {error && (
+      {loginError && (
         <Alert 
           severity="error" 
           sx={{ mb: 2 }}
-          onClose={clearAuthError}
         >
-          {typeof error === 'string' ? error : 'Invalid login credentials'}
+          {typeof loginError === 'string' ? loginError : 'Invalid login credentials'}
         </Alert>
       )}
 
@@ -98,7 +100,7 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
       >
         <TextField
-          label="Username"
+          label="Email"
           variant="outlined"
           fullWidth
           required
@@ -111,7 +113,7 @@ export default function LoginPage() {
             }
           }}
           error={usernameError}
-          helperText={usernameError ? "Username is required" : ""}
+          helperText={usernameError ? "Email is required" : ""}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -205,7 +207,29 @@ export default function LoginPage() {
             Forgot Password?
           </Typography>
         </Box>
+
+        {/* Добавляем OAuth кнопки */}
+        <Typography align="center" variant="body2" sx={{ mt: 2, mb: 1 }}>
+          Or login with
+        </Typography>
+        
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          onClick={handleGoogleSignIn} 
+          sx={{ mb: 1 }}
+        >
+          Login with Google
+        </Button>
+        
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          onClick={handleLinkedInSignIn}
+        >
+          Login with LinkedIn
+        </Button>
       </Box>
     </Container>
   );
-
+}

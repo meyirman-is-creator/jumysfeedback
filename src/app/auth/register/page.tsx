@@ -22,11 +22,12 @@ import {
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import styles from "./RegisterPage.module.scss";
-import { useAuth } from "@/hooks/useAuth";
+import { useRegister } from "@/hooks/useAuthQuery";
+import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isAuthenticated, isLoading, error, clearAuthError } = useAuth();
+  const { mutate: register, isLoading, error: registerError, isSuccess } = useRegister();
 
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
@@ -43,19 +44,12 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
-  // Redirect if already authenticated
+  // Если регистрация успешна, перенаправляем на страницу подтверждения email
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/");
+    if (isSuccess) {
+      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     }
-  }, [isAuthenticated, router]);
-
-  // Clear errors when component unmounts
-  useEffect(() => {
-    return () => {
-      clearAuthError();
-    };
-  }, [clearAuthError]);
+  }, [isSuccess, router, email]);
 
   const validateForm = () => {
     let isValid = true;
@@ -76,7 +70,7 @@ export default function RegisterPage() {
       setLastNameError("");
     }
 
-    // Validation for email
+    // Validation for email - используем формат RFC5322
     if (email.trim() === "") {
       setEmailError("Email is required");
       isValid = false;
@@ -87,18 +81,15 @@ export default function RegisterPage() {
       setEmailError("");
     }
 
-    // Validation for password
+    // Validation for password - минимум 8 символов, одна цифра и заглавная буква
     if (password === "") {
       setPasswordError("Password is required");
       isValid = false;
-    } else if (password.length < 8 || password.length > 20) {
-      setPasswordError("Password must be between 8 and 20 characters");
+    } else if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters long");
       isValid = false;
     } else if (!/[A-Z]/.test(password)) {
       setPasswordError("Password must contain at least one uppercase letter");
-      isValid = false;
-    } else if (!/[a-z]/.test(password)) {
-      setPasswordError("Password must contain at least one lowercase letter");
       isValid = false;
     } else if (!/[0-9]/.test(password)) {
       setPasswordError("Password must contain at least one digit");
@@ -107,7 +98,7 @@ export default function RegisterPage() {
       setPasswordError("");
     }
 
-    // Validation for confirm password
+    // Validation for confirm password - должен совпадать с password
     if (confirmPassword === "") {
       setConfirmPasswordError("Please confirm your password");
       isValid = false;
@@ -126,13 +117,22 @@ export default function RegisterPage() {
 
     if (!validateForm()) return;
 
-    // Registration logic
-    await register({
+    // Вызываем хук регистрации
+    register({
       first_name: firstName,
       last_name: lastName,
       email: email,
       password: password,
     });
+  };
+
+  // Обработчики для OAuth
+  const handleGoogleSignIn = () => {
+    signIn('google', { callbackUrl: '/' });
+  };
+
+  const handleLinkedInSignIn = () => {
+    signIn('linkedin', { callbackUrl: '/' });
   };
 
   return (
@@ -144,13 +144,12 @@ export default function RegisterPage() {
         Customer Registration
       </Typography>
 
-      {error && (
+      {registerError && (
         <Alert 
           severity="error" 
           sx={{ mb: 2 }}
-          onClose={clearAuthError}
         >
-          {typeof error === 'string' ? error : 'Registration failed. Please try again.'}
+          {typeof registerError === 'string' ? registerError : 'Registration failed. Please try again.'}
         </Alert>
       )}
 
@@ -324,6 +323,28 @@ export default function RegisterPage() {
           disabled={isLoading}
         >
           Sign In
+        </Button>
+
+        {/* Добавляем OAuth кнопки */}
+        <Typography align="center" variant="body2" sx={{ mt: 2, mb: 1 }}>
+          Or sign up with
+        </Typography>
+        
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          onClick={handleGoogleSignIn} 
+          sx={{ mb: 1 }}
+        >
+          Sign up with Google
+        </Button>
+        
+        <Button 
+          variant="outlined" 
+          fullWidth 
+          onClick={handleLinkedInSignIn}
+        >
+          Sign up with LinkedIn
         </Button>
       </Box>
     </Container>

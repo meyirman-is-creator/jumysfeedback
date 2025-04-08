@@ -1,181 +1,43 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import {
   Button,
   Typography,
   Container,
   Box,
-  TextField,
-  Alert,
   CircularProgress,
   Paper,
+  Alert,
 } from "@mui/material";
-import { CheckCircleOutline, Email } from "@mui/icons-material";
+import { CheckCircleOutline } from "@mui/icons-material";
 import styles from "./VerifyEmailPage.module.scss";
+import { useVerifyEmail } from "@/hooks/useAuthQuery";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
-  const directToken = searchParams.get("token"); // If user comes directly from email link
+  const token = searchParams.get("token");
+  const email = searchParams.get("email");
   
-  const [token, setToken] = useState(directToken || "");
-  const [isVerifying, setIsVerifying] = useState(!!directToken);
+  const { mutate: verifyEmail, isLoading, isSuccess, error: verifyError } = useVerifyEmail();
   const [verified, setVerified] = useState(false);
-  const [error, setError] = useState("");
-  const [remainingTime, setRemainingTime] = useState(60);
-  const [canResend, setCanResend] = useState(false);
   
-  // For the 6-digit code entry
-  const [verificationCode, setVerificationCode] = useState<string[]>(Array(6).fill(""));
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  // Initialize refs array
+  // Если токен есть в URL, автоматически верифицируем
   useEffect(() => {
-    inputRefs.current = inputRefs.current.slice(0, 6);
-  }, []);
-
-  // Handle direct token verification
-  useEffect(() => {
-    if (directToken) {
-      verifyToken(directToken);
-    }
-  }, [directToken]);
-
-  // Handle countdown timer for resend
-  useEffect(() => {
-    if (!canResend && remainingTime > 0) {
-      const timer = setTimeout(() => {
-        setRemainingTime(prevTime => prevTime - 1);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    } else if (remainingTime === 0) {
-      setCanResend(true);
-    }
-  }, [remainingTime, canResend]);
-
-  const handleCodeChange = (index: number, value: string) => {
-    // Only allow digits
-    if (value && !/^\d+$/.test(value)) return;
-    
-    const newCode = [...verificationCode];
-    
-    // If pasting a full code
-    if (value.length > 1) {
-      const digits = value.split("").slice(0, 6);
-      const newFullCode = [...verificationCode];
-      
-      digits.forEach((digit, idx) => {
-        if (idx < 6) {
-          newFullCode[idx] = digit;
+    if (token) {
+      verifyEmail(token, {
+        onSuccess: () => {
+          setVerified(true);
+          // Редирект на логин после 3 секунд
+          setTimeout(() => {
+            router.push('/auth/login');
+          }, 3000);
         }
       });
-      
-      setVerificationCode(newFullCode);
-      
-      // Focus on the appropriate input
-      if (digits.length < 6 && inputRefs.current[digits.length]) {
-        inputRefs.current[digits.length]?.focus();
-      }
-      return;
     }
-    
-    // Handle single digit input
-    newCode[index] = value;
-    setVerificationCode(newCode);
-    
-    // Auto-focus next input
-    if (value !== "" && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Move to previous input on backspace if current input is empty
-    if (e.key === "Backspace" && index > 0 && verificationCode[index] === "") {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const verifyToken = async (tokenValue: string) => {
-    setIsVerifying(true);
-    setError("");
-    
-    try {
-      const response = await fetch('/api/auth/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: tokenValue }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Email verification failed');
-      }
-      
-      // Success
-      setVerified(true);
-      
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Verification error:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred during verification');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleVerify = () => {
-    const codeString = verificationCode.join("");
-    
-    if (codeString.length !== 6) {
-      setError("Please enter the complete 6-digit code");
-      return;
-    }
-    
-    verifyToken(codeString);
-  };
-
-  const handleResendCode = async () => {
-    if (!canResend) return;
-    
-    setCanResend(false);
-    setRemainingTime(60);
-    setError("");
-    
-    try {
-      // Call API to resend verification code
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend verification code');
-      }
-      
-    } catch (error) {
-      console.error('Resend error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to resend verification code');
-      setCanResend(true);
-    }
-  };
+  }, [token, verifyEmail, router]);
 
   return (
     <Container maxWidth="sm" className={styles.container}>
@@ -187,7 +49,7 @@ export default function VerifyEmailPage() {
             </Typography>
           </Box>
 
-          {verified ? (
+          {verified || isSuccess ? (
             <Box className={styles.successContainer}>
               <CheckCircleOutline className={styles.successIcon} />
               
@@ -200,16 +62,16 @@ export default function VerifyEmailPage() {
               </Typography>
               
               <Button
-                component={Link}
-                href="/auth/login"
                 fullWidth
                 variant="contained"
                 className={styles.loginButton}
+                onClick={() => router.push('/auth/login')}
               >
                 Go to Login
               </Button>
             </Box>
-          ) : isVerifying ? (
+          
+          ) : isLoading ? (
             <Box className={styles.loadingContainer}>
               <CircularProgress size={60} className={styles.loader} />
               <Typography variant="h6" className={styles.loadingText}>
@@ -218,73 +80,36 @@ export default function VerifyEmailPage() {
             </Box>
           ) : (
             <>
-              <Box className={styles.emailIconContainer}>
-                <Email className={styles.emailIcon} />
-              </Box>
-              
+              {/* Отображаем информацию о необходимости подтвердить email */}
               <Typography variant="h5" className={styles.title}>
-                Verify Your Email
+                Please Verify Your Email
               </Typography>
               
               <Typography variant="body1" className={styles.subtitle}>
-                We've sent a verification code to
+                We've sent a verification link to
                 <Box component="span" fontWeight="bold"> {email}</Box>
               </Typography>
               
-              {error && (
+              {verifyError && (
                 <Alert severity="error" className={styles.alert}>
-                  {error}
+                  {typeof verifyError === 'string' ? verifyError : 'Verification failed. Please try again.'}
                 </Alert>
               )}
               
-              <Box className={styles.codeContainer}>
-                {verificationCode.map((digit, index) => (
-                  <TextField
-                    key={index}
-                    inputRef={(el) => (inputRefs.current[index] = el)}
-                    value={digit}
-                    onChange={(e) => handleCodeChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    variant="outlined"
-                    className={styles.codeInput}
-                    inputProps={{
-                      maxLength: 1,
-                      className: styles.codeInputField,
-                    }}
-                    autoFocus={index === 0}
-                    onFocus={(e) => e.target.select()}
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const pasteData = e.clipboardData.getData('text');
-                      handleCodeChange(index, pasteData);
-                    }}
-                  />
-                ))}
-              </Box>
+              <Typography variant="body2" sx={{ mt: 2, mb: 2 }}>
+                Please check your email and click on the verification link to activate your account.
+                If you don't see the email, please check your spam folder.
+              </Typography>
               
               <Box className={styles.actions}>
                 <Button
                   variant="contained"
                   fullWidth
-                  onClick={handleVerify}
+                  onClick={() => router.push('/auth/login')}
                   className={styles.verifyButton}
-                  disabled={verificationCode.some(digit => digit === '')}
                 >
-                  Verify Email
+                  Back to Login
                 </Button>
-                
-                <Box className={styles.resendContainer}>
-                  <Typography variant="body2" className={styles.resendText}>
-                    Didn't receive the code?
-                  </Typography>
-                  <Button
-                    onClick={handleResendCode}
-                    disabled={!canResend}
-                    className={styles.resendButton}
-                  >
-                    {canResend ? "Resend Code" : `Resend code in ${remainingTime}s`}
-                  </Button>
-                </Box>
               </Box>
             </>
           )}
@@ -292,4 +117,4 @@ export default function VerifyEmailPage() {
       </Paper>
     </Container>
   );
-}
+  }

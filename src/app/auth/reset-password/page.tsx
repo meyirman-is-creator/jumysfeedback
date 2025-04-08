@@ -16,9 +16,9 @@ import {
 import { Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./ResetPasswordPage.module.scss";
-import { authAPI } from "@/services/apiClient";
+import { useResetPassword } from "@/hooks/useAuthQuery";
 
-// Password strength calculation
+// Функции для оценки силы пароля (сохраняем существующие функции)
 const calculatePasswordStrength = (password: string): number => {
   let strength = 0;
   
@@ -53,20 +53,23 @@ export default function ResetPasswordPage() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  
   const [passwordStrength, setPasswordStrength] = useState(0);
   
-  // Redirect if no token is provided
+  const { 
+    mutate: resetPassword, 
+    isLoading, 
+    error: apiError, 
+    isSuccess 
+  } = useResetPassword();
+
+  // Редирект, если нет токена в URL
   useEffect(() => {
     if (!token) {
       router.push("/auth/login");
     }
   }, [token, router]);
   
-  // Update password strength when password changes
+  // Обновляем силу пароля при его изменении
   useEffect(() => {
     if (password) {
       setPasswordStrength(calculatePasswordStrength(password));
@@ -75,15 +78,30 @@ export default function ResetPasswordPage() {
     }
   }, [password]);
   
+  // Редирект после успешного сброса пароля
+  useEffect(() => {
+    if (isSuccess) {
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 3000);
+    }
+  }, [isSuccess, router]);
+  
   const validateForm = () => {
     let isValid = true;
     
-    // Validation for password
+    // Проверка пароля
     if (password === "") {
       setPasswordError("Password is required");
       isValid = false;
     } else if (password.length < 8) {
       setPasswordError("Password must be at least 8 characters");
+      isValid = false;
+    } else if (!/[A-Z]/.test(password)) {
+      setPasswordError("Password must contain at least one uppercase letter");
+      isValid = false;
+    } else if (!/[0-9]/.test(password)) {
+      setPasswordError("Password must contain at least one digit");
       isValid = false;
     } else if (passwordStrength < 3) {
       setPasswordError("Password is too weak");
@@ -92,7 +110,7 @@ export default function ResetPasswordPage() {
       setPasswordError("");
     }
     
-    // Validation for confirm password
+    // Проверка подтверждения пароля
     if (confirmPassword === "") {
       setConfirmPasswordError("Please confirm your password");
       isValid = false;
@@ -109,29 +127,13 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm() || !token) return;
     
-    setIsLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
-    
-    try {
-      if (!token) {
-        throw new Error("Reset token is missing");
-      }
-      
-      await authAPI.resetPassword(token, password);
-      setSuccessMessage("Your password has been reset successfully. You will be redirected to the login page.");
-      
-      // Redirect to login page after a delay
-      setTimeout(() => {
-        router.push("/auth/login");
-      }, 3000);
-    } catch (error) {
-      setErrorMessage("Failed to reset password. The token may be invalid or expired.");
-    } finally {
-      setIsLoading(false);
-    }
+    // Сбрасываем пароль
+    resetPassword({
+      token,
+      new_password: password
+    });
   };
   
   return (
@@ -143,22 +145,21 @@ export default function ResetPasswordPage() {
         Reset Password
       </Typography>
       
-      {errorMessage && (
+      {apiError && (
         <Alert 
           severity="error" 
           sx={{ mb: 2 }}
-          onClose={() => setErrorMessage("")}
         >
-          {errorMessage}
+          {typeof apiError === 'string' ? apiError : 'Failed to reset password. The token may be invalid or expired.'}
         </Alert>
       )}
       
-      {successMessage && (
+      {isSuccess && (
         <Alert 
           severity="success" 
           sx={{ mb: 2 }}
         >
-          {successMessage}
+          Your password has been reset successfully. Redirecting to login page...
         </Alert>
       )}
       
@@ -204,7 +205,7 @@ export default function ResetPasswordPage() {
               </InputAdornment>
             ),
           }}
-          disabled={isLoading}
+          disabled={isLoading || isSuccess}
         />
         
         {password && (
@@ -264,14 +265,14 @@ export default function ResetPasswordPage() {
               </InputAdornment>
             ),
           }}
-          disabled={isLoading}
+          disabled={isLoading || isSuccess}
         />
         
         <Button
           variant="contained"
           type="submit"
           className={styles["reset-password-page__submit"]}
-          disabled={isLoading}
+          disabled={isLoading || isSuccess}
         >
           {isLoading ? <CircularProgress size={24} color="inherit" /> : "Reset Password"}
         </Button>

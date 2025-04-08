@@ -24,50 +24,25 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for refreshing token or handling errors
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    
-    // If error is 401 (unauthorized) and not already retrying
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+apiClient.interceptors.request.use(
+  async (config) => {
+    // Если метод POST, PUT, DELETE, PATCH - добавляем CSRF-токен
+    if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '')) {
+      // Получаем CSRF-токен из cookie
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrfToken='))
+        ?.split('=')[1];
       
-      try {
-        // Try to refresh token
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          // No refresh token, user must login again
-          return Promise.reject(error);
-        }
-        
-        const response = await axios.post(`${BASE_URL}/auth/refresh`, {
-          refresh_token: refreshToken
-        });
-        
-        const { access_token, refresh_token } = response.data;
-        
-        // Update tokens in localStorage
-        localStorage.setItem('accessToken', access_token);
-        localStorage.setItem('refreshToken', refresh_token);
-        
-        // Update Authorization header
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-        
-        // Retry original request
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        // Refresh token failed, user must login again
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/auth/login';
-        return Promise.reject(refreshError);
+      // Добавляем токен в заголовки запроса
+      if (csrfToken) {
+        config.headers['X-CSRF-Token'] = csrfToken;
       }
     }
     
-    return Promise.reject(error);
-  }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 // Authentication API
@@ -122,6 +97,23 @@ export const authAPI = {
   
   getUserProfile: (): Promise<AxiosResponse> => {
     return apiClient.get('/users/me');
+  },
+
+  googleAuthRedirect: () => {
+    window.location.href = `${BASE_URL}/oauth/google/login`;
+  },
+  
+  // Обмен кода Google OAuth на токены IWork
+  exchangeGoogleAuthCode: async (code: string): Promise<{ access_token: string; refresh_token: string }> => {
+    const response = await apiClient.post('/oauth/google/token', { code });
+    
+    // Сохраняем полученные токены
+    if (response.data.access_token && response.data.refresh_token) {
+      localStorage.setItem('accessToken', response.data.access_token);
+      localStorage.setItem('refreshToken', response.data.refresh_token);
+    }
+    
+    return response.data;
   },
 };
 

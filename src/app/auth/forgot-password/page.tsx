@@ -14,15 +14,20 @@ import {
 import { Email } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import styles from "./ForgotPasswordPage.module.scss";
-import { authAPI } from "@/services/apiClient";
+import { useForgotPassword } from "@/hooks/useAuthQuery";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  
+  const { 
+    mutate: forgotPassword, 
+    isLoading, 
+    error: apiError, 
+    isSuccess 
+  } = useForgotPassword();
 
   const validateEmail = () => {
     if (!email.trim()) {
@@ -41,19 +46,13 @@ export default function ForgotPasswordPage() {
     
     if (!validateEmail()) return;
     
-    setIsLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
-    
-    try {
-      await authAPI.forgotPassword(email);
-      setSuccessMessage("Password reset instructions have been sent to your email. Please check your inbox.");
-    } catch (error) {
-      // Don't reveal whether the email exists in the system for security reasons
-      setSuccessMessage("If your email is registered, you will receive password reset instructions. Please check your inbox.");
-    } finally {
-      setIsLoading(false);
-    }
+    // Отправляем запрос на сброс пароля
+    forgotPassword(email, {
+      onSuccess: () => {
+        // Всегда показываем успешное сообщение, даже если email не существует (для безопасности)
+        setSuccessMessage("If your email is registered, you will receive password reset instructions. Please check your inbox.");
+      }
+    });
   };
 
   return (
@@ -65,13 +64,13 @@ export default function ForgotPasswordPage() {
         Forgot Password
       </Typography>
 
-      {errorMessage && (
+      {apiError && (
         <Alert 
           severity="error" 
           sx={{ mb: 2 }}
-          onClose={() => setErrorMessage("")}
+          onClose={() => {}}
         >
-          {errorMessage}
+          {typeof apiError === 'string' ? apiError : 'An error occurred. Please try again later.'}
         </Alert>
       )}
 
@@ -115,14 +114,14 @@ export default function ForgotPasswordPage() {
               </InputAdornment>
             ),
           }}
-          disabled={isLoading}
+          disabled={isLoading || isSuccess}
         />
 
         <Button
           variant="contained"
           type="submit"
           className={styles["forgot-password-page__submit"]}
-          disabled={isLoading}
+          disabled={isLoading || isSuccess}
         >
           {isLoading ? <CircularProgress size={24} color="inherit" /> : "Send Reset Instructions"}
         </Button>

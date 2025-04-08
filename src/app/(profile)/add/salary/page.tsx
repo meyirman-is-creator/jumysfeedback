@@ -1,4 +1,3 @@
-// src/app/profile/add/salary/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -25,27 +24,51 @@ import {
   Divider,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight, Save, X } from "lucide-react";
+import { SelectChangeEvent } from "@mui/material/Select";
 import styles from "./AddSalaryPage.module.scss";
-import './AddSalaryPage.scss'
+import "./AddSalaryPage.scss";
+
+interface SalaryFormData {
+  companyName: string;
+  position: string;
+  department: string;
+  employmentStatus: "current" | "former";
+  employmentType: "full-time" | "part-time" | "contract" | "internship" | "freelance";
+  salary: string;
+  currency: "USD" | "EUR" | "KZT" | "RUB";
+  payPeriod: "monthly" | "yearly";
+  bonuses: string;
+  stockOptions: string;
+  experience: "0-1" | "1-3" | "3-5" | "5-10" | "10+";
+  location: string;
+  anonymous: boolean;
+  confirmTruthful: boolean;
+}
+
 export default function AddSalaryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEditing = searchParams.has("id");
-  
-  // State for stepper
+
+  // State для stepper'а
   const [activeStep, setActiveStep] = useState(0);
-  const steps = ["Компания и должность", "Информация о зарплате", "Дополнительно", "Подтверждение"];
-  
-  // Form state
-  const [formData, setFormData] = useState({
+  const steps = [
+    "Компания и должность",
+    "Информация о зарплате",
+    "Дополнительно",
+    "Подтверждение",
+  ];
+
+  // Состояние формы
+  const [formData, setFormData] = useState<SalaryFormData>({
     companyName: "",
     position: "",
     department: "",
-    employmentStatus: "current", // 'current' or 'former'
-    employmentType: "full-time", // 'full-time', 'part-time', 'contract', etc.
+    employmentStatus: "current", // 'current' или 'former'
+    employmentType: "full-time", // 'full-time', 'part-time', 'contract', 'internship', 'freelance'
     salary: "",
     currency: "USD",
-    payPeriod: "monthly", // 'monthly', 'yearly'
+    payPeriod: "monthly", // 'monthly' или 'yearly'
     bonuses: "",
     stockOptions: "",
     experience: "1-3", // '0-1', '1-3', '3-5', '5-10', '10+'
@@ -53,13 +76,13 @@ export default function AddSalaryPage() {
     anonymous: true,
     confirmTruthful: false,
   });
-  
-  // Form validation
+
+  // Состояние ошибок формы
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {};
-    
+
     switch (step) {
       case 0:
         if (!formData.companyName.trim()) {
@@ -84,27 +107,33 @@ export default function AddSalaryPage() {
           newErrors.confirmTruthful = "Необходимо подтвердить достоверность информации";
         }
         break;
+      default:
+        break;
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleNext = () => {
     if (validateStep(activeStep)) {
       setActiveStep((prevStep) => prevStep + 1);
     }
   };
-  
+
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+
+  // Универсальный обработчик для текстовых полей и Select
+  const handleChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | SelectChangeEvent<string>
+  ) => {
     const { name, value } = e.target;
     if (name) {
       setFormData((prev) => ({ ...prev, [name]: value }));
-      
       if (errors[name]) {
         setErrors((prev) => {
           const newErrors = { ...prev };
@@ -114,12 +143,10 @@ export default function AddSalaryPage() {
       }
     }
   };
-  
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: checked }));
-    
-    // Clear error when field is changed
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -128,20 +155,19 @@ export default function AddSalaryPage() {
       });
     }
   };
-  
+
   const handleSubmit = () => {
     if (validateStep(activeStep)) {
-      // Handle submission logic here
+      // Логика отправки данных
       console.log("Form submitted:", formData);
       router.push("/salaries");
     }
   };
-  
+
   const handleCancel = () => {
     router.back();
   };
-  
-  // Render steps
+
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
@@ -150,7 +176,7 @@ export default function AddSalaryPage() {
             <Typography variant="h6" className={styles.stepTitle}>
               Информация о компании и должности
             </Typography>
-            
+
             <FormControl fullWidth className={styles.formField}>
               <InputLabel id="company-label">Компания *</InputLabel>
               <Select
@@ -170,7 +196,7 @@ export default function AddSalaryPage() {
                 <FormHelperText error>{errors.companyName}</FormHelperText>
               )}
             </FormControl>
-            
+
             <TextField
               label="Должность *"
               name="position"
@@ -181,7 +207,7 @@ export default function AddSalaryPage() {
               error={!!errors.position}
               helperText={errors.position}
             />
-            
+
             <TextField
               label="Отдел/Департамент"
               name="department"
@@ -191,7 +217,7 @@ export default function AddSalaryPage() {
               className={styles.formField}
               helperText="Необязательно"
             />
-            
+
             <FormControl component="fieldset" className={styles.formField}>
               <Typography variant="subtitle2" className={styles.fieldLabel}>
                 Статус работы *
@@ -214,7 +240,7 @@ export default function AddSalaryPage() {
                 />
               </RadioGroup>
             </FormControl>
-            
+
             <FormControl fullWidth className={styles.formField}>
               <InputLabel id="employment-type-label">Тип занятости</InputLabel>
               <Select
@@ -239,7 +265,7 @@ export default function AddSalaryPage() {
             <Typography variant="h6" className={styles.stepTitle}>
               Данные о зарплате
             </Typography>
-            
+
             <Box className={styles.salaryGroup}>
               <TextField
                 label="Базовая зарплата *"
@@ -253,14 +279,20 @@ export default function AddSalaryPage() {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      {formData.currency === "USD" ? "$" : 
-                       formData.currency === "EUR" ? "€" : 
-                       formData.currency === "KZT" ? "₸" : ""}
+                      {formData.currency === "USD"
+                        ? "$"
+                        : formData.currency === "EUR"
+                        ? "€"
+                        : formData.currency === "KZT"
+                        ? "₸"
+                        : formData.currency === "RUB"
+                        ? "₽"
+                        : ""}
                     </InputAdornment>
                   ),
                 }}
               />
-              
+
               <FormControl className={styles.currencyField}>
                 <InputLabel id="currency-label">Валюта *</InputLabel>
                 <Select
@@ -280,7 +312,7 @@ export default function AddSalaryPage() {
                   <FormHelperText error>{errors.currency}</FormHelperText>
                 )}
               </FormControl>
-              
+
               <FormControl className={styles.periodField}>
                 <InputLabel id="period-label">Период</InputLabel>
                 <Select
@@ -295,13 +327,13 @@ export default function AddSalaryPage() {
                 </Select>
               </FormControl>
             </Box>
-            
+
             <Divider className={styles.divider} />
-            
+
             <Typography variant="subtitle1" className={styles.sectionTitle}>
               Дополнительные выплаты
             </Typography>
-            
+
             <TextField
               label="Бонусы и премии"
               name="bonuses"
@@ -312,7 +344,7 @@ export default function AddSalaryPage() {
               placeholder="Например: годовой бонус 15% от зарплаты"
               helperText="Необязательно"
             />
-            
+
             <TextField
               label="Опционы и акции"
               name="stockOptions"
@@ -331,7 +363,7 @@ export default function AddSalaryPage() {
             <Typography variant="h6" className={styles.stepTitle}>
               Дополнительная информация
             </Typography>
-            
+
             <FormControl fullWidth className={styles.formField}>
               <InputLabel id="experience-label">Опыт работы</InputLabel>
               <Select
@@ -348,7 +380,7 @@ export default function AddSalaryPage() {
                 <MenuItem value="10+">Более 10 лет</MenuItem>
               </Select>
             </FormControl>
-            
+
             <TextField
               label="Местоположение"
               name="location"
@@ -367,37 +399,42 @@ export default function AddSalaryPage() {
             <Typography variant="h6" className={styles.stepTitle}>
               Подтверждение и отправка
             </Typography>
-            
+
             <Paper className={styles.salarySummary}>
               <Typography variant="subtitle1" className={styles.summaryTitle}>
                 Предварительный просмотр
               </Typography>
-              
+
               <Box className={styles.summaryContent}>
                 <Box className={styles.summaryHeader}>
-                  <Typography variant="h6">
-                    {formData.position}
-                  </Typography>
+                  <Typography variant="h6">{formData.position}</Typography>
                   <Typography variant="subtitle1" className={styles.summaryCompany}>
                     {formData.companyName}
                   </Typography>
                 </Box>
-                
+
                 <Divider className={styles.summaryDivider} />
-                
+
                 <Box className={styles.summaryGrid}>
                   <Box className={styles.summaryItem}>
                     <Typography variant="body2" className={styles.summaryLabel}>
                       Базовая зарплата:
                     </Typography>
                     <Typography variant="body1" className={styles.summaryValue}>
-                      {formData.currency === "USD" ? "$" : 
-                       formData.currency === "EUR" ? "€" : 
-                       formData.currency === "KZT" ? "₸" : ""}
-                      {formData.salary} {formData.payPeriod === "monthly" ? "в месяц" : "в год"}
+                      {formData.currency === "USD"
+                        ? "$"
+                        : formData.currency === "EUR"
+                        ? "€"
+                        : formData.currency === "KZT"
+                        ? "₸"
+                        : formData.currency === "RUB"
+                        ? "₽"
+                        : ""}
+                      {formData.salary}{" "}
+                      {formData.payPeriod === "monthly" ? "в месяц" : "в год"}
                     </Typography>
                   </Box>
-                  
+
                   {formData.bonuses && (
                     <Box className={styles.summaryItem}>
                       <Typography variant="body2" className={styles.summaryLabel}>
@@ -408,7 +445,7 @@ export default function AddSalaryPage() {
                       </Typography>
                     </Box>
                   )}
-                  
+
                   {formData.stockOptions && (
                     <Box className={styles.summaryItem}>
                       <Typography variant="body2" className={styles.summaryLabel}>
@@ -419,24 +456,22 @@ export default function AddSalaryPage() {
                       </Typography>
                     </Box>
                   )}
-                  
+
                   <Box className={styles.summaryItem}>
                     <Typography variant="body2" className={styles.summaryLabel}>
                       Опыт работы:
                     </Typography>
                     <Typography variant="body1" className={styles.summaryValue}>
-                      {
-                        {
-                          '0-1': 'Менее 1 года',
-                          '1-3': '1-3 года',
-                          '3-5': '3-5 лет',
-                          '5-10': '5-10 лет',
-                          '10+': 'Более 10 лет',
-                        }[formData.experience]
-                      }
+                      {{
+                        "0-1": "Менее 1 года",
+                        "1-3": "1-3 года",
+                        "3-5": "3-5 лет",
+                        "5-10": "5-10 лет",
+                        "10+": "Более 10 лет",
+                      }[formData.experience]}
                     </Typography>
                   </Box>
-                  
+
                   {formData.location && (
                     <Box className={styles.summaryItem}>
                       <Typography variant="body2" className={styles.summaryLabel}>
@@ -447,27 +482,29 @@ export default function AddSalaryPage() {
                       </Typography>
                     </Box>
                   )}
-                  
+
                   <Box className={styles.summaryItem}>
                     <Typography variant="body2" className={styles.summaryLabel}>
                       Статус:
                     </Typography>
                     <Typography variant="body1" className={styles.summaryValue}>
-                      {formData.employmentStatus === 'current' ? 'Текущий сотрудник' : 'Бывший сотрудник'} | {
-                        {
-                          'full-time': 'Полная занятость',
-                          'part-time': 'Частичная занятость',
-                          'contract': 'Контракт',
-                          'internship': 'Стажировка',
-                          'freelance': 'Фриланс',
-                        }[formData.employmentType]
-                      }
+                      {formData.employmentStatus === "current"
+                        ? "Текущий сотрудник"
+                        : "Бывший сотрудник"}{" "}
+                      |{" "}
+                      {{
+                        "full-time": "Полная занятость",
+                        "part-time": "Частичная занятость",
+                        contract: "Контракт",
+                        internship: "Стажировка",
+                        freelance: "Фриланс",
+                      }[formData.employmentType]}
                     </Typography>
                   </Box>
                 </Box>
               </Box>
             </Paper>
-            
+
             <Box className={styles.confirmationOptions}>
               <FormControlLabel
                 control={
@@ -479,7 +516,7 @@ export default function AddSalaryPage() {
                 }
                 label="Оставить информацию анонимно"
               />
-              
+
               <FormControlLabel
                 control={
                   <Checkbox
@@ -495,7 +532,7 @@ export default function AddSalaryPage() {
                 <FormHelperText error>{errors.confirmTruthful}</FormHelperText>
               )}
             </Box>
-            
+
             <Box className={styles.privacyNote}>
               <Typography variant="body2" color="textSecondary">
                 Ваша информация будет использована только в обобщенном виде. Мы не раскрываем личные данные пользователей.
@@ -527,20 +564,14 @@ export default function AddSalaryPage() {
             </Step>
           ))}
         </Stepper>
-        
-        <Box className={styles.formContent}>
-          {renderStepContent(activeStep)}
-        </Box>
-        
+
+        <Box className={styles.formContent}>{renderStepContent(activeStep)}</Box>
+
         <Box className={styles.formActions}>
-          <Button
-            onClick={handleCancel}
-            className={styles.cancelButton}
-            startIcon={<X size={18} />}
-          >
+          <Button onClick={handleCancel} className={styles.cancelButton} startIcon={<X size={18} />}>
             Отмена
           </Button>
-          
+
           <Box className={styles.navigationButtons}>
             <Button
               disabled={activeStep === 0}
@@ -550,21 +581,13 @@ export default function AddSalaryPage() {
             >
               Назад
             </Button>
-            
+
             {activeStep === steps.length - 1 ? (
-              <Button
-                onClick={handleSubmit}
-                className={styles.submitButton}
-                startIcon={<Save size={18} />}
-              >
+              <Button onClick={handleSubmit} className={styles.submitButton} startIcon={<Save size={18} />}>
                 {isEditing ? "Сохранить изменения" : "Отправить данные"}
               </Button>
             ) : (
-              <Button
-                onClick={handleNext}
-                className={styles.nextButton}
-                endIcon={<ChevronRight size={18} />}
-              >
+              <Button onClick={handleNext} className={styles.nextButton} endIcon={<ChevronRight size={18} />}>
                 Далее
               </Button>
             )}
