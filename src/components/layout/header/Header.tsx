@@ -1,3 +1,5 @@
+// src/components/layout/header/Header.tsx - FULL FILE WITH CHANGES
+
 "use client"; 
 
 import { AppBar, Toolbar, Typography, Box, Button, Menu, MenuItem, Avatar } from "@mui/material";
@@ -60,7 +62,7 @@ export default function Header() {
             <FaSearch className={styles.icon} /> Search
           </Link>
           
-          {/* Используем ClientOnly для условного рендеринга на клиенте */}
+          {/* CHANGE: Use ClientOnly for code that depends on isAuthenticated */}
           <ClientOnly 
             fallback={
               <span className={styles.link}>

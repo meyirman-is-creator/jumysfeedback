@@ -1,4 +1,5 @@
-// src/services/apiClient.ts
+// src/services/apiClient.ts - FULL FILE WITH CHANGES
+
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
 const BASE_URL = 'https://iwork-api.up.railway.app';
@@ -12,38 +13,42 @@ const apiClient = axios.create({
   timeout: 10000, // 10 seconds
 });
 
-// Request interceptor for adding auth token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-apiClient.interceptors.request.use(
-  async (config) => {
-    // Если метод POST, PUT, DELETE, PATCH - добавляем CSRF-токен
-    if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '')) {
-      // Получаем CSRF-токен из cookie
-      const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrfToken='))
-        ?.split('=')[1];
-      
-      // Добавляем токен в заголовки запроса
-      if (csrfToken) {
-        config.headers['X-CSRF-Token'] = csrfToken;
+// CHANGE: Only apply interceptors on client-side
+if (typeof window !== 'undefined') {
+  // Request interceptor for adding auth token
+  apiClient.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-    }
-    
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // CSRF token interceptor
+  apiClient.interceptors.request.use(
+    async (config) => {
+      // If method is POST, PUT, DELETE, PATCH - add CSRF token
+      if (['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase() || '')) {
+        // Get CSRF token from cookie
+        const csrfToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('csrfToken='))
+          ?.split('=')[1];
+        
+        // Add token to request headers
+        if (csrfToken) {
+          config.headers['X-CSRF-Token'] = csrfToken;
+        }
+      }
+      
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+}
 
 // Authentication API
 export const authAPI = {
@@ -99,16 +104,19 @@ export const authAPI = {
     return apiClient.get('/users/me');
   },
 
+  // CHANGE: Only redirect if window exists
   googleAuthRedirect: () => {
-    window.location.href = `${BASE_URL}/oauth/google/login`;
+    if (typeof window !== 'undefined') {
+      window.location.href = `${BASE_URL}/oauth/google/login`;
+    }
   },
   
-  // Обмен кода Google OAuth на токены IWork
+  // Exchange Google OAuth code for IWork tokens
   exchangeGoogleAuthCode: async (code: string): Promise<{ access_token: string; refresh_token: string }> => {
     const response = await apiClient.post('/oauth/google/token', { code });
     
-    // Сохраняем полученные токены
-    if (response.data.access_token && response.data.refresh_token) {
+    // CHANGE: Only save tokens on client
+    if (typeof window !== 'undefined' && response.data.access_token && response.data.refresh_token) {
       localStorage.setItem('accessToken', response.data.access_token);
       localStorage.setItem('refreshToken', response.data.refresh_token);
     }

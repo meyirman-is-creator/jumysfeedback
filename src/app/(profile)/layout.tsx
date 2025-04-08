@@ -1,9 +1,10 @@
+// src/app/(profile)/layout.tsx - FULL FILE WITH CHANGES
 
-"use client";
+"use client"; // CHANGE: Make sure "use client" directive is at the top
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Container,
   Box,
@@ -22,6 +23,7 @@ import {
   PlusCircle,
 } from "lucide-react";
 import styles from "./ProfileLayout.module.scss";
+import { useAuth } from "@/hooks/useAuth"; // CHANGE: Import useAuth
 
 export default function ProfileLayout({
   children,
@@ -29,7 +31,21 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter(); // CHANGE: Add router
+  const { isAuthenticated, logout } = useAuth(); // CHANGE: Use auth hook
   const isAdmin = true; // Replace with actual auth check logic
+
+  // CHANGE: Add authentication check
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isAuthenticated, router]);
+
+  // CHANGE: Don't render children if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const menuItems = [
     {
@@ -57,6 +73,12 @@ export default function ProfileLayout({
       active: pathname === "/add",
     },
   ];
+
+  // CHANGE: Add logout handler
+  const handleLogout = async () => {
+    await logout();
+    router.push("/auth/login");
+  };
 
   return (
     <Container maxWidth="lg" className={styles.profileLayout}>
@@ -96,12 +118,18 @@ export default function ProfileLayout({
             <Divider className={styles.divider} sx={{ my: 2 }} />
 
             <ListItem disablePadding>
-              <Link href="/auth/logout" className={styles.menuItem}>
+              {/* CHANGE: Replace Link with Box for logout */}
+              <Box
+                component="div"
+                className={styles.menuItem}
+                onClick={handleLogout}
+                sx={{ cursor: "pointer" }}
+              >
                 <span className={styles.menuIcon}>
                   <LogOut size={20} />
                 </span>
                 Выйти
-              </Link>
+              </Box>
             </ListItem>
           </List>
         </Box>
