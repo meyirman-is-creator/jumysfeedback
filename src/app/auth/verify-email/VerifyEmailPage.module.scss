@@ -1,0 +1,222 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    background-color: #f5f7fa;
+  }
+  
+  .paper {
+    width: 100%;
+    max-width: 480px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .formWrapper {
+    padding: 2.5rem;
+    background-color: #fff;
+  
+    @media (max-width: 600px) {
+      padding: 1.5rem;
+    }
+  }
+  
+  .logoContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .logo {
+    color: #800000;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  
+  .emailIconContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .emailIcon {
+    font-size: 3rem;
+    color: #800000;
+    background-color: rgba(128, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 50%;
+  }
+  
+  .title {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #333;
+  }
+  
+  .subtitle {
+    text-align: center;
+    color: #555;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+  
+  .alert {
+    margin-bottom: 1.5rem;
+  }
+  
+  .codeContainer {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  
+    @media (max-width: 480px) {
+      gap: 0.25rem;
+    }
+  }
+  
+  .codeInput {
+    width: 100%;
+    max-width: 60px;
+  
+    // Remove spinner from number input
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  
+    .MuiOutlinedInput-root {
+      &:hover .MuiOutlinedInput-notchedOutline {
+        border-color: #800000;
+      }
+  
+      &.Mui-focused .MuiOutlinedInput-notchedOutline {
+        border-color: #800000;
+      }
+    }
+  
+    @media (max-width: 480px) {
+      max-width: 50px;
+    }
+  }
+  
+  .codeInputField {
+    font-size: 1.5rem;
+    text-align: center;
+    padding: 0.5rem 0;
+    font-weight: 500;
+  }
+  
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .verifyButton {
+    padding: 0.75rem 0;
+    background-color: #800000;
+    font-weight: 600;
+    border-radius: 8px;
+    text-transform: none;
+    font-size: 1rem;
+  
+    &:hover {
+      background-color: #6b0000;
+    }
+  
+    &:disabled {
+      background-color: rgba(128, 0, 0, 0.7);
+    }
+  }
+  
+  .resendContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .resendText {
+    color: #666;
+  }
+  
+  .resendButton {
+    color: #800000;
+    font-weight: 500;
+    padding: 0;
+    min-width: auto;
+    text-transform: none;
+  
+    &:hover {
+      background-color: transparent;
+      text-decoration: underline;
+    }
+  
+    &:disabled {
+      color: #888;
+    }
+  }
+  
+  // Success state styles
+  .successContainer {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .successIcon {
+    font-size: 4rem;
+    color: #4caf50;
+    margin-bottom: 1rem;
+  }
+  
+  .message {
+    margin-bottom: 1.5rem;
+    color: #333;
+    line-height: 1.5;
+  }
+  
+  .loginButton {
+    background-color: #800000;
+    color: white;
+    font-weight: 600;
+    text-transform: none;
+    padding: 0.75rem 0;
+    border-radius: 8px;
+    margin-top: 1rem;
+    width: 100%;
+  
+    &:hover {
+      background-color: #6b0000;
+    }
+  }
+  
+  // Loading state styles
+  .loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem 0;
+  }
+  
+  .loader {
+    color: #800000;
+  }
+  
+  .loadingText {
+    color: #555;
+    font-weight: 500;
+  }
