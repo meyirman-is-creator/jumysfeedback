@@ -136,51 +136,81 @@ const defaultCompanyData = {
 };
 
 const CompanyTaxesPage = () => {
-  // Chart 1: Total Yearly Taxes (Bar Chart)
   const taxEntries = defaultCompanyData.tax_data.yearly_taxes;
-  const aggregatedTaxes = taxEntries.reduce((acc, tax) => {
+  
+  // Явно типизируем аккумулятор
+  const aggregatedTaxes: Record<number, number> = taxEntries.reduce((acc, tax) => {
     const year = tax.year;
-    if (!acc[year]) acc[year] = 0;
+    
+    // Инициализируем значение, если его нет
+    if (!(year in acc)) {
+      acc[year] = 0;
+    }
+    
     acc[year] += tax.amount;
     return acc;
-  }, {});
-  const taxCategories = Object.keys(aggregatedTaxes).sort();
-  const taxSeriesData = taxCategories.map(year => aggregatedTaxes[year]);
+  }, {} as Record<number, number>);
+  
+  const taxCategories = Object.keys(aggregatedTaxes)
+    .map(Number) // Преобразуем в числа
+    .sort((a, b) => a - b) // Сортируем по возрастанию
+    .map(String); // Обратно в строки для chart
+
+  const taxSeriesData = taxCategories.map(year => aggregatedTaxes[Number(year)]);
 
   const taxChartOptions = {
     chart: { id: 'tax-bar-chart' },
     xaxis: { categories: taxCategories, title: { text: 'Year' } },
     yaxis: {
-      
-      labels: { formatter: (value) => `$${(value / 1e6).toFixed(2)}M` }
+      labels: { formatter: (value: number) => `$${(value / 1e6).toFixed(2)}M` }
     },
-   
-    tooltip: { y: { formatter: (value) => `$${(value / 1e6).toFixed(2)} million` } }
+    tooltip: { 
+      y: { 
+        formatter: (value: number) => `$${(value / 1e6).toFixed(2)} million` 
+      } 
+    }
   };
   const taxSeries = [{ name: 'Total Tax', data: taxSeriesData }];
 
   // Chart 2: Average Revenue Trend (Line Chart)
   const revenueTrendEntries = defaultCompanyData.revenue_trend;
-  const aggregatedRevenueTrend = revenueTrendEntries.reduce((acc, entry) => {
-    const year = entry.year;
-    if (!acc[year]) acc[year] = { sum: 0, count: 0 };
-    acc[year].sum += entry.revenue;
-    acc[year].count += 1;
-    return acc;
-  }, {});
-  const revenueTrendCategories = Object.keys(aggregatedRevenueTrend).sort();
+  
+  // Явно типизируем аккумулятор для тренда дохода
+  const aggregatedRevenueTrend: Record<number, { sum: number; count: number }> = 
+    revenueTrendEntries.reduce((acc, entry) => {
+      const year = entry.year;
+      
+      // Инициализируем значение, если его нет
+      if (!(year in acc)) {
+        acc[year] = { sum: 0, count: 0 };
+      }
+      
+      acc[year].sum += entry.revenue;
+      acc[year].count += 1;
+      return acc;
+    }, {} as Record<number, { sum: number; count: number }>);
+  
+  const revenueTrendCategories = Object.keys(aggregatedRevenueTrend)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map(String);
+  
   const revenueTrendSeriesData = revenueTrendCategories.map(
-    year => aggregatedRevenueTrend[year].sum / aggregatedRevenueTrend[year].count
+    year => aggregatedRevenueTrend[Number(year)].sum / 
+            aggregatedRevenueTrend[Number(year)].count
   );
+
   const revenueChartOptions = {
     chart: { id: 'revenue-line-chart' },
     xaxis: { categories: revenueTrendCategories, title: { text: 'Year' } },
     yaxis: {
-      
-      labels: { formatter: (value) => `$${(value / 1e9).toFixed(2)}B` }
+      labels: { formatter: (value: number) => `$${(value / 1e9).toFixed(2)}B` }
     },
-    
-    tooltip: { y: { formatter: (value) => `$${(value / 1e9).toFixed(2)} billion` } }
+    tooltip: { 
+      y: { 
+        formatter: (value: number) => `$${(value / 1e9).toFixed(2)} billion` 
+      } 
+    }
   };
   const revenueSeries = [{ name: 'Avg Revenue', data: revenueTrendSeriesData }];
 
@@ -192,15 +222,18 @@ const CompanyTaxesPage = () => {
     chart: { id: 'industry-bar-chart' },
     xaxis: { categories: industryCategories, title: { text: 'Company' } },
     yaxis: {
-      labels: { formatter: (value) => `${value.toFixed(2)}B` }
+      labels: { formatter: (value: number) => `${value.toFixed(2)}B` }
     },
-    tooltip: { y: { formatter: (value) => `${value.toFixed(2)} billion USD` } }
+    tooltip: { 
+      y: { 
+        formatter: (value: number) => `${value.toFixed(2)} billion USD` 
+      } 
+    }
   };
   const industrySeries = [{ name: 'Market Cap', data: industrySeriesData }];
 
   return (
     <Container maxWidth="md" className={styles.container}>
-
       <div className={styles.chartSection}>
         <Typography variant="h6" className={styles.chartTitle}>
             Total Tax Data
@@ -209,8 +242,8 @@ const CompanyTaxesPage = () => {
       </div>
 
       <div className={styles.chartSection}>
-      <Typography variant="h6" className={styles.chartTitle}>
-            Total Tax Data
+        <Typography variant="h6" className={styles.chartTitle}>
+            Revenue Trend
         </Typography>
         <Chart options={revenueChartOptions} series={revenueSeries} type="line" height={350} />
       </div>

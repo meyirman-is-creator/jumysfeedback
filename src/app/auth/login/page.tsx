@@ -85,14 +85,7 @@ export default function LoginPage() {
         Customer Login
       </Typography>
 
-      {loginError && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 2 }}
-        >
-          {typeof loginError === 'string' ? loginError : 'Invalid login credentials'}
-        </Alert>
-      )}
+      
 
       <Box
         component="form"

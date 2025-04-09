@@ -113,9 +113,15 @@ export default function VerificationPage() {
   };
 
   // Handle key press for backspace
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number, 
+    e: React.KeyboardEvent<HTMLInputElement> | React.KeyboardEvent<HTMLDivElement>
+  ) => {
+    // Explicitly type cast the event
+    const event = e as React.KeyboardEvent<HTMLInputElement>;
+    
     // If backspace is pressed and current input is empty, focus to the previous input
-    if (e.key === "Backspace" && !code[index] && index > 0) {
+    if (event.key === "Backspace" && !code[index] && index > 0) {
       inputRefs[index - 1]?.current?.focus();
     }
   };

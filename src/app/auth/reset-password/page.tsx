@@ -145,14 +145,7 @@ export default function ResetPasswordPage() {
         Reset Password
       </Typography>
       
-      {apiError && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 2 }}
-        >
-          {typeof apiError === 'string' ? apiError : 'Failed to reset password. The token may be invalid or expired.'}
-        </Alert>
-      )}
+    
       
       {isSuccess && (
         <Alert 

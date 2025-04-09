@@ -64,15 +64,7 @@ export default function ForgotPasswordPage() {
         Forgot Password
       </Typography>
 
-      {apiError && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 2 }}
-          onClose={() => {}}
-        >
-          {typeof apiError === 'string' ? apiError : 'An error occurred. Please try again later.'}
-        </Alert>
-      )}
+      
 
       {successMessage && (
         <Alert 

@@ -144,14 +144,7 @@ export default function RegisterPage() {
         Customer Registration
       </Typography>
 
-      {registerError && (
-        <Alert 
-          severity="error" 
-          sx={{ mb: 2 }}
-        >
-          {typeof registerError === 'string' ? registerError : 'Registration failed. Please try again.'}
-        </Alert>
-      )}
+     
 
       <Box
         component="form"
