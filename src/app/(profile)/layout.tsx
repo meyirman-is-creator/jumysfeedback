@@ -72,7 +72,7 @@ export default function ProfileLayout({
               John Doe
             </Typography>
             <Typography variant="body2" className={styles.userRole}>
-              {!isAdmin ? "Администратор" : "Пользователь"}
+              {isAdmin ? "Администратор" : "Пользователь"}
             </Typography>
           </Box>
 
