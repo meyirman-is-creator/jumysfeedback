@@ -55,7 +55,7 @@ export default function Header() {
           <Link href="/companies" className={styles.link}>
             Companies
           </Link>
-          <Link href="/salaries" className={styles.link}>
+          <Link href="/salary-explorer" className={styles.link}>
             Salaries
           </Link>
           <Link href="/search" className={styles.link}>

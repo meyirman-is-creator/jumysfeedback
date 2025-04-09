@@ -2,7 +2,8 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-const BASE_URL = 'https://iwork-api.up.railway.app';
+// Установим baseURL в зависимости от окружения
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://iwork-api.up.railway.app';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -10,8 +11,32 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds
+  timeout: 15000, // увеличим таймаут до 15 секунд
 });
+
+// Логируем запросы в режиме разработки
+apiClient.interceptors.request.use(
+  (config) => {
+    console.log(`Request: ${config.method?.toUpperCase()} ${config.url}`, config.params || config.data);
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Логируем ответы в режиме разработки
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log(`Response from ${response.config.url}:`, response.status);
+    return response;
+  },
+  (error) => {
+    console.error('Response error:', error.response?.status, error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 // CHANGE: Only apply interceptors on client-side
 if (typeof window !== 'undefined') {
