@@ -6,7 +6,8 @@ import {
   useSelectedLayoutSegments,
   useRouter,
 } from "next/navigation";
-import { Container, Typography, Box, Button } from "@mui/material";
+import { Container } from "@/components/ui/container";
+import { Typography, Box, Button } from "@mui/material";
 import { mockCompanies } from "@/features/company/mockData";
 import styles from "./layout.module.scss";
 
@@ -24,22 +25,22 @@ export default function CompanyLayout({
 
   if (!company) {
     return (
-      <Container maxWidth="md" className={styles.notFound}>
+      <Container className={styles.notFound}>
         <Typography variant="h4">Компания не найдена</Typography>
       </Container>
     );
   }
 
   const handleAddReview = () => {
-    router.push("/create/review");
+    router.push("/profile/add");
   };
 
   const tabs = [
-    { label: "Overview", path: "" },
-    { label: "Reviews", path: "reviews" },
-    { label: "Salaries", path: "salaries" },
-    { label: "Taxes", path: "taxes" },
-    { label: "Stockes", path: "stockes" }
+    { label: "Обзор", path: "" },
+    { label: "Отзывы", path: "reviews" },
+    { label: "Зарплаты", path: "salaries" },
+    { label: "Налоги", path: "taxes" },
+    { label: "Акции", path: "stockes" },
   ];
 
   const isActiveTab = (tabPath: string) => {
@@ -47,10 +48,10 @@ export default function CompanyLayout({
   };
 
   return (
-    <Container maxWidth="md" className={styles.companyLayout}>
+    <Container className={styles.companyLayout}>
       {company.bannerImg && (
         <Box className={styles.companyLayout__banner}>
-          <img src={company.bannerImg} alt={`${company.name} banner`} />
+          <img src={company.bannerImg} alt={`${company.name} баннер`} />
         </Box>
       )}
 
