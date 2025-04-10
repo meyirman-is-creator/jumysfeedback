@@ -1,500 +1,344 @@
-"use client"
-import React from "react"
-import Link from "next/link"
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { Container } from "@/components/ui/container";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Pagination,
-  FormControl,
   Select,
-  MenuItem,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  Checkbox,
-  Button,
-  IconButton,
-  Divider,
-  useTheme,
-} from "@mui/material"
-import ViewModuleIcon from "@mui/icons-material/ViewModule"
-import ViewListIcon from "@mui/icons-material/ViewList"
-import FilterAltIcon from "@mui/icons-material/FilterAlt"
-import StarIcon from "@mui/icons-material/Star"
-import StarBorderIcon from "@mui/icons-material/StarBorder"
-import type { SelectChangeEvent } from "@mui/material/Select"
-import { useRouter } from "next/navigation"
-import { mockCompanies } from "@/features/company/mockData"
-import styles from "./CompaniesPage.module.scss"
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import {
+  Grid,
+  List,
+  Search,
+  Star,
+  StarIcon,
+  StarOutline,
+  X,
+} from "lucide-react";
+import { mockCompanies } from "@/features/company/mockData";
+import styles from "./CompaniesPage.module.scss";
 
 const CompaniesPage = () => {
-  const theme = useTheme()
-  const router = useRouter()
-  const [page, setPage] = React.useState(1)
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
-  const [location, setLocation] = React.useState("")
-  const [industry, setIndustry] = React.useState("")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [location, setLocation] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [page, setPage] = useState(1);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  const itemsPerPage = 15
-  const totalPages = Math.ceil(mockCompanies.length / itemsPerPage)
-  const startIndex = (page - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentCompanies = mockCompanies.slice(startIndex, endIndex)
+  const itemsPerPage = 9;
+  const totalPages = Math.ceil(mockCompanies.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentCompanies = mockCompanies.slice(startIndex, endIndex);
 
-  const handleChangePage = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value)
-  }
+  const handleChangePage = (pageNumber: number) => {
+    setPage(pageNumber);
+  };
 
   const handleSwitchToGrid = () => {
-    setViewMode("grid")
-  }
+    setViewMode("grid");
+  };
 
   const handleSwitchToList = () => {
-    setViewMode("list")
-  }
+    setViewMode("list");
+  };
 
-  const handleChangeLocation = (event: SelectChangeEvent<string>) => {
-    setLocation(event.target.value)
-  }
+  const handleLocationChange = (value: string) => {
+    setLocation(value);
+  };
 
-  const handleChangeIndustry = (event: SelectChangeEvent<string>) => {
-    setIndustry(event.target.value)
-  }
+  const handleIndustryChange = (value: string) => {
+    setIndustry(value);
+  };
 
-  // Function to render star rating
-  const renderRating = (rating: number) => {
-    const stars = []
-    for (let i = 1; i <= 5; i++) {
-      if (i <= rating) {
-        stars.push(
-          <StarIcon
-            key={i}
-            sx={{
-              fontSize: "1rem",
-              color: theme.palette.warning.main,
-            }}
-          />,
-        )
-      } else {
-        stars.push(
-          <StarBorderIcon
-            key={i}
-            sx={{
-              fontSize: "1rem",
-              color: theme.palette.warning.main,
-            }}
-          />,
-        )
-      }
+  const addFilter = (filter: string) => {
+    if (!selectedFilters.includes(filter)) {
+      setSelectedFilters([...selectedFilters, filter]);
     }
-    return stars
-  }
+  };
+
+  const removeFilter = (filter: string) => {
+    setSelectedFilters(selectedFilters.filter((f) => f !== filter));
+  };
+
+  const clearAllFilters = () => {
+    setSelectedFilters([]);
+    setLocation("");
+    setIndustry("");
+  };
+
+  const renderRating = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        i <= rating ? (
+          <Star
+            key={i}
+            className={styles.starFilled}
+            size={16}
+            fill="#f5b400"
+            strokeWidth={0}
+          />
+        ) : (
+          <Star
+            key={i}
+            className={styles.starEmpty}
+            size={16}
+            strokeWidth={1.5}
+          />
+        )
+      );
+    }
+    return stars;
+  };
 
   return (
-    <Container maxWidth="lg" className={styles.companiesPage}>
-      <Grid container spacing={3}>
-        {/* Enhanced Filter Section */}
-        <Grid item xs={12} sm={4} md={3}>
-          <Box
-            className={styles.companiesPage__filters}
-            sx={{
-              backgroundColor: theme.palette.background.paper,
-              borderRadius: "16px",
-              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
-              padding: "1.5rem",
-              position: "sticky",
-              top: "20px",
-            }}
-          >
-            <Typography
-              variant="subtitle2"
-              className={styles.companiesPage__results}
-              sx={{
-                color: theme.palette.text.secondary,
-                fontWeight: 500,
-              }}
+    <div className={styles.companiesPage}>
+      <Container>
+        <div className={styles.pageHeader}>
+          <h1 className={styles.pageTitle}>Компании</h1>
+          <p className={styles.pageDescription}>
+            Ознакомьтесь с рейтингами компаний, отзывами и информацией о
+            зарплатах, предоставленными сотрудниками
+          </p>
+        </div>
+
+        {selectedFilters.length > 0 && (
+          <div className={styles.activeFilters}>
+            <div className={styles.filtersLabel}>Активные фильтры:</div>
+            <div className={styles.filterTags}>
+              {selectedFilters.map((filter) => (
+                <div key={filter} className={styles.filterTag}>
+                  {filter}
+                  <button
+                    className={styles.removeFilterBtn}
+                    onClick={() => removeFilter(filter)}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className={styles.clearFiltersBtn}
             >
-              1–10 из 9,990 результатов
-            </Typography>
+              Очистить все
+            </Button>
+          </div>
+        )}
 
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <FilterAltIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-              <Typography
-                variant="h6"
-                className={styles.companiesPage__filterTitle}
-                sx={{
-                  fontWeight: 600,
-                  color: theme.palette.text.primary,
-                }}
-              >
-                Фильтр компаний
-              </Typography>
-            </Box>
+        <div className={styles.pageContent}>
+          <div className={styles.filtersPanel}>
+            <div className={styles.filterHeader}>
+              <h2 className={styles.filterTitle}>Фильтры</h2>
+              <Search className={styles.filterIcon} size={18} />
+            </div>
 
-            <Divider sx={{ mb: 3 }} />
+            <Separator className={styles.filterDivider} />
 
-            <Box className={styles.companiesPage__filterItem}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  mb: 1,
-                  fontSize: "0.95rem",
-                }}
-              >
-                Локация
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  className={styles.companiesPage__inputField}
-                  variant="outlined"
-                  value={location}
-                  onChange={handleChangeLocation}
-                  displayEmpty
-                  sx={{
-                    borderRadius: "8px",
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: theme.palette.divider,
-                    },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                      borderColor: theme.palette.primary.light,
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: theme.palette.primary.main,
-                    },
-                  }}
-                >
-                  <MenuItem value="">Выберите локацию</MenuItem>
-                  <MenuItem value="Нью-Йорк, США">Нью-Йорк, США</MenuItem>
-                  <MenuItem value="Москва, РФ">Москва, РФ</MenuItem>
-                  <MenuItem value="Сан-Франциско, США">Сан-Франциско, США</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+            <div className={styles.filterSection}>
+              <h3 className={styles.filterSectionTitle}>Локация</h3>
+              <Select value={location} onValueChange={handleLocationChange}>
+                <SelectTrigger className={styles.filterSelect}>
+                  <SelectValue placeholder="Выберите локацию" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все локации</SelectItem>
+                  <SelectItem value="almaty">Алматы, Казахстан</SelectItem>
+                  <SelectItem value="astana">Астана, Казахстан</SelectItem>
+                  <SelectItem value="moscow">Москва, Россия</SelectItem>
+                  <SelectItem value="newyork">Нью-Йорк, США</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Box className={styles.companiesPage__filterItem}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  mb: 1,
-                  fontSize: "0.95rem",
-                }}
-              >
-                Отрасли
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  variant="outlined"
-                  value={industry}
-                  onChange={handleChangeIndustry}
-                  displayEmpty
-                  sx={{
-                    borderRadius: "8px",
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: theme.palette.divider,
-                    },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                      borderColor: theme.palette.primary.light,
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: theme.palette.primary.main,
-                    },
-                  }}
-                >
-                  <MenuItem value="">Выберите отрасль</MenuItem>
-                  <MenuItem value="IT">IT</MenuItem>
-                  <MenuItem value="Финансы">Финансы</MenuItem>
-                  <MenuItem value="Образование">Образование</MenuItem>
-                  <MenuItem value="Производство">Производство</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+            <div className={styles.filterSection}>
+              <h3 className={styles.filterSectionTitle}>Отрасли</h3>
+              <Select value={industry} onValueChange={handleIndustryChange}>
+                <SelectTrigger className={styles.filterSelect}>
+                  <SelectValue placeholder="Выберите отрасль" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все отрасли</SelectItem>
+                  <SelectItem value="it">IT и технологии</SelectItem>
+                  <SelectItem value="finance">Финансы</SelectItem>
+                  <SelectItem value="manufacturing">Производство</SelectItem>
+                  <SelectItem value="education">Образование</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Box className={styles.companiesPage__filterItem}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  mb: 1,
-                  fontSize: "0.95rem",
-                }}
-              >
-                Рейтинг компании
-              </Typography>
-              <Box>
-                <FormControlLabel
-                  control={
+            <div className={styles.filterSection}>
+              <h3 className={styles.filterSectionTitle}>Рейтинг компании</h3>
+              <div className={styles.ratingFilter}>
+                {[4, 3, 2].map((rating) => (
+                  <div key={rating} className={styles.ratingOption}>
                     <Checkbox
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
+                      id={`rating-${rating}`}
+                      className={styles.ratingCheckbox}
+                      onCheckedChange={(checked) => {
+                        checked
+                          ? addFilter(`${rating}★ и выше`)
+                          : removeFilter(`${rating}★ и выше`);
                       }}
                     />
-                  }
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {renderRating(4)} <Typography sx={{ ml: 0.5 }}>и выше</Typography>
-                    </Box>
-                  }
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {renderRating(3)} <Typography sx={{ ml: 0.5 }}>и выше</Typography>
-                    </Box>
-                  }
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {renderRating(2)} <Typography sx={{ ml: 0.5 }}>и выше</Typography>
-                    </Box>
-                  }
-                />
-              </Box>
-            </Box>
+                    <Label
+                      htmlFor={`rating-${rating}`}
+                      className={styles.ratingLabel}
+                    >
+                      <span className={styles.ratingStars}>
+                        {renderRating(rating)}
+                      </span>
+                      <span>и выше</span>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-            <Box className={styles.companiesPage__filterItem}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  mb: 1,
-                  fontSize: "0.95rem",
-                }}
-              >
-                Размер компании
-              </Typography>
-              <RadioGroup defaultValue="any">
-                <FormControlLabel
-                  value="1-50"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
+            <div className={styles.filterSection}>
+              <h3 className={styles.filterSectionTitle}>Размер компании</h3>
+              <RadioGroup defaultValue="any" className={styles.sizeFilter}>
+                {[
+                  { value: "1-50", label: "1 - 50" },
+                  { value: "51-200", label: "51 - 200" },
+                  { value: "201-500", label: "201 - 500" },
+                  { value: "501-1000", label: "501 - 1000" },
+                  { value: "1001-5000", label: "1001 - 5000" },
+                  { value: "5001+", label: "5001+" },
+                  { value: "any", label: "Любой размер" },
+                ].map((size) => (
+                  <div key={size.value} className={styles.sizeOption}>
+                    <RadioGroupItem
+                      value={size.value}
+                      id={`size-${size.value}`}
+                      className={styles.sizeRadio}
+                      onClick={() => {
+                        if (size.value !== "any") {
+                          addFilter(`Размер: ${size.label}`);
+                        } else {
+                          removeFilter(
+                            selectedFilters.find((f) =>
+                              f.startsWith("Размер:")
+                            ) || ""
+                          );
+                        }
                       }}
                     />
-                  }
-                  label="1 - 50"
-                />
-                <FormControlLabel
-                  value="51-200"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label="51 - 200"
-                />
-                <FormControlLabel
-                  value="201-500"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label="201 - 500"
-                />
-                <FormControlLabel
-                  value="501-1000"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label="501 - 1000"
-                />
-                <FormControlLabel
-                  value="1001-5000"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label="1001 - 5000"
-                />
-                <FormControlLabel
-                  value="5001-10000"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label="5001 - 10000"
-                />
-                <FormControlLabel
-                  value="10000+"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label="10000+"
-                />
-                <FormControlLabel
-                  value="any"
-                  control={
-                    <Radio
-                      size="small"
-                      sx={{
-                        color: theme.palette.primary.light,
-                        "&.Mui-checked": {
-                          color: theme.palette.primary.main,
-                        },
-                      }}
-                    />
-                  }
-                  label="Любой размер"
-                />
+                    <Label htmlFor={`size-${size.value}`}>{size.label}</Label>
+                  </div>
+                ))}
               </RadioGroup>
-            </Box>
+            </div>
 
-            <Box mt={2}>
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                sx={{
-                  borderRadius: "8px",
-                  textTransform: "none",
-                  fontWeight: 600,
-                  py: 1,
-                  borderWidth: "1.5px",
-                  "&:hover": {
-                    borderWidth: "1.5px",
-                  },
-                }}
-              >
-                Очистить фильтры
-              </Button>
-            </Box>
-          </Box>
-        </Grid>
+            <Button
+              variant="outline"
+              className={styles.resetFiltersBtn}
+              onClick={clearAllFilters}
+            >
+              Сбросить фильтры
+            </Button>
+          </div>
 
-        {/* Card Section */}
-        <Grid item xs={12} sm={8} md={9}>
-          <Box className={styles.companiesPage__header}>
-            <Typography variant="h4" className={styles.companiesPage__title}>
-              Список компаний
-            </Typography>
-            <Box className={styles.companiesPage__viewButtons}>
-              <IconButton color={viewMode === "grid" ? "secondary" : "default"} onClick={handleSwitchToGrid}>
-                <ViewModuleIcon />
-              </IconButton>
-              <IconButton color={viewMode === "list" ? "secondary" : "default"} onClick={handleSwitchToList}>
-                <ViewListIcon />
-              </IconButton>
-            </Box>
-          </Box>
+          <div className={styles.resultsPanel}>
+            <div className={styles.resultsHeader}>
+              <div className={styles.resultsCount}>
+                <p>Найдено {mockCompanies.length} компаний</p>
+              </div>
+              <div className={styles.viewToggle}>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={handleSwitchToGrid}
+                  className={styles.viewToggleBtn}
+                >
+                  <Grid size={18} />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={handleSwitchToList}
+                  className={styles.viewToggleBtn}
+                >
+                  <List size={18} />
+                </Button>
+              </div>
+            </div>
 
-          <Grid
-            container
-            spacing={2}
-            className={viewMode === "grid" ? styles.companiesPage__gridView : styles.companiesPage__listView}
-          >
-            {currentCompanies.map((company) => (
-              <Grid item xs={12} sm={viewMode === "grid" ? 6 : 12} md={viewMode === "grid" ? 4 : 12} key={company.id}>
-                <Card className={styles.companiesPage__card} sx={{borderRadius: "10px"}}>
-                  <CardContent className={styles.companiesPage__cardContent}>
-                    <Box className={styles.companiesPage__cardHeader}>
-                      <img src={company.logoUrl || "/placeholder.svg"} alt={company.name} />
-                      <Box>
-                        <Link href={`/companies/${company.id}`}>
-                          <Typography variant="h6" className={styles.companiesPage__companyLink}>
-                            {company.name}
-                          </Typography>
-                        </Link>
-                        <Typography variant="body2">Рейтинг: {company.rating}</Typography>
-                      </Box>
-                    </Box>
-                    <Typography variant="body2" className={styles.companiesPage__desc}>
-                      {company.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              
-            ))}
-          </Grid>
-          
-          <Box className={styles.companiesPage__pagination}>
-            <Pagination count={totalPages} page={page} onChange={handleChangePage}/>
-          </Box>
-        </Grid>
-      </Grid>
-    </Container>
-  )
-}
+            <div
+              className={`${styles.companyGrid} ${
+                viewMode === "list" ? styles.listView : ""
+              }`}
+            >
+              {currentCompanies.map((company) => (
+                <Link
+                  href={`/companies/${company.id}`}
+                  key={company.id}
+                  className={styles.companyCard}
+                >
+                  <Card>
+                    <CardContent className={styles.companyCardContent}>
+                      <div className={styles.companyLogo}>
+                        <img
+                          src={company.logoUrl || "/placeholder.svg"}
+                          alt={company.name}
+                        />
+                      </div>
+                      <div className={styles.companyInfo}>
+                        <h3 className={styles.companyName}>{company.name}</h3>
+                        <div className={styles.companyRating}>
+                          <span className={styles.ratingValue}>
+                            {company.rating}
+                          </span>
+                          <div className={styles.ratingStars}>
+                            {renderRating(company.rating)}
+                          </div>
+                        </div>
+                        <p className={styles.companyLocation}>
+                          {company.location}
+                        </p>
+                        <p className={styles.companyDescription}>
+                          {company.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
 
-export default CompaniesPage
+            <div className={styles.pagination}>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button
+                  key={i + 1}
+                  variant={page === i + 1 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleChangePage(i + 1)}
+                  className={styles.paginationBtn}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Container>
+    </div>
+  );
+};
 
+export default CompaniesPage;

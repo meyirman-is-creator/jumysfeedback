@@ -1,33 +1,131 @@
 .header {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.headerContent {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 
 .logo {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
   color: #800000;
+  text-decoration: none;
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
+  max-width: 500px;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.searchWrapper {
+  position: relative;
+  flex-grow: 1;
+  margin-right: 0.5rem;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.searchInput {
+  padding-left: 2.5rem;
+  height: 40px;
+  border-color: #e2e8f0;
+
+  &:focus {
+    border-color: #800000;
+    box-shadow: 0 0 0 1px rgba(128, 0, 0, 0.2);
+  }
+}
+
+.searchButton {
+  background-color: #800000;
+  color: white;
+
+  &:hover {
+    background-color: #660000;
+  }
 }
 
 .nav {
   display: flex;
   align-items: center;
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    position: absolute;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: white;
+    top: 100%;
+    right: 0;
+    left: 0;
+    padding: 1rem;
+    gap: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 40;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+  }
 }
 
-.link {
-  margin-left: 24px;
-  color: #000;
+.navOpen {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+.navLink {
+  color: #334155;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
   display: flex;
   align-items: center;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
 
   &:hover {
-    text-decoration: underline;
+    color: #800000;
   }
+}
 
-  .icon {
-    margin-right: 4px;
+.navIcon {
+  margin-right: 0.5rem;
+}
+
+.menuToggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #334155;
+  cursor: pointer;
+
+  @media (max-width: 768px) {
+    display: block;
   }
 }
