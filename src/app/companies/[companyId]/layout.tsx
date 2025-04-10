@@ -47,9 +47,9 @@ export default function CompanyLayout({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {company.bannerImg && (
-        <div className="w-full rounded-2xl overflow-hidden mt-5">
+        <div className="w-full overflow-hidden mb-5">
           <img
             src={company.bannerImg}
             alt={`${company.name} баннер`}
@@ -73,7 +73,7 @@ export default function CompanyLayout({
           <p className="text-gray-700 font-medium text-base">
             Рейтинг: {company.rating}
           </p>
-          <p className="text-[#d2691e] font-medium text-sm">
+          <p className="text-[black] font-medium text-sm">
             {company.location}
           </p>
         </div>
@@ -87,13 +87,13 @@ export default function CompanyLayout({
         </div>
       </div>
 
-      <div className="flex gap-6 mb-6 border-b border-gray-200 pb-2 overflow-x-auto md:gap-6 gap-4">
+      <div className="flex gap-6 mb-6 border-b border-gray-200 overflow-x-auto md:gap-6 gap-4">
         {tabs.map((tab) => (
           <Link
             key={tab.label}
             href={`/companies/${companyId}/${tab.path}`}
             className={cn(
-              "inline-block no-underline text-gray-700 font-medium pb-2 border-b-2 border-transparent transition-colors whitespace-nowrap hover:text-[#d2691e]",
+              "inline-block no-underline text-gray-700 font-medium pb-3 border-b-2 border-transparent transition-colors whitespace-nowrap",
               isActiveTab(tab.path) && "text-[#800000] border-b-[#800000]"
             )}
           >
