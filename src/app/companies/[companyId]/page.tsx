@@ -2,12 +2,10 @@
 import React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Typography, Box, Button, Grid, Divider } from "@mui/material";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { mockCompanies } from "@/features/company/mockData";
-import styles from "./CompanyOverviewPage.module.scss";
 
-// Функция: ищем компании по массиву id
 function getCompaniesByIds(ids: string[]) {
   return mockCompanies.filter((c) => ids.includes(c.id));
 }
@@ -21,9 +19,9 @@ export default function CompanyOverviewPage() {
 
   if (!company) {
     return (
-      <Box className={styles.companyOverview}>
-        <Typography variant="h4">Компания не найдена</Typography>
-      </Box>
+      <div className="mt-4 mb-8">
+        <h4 className="text-2xl font-semibold">Компания не найдена</h4>
+      </div>
     );
   }
 
@@ -35,270 +33,224 @@ export default function CompanyOverviewPage() {
   const handleSeeAllSalaries = () =>
     router.push(`/companies/${companyId}/salaries`);
 
-  // Предположим, company.recommended и company.topCompanies — это массив
-  // вида [{ id: "...", name: "...", ... }] или просто массив id-строк.
-  // Если у вас в mockData хранятся id-объекты, то нужно чуть иначе.
-  // Если там уже полные объекты, можно напрямую использовать company.recommended.
-  // Но здесь показываю логику, если это массив ID:
-  const recommendedIds = company.recommended.map((r) => r.id); // извлекаем id
-  const topIds = company.topCompanies.map((t) => t.id); // извлекаем id
+  const recommendedIds = company.recommended.map((r) => r.id);
+  const topIds = company.topCompanies.map((t) => t.id);
 
   const recommendedCompanies = getCompaniesByIds(recommendedIds);
   const topCompanies = getCompaniesByIds(topIds);
 
   return (
-    <Box className={styles.companyOverview}>
-      <Card className={styles.overviewCard}>
-        <CardContent>
-          <Typography variant="h6" className={styles.sectionHeading}>
+    <div className="mt-4 mb-8">
+      <Card className="mb-6 shadow-sm">
+        <CardContent className="pt-6">
+          <h6 className="text-[#800000] font-semibold mb-4 pb-2 border-b border-[rgba(128,0,0,0.1)]">
             Основная информация
-          </Typography>
-          <Grid container spacing={2} className={styles.infoGrid}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box className={styles.infoItem}>
-                <Typography variant="body2" className={styles.infoLabel}>
-                  Основана
-                </Typography>
-                <Typography variant="body1" className={styles.infoValue}>
-                  {company.overallInfo.founded}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box className={styles.infoItem}>
-                <Typography variant="body2" className={styles.infoLabel}>
-                  Выручка
-                </Typography>
-                <Typography variant="body1" className={styles.infoValue}>
-                  {company.overallInfo.revenue}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box className={styles.infoItem}>
-                <Typography variant="body2" className={styles.infoLabel}>
-                  Индустрия
-                </Typography>
-                <Typography variant="body1" className={styles.infoValue}>
-                  {company.industries.join(", ")}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Box className={styles.infoItem}>
-                <Typography variant="body2" className={styles.infoLabel}>
-                  Размер
-                </Typography>
-                <Typography variant="body1" className={styles.infoValue}>
-                  {company.size}
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+          </h6>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="flex flex-col">
+              <p className="text-gray-500 text-sm mb-1">Основана</p>
+              <p className="text-gray-800 font-medium">
+                {company.overallInfo.founded}
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <p className="text-gray-500 text-sm mb-1">Выручка</p>
+              <p className="text-gray-800 font-medium">
+                {company.overallInfo.revenue}
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <p className="text-gray-500 text-sm mb-1">Индустрия</p>
+              <p className="text-gray-800 font-medium">
+                {company.industries.join(", ")}
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <p className="text-gray-500 text-sm mb-1">Размер</p>
+              <p className="text-gray-800 font-medium">{company.size}</p>
+            </div>
+          </div>
 
-          <Box className={styles.missionSection}>
-            <Typography variant="body2" className={styles.infoLabel}>
-              Миссия компании
-            </Typography>
-            <Typography variant="body1" className={styles.missionText}>
+          <div className="mb-4">
+            <p className="text-gray-500 text-sm mb-1">Миссия компании</p>
+            <p className="text-gray-700 italic leading-relaxed">
               {company.overallInfo.mission}
-            </Typography>
-          </Box>
+            </p>
+          </div>
 
-          <Box className={styles.competitorsSection}>
-            <Typography variant="body2" className={styles.infoLabel}>
-              Конкуренты
-            </Typography>
-            <Box className={styles.competitorsList}>
+          <div className="mt-4">
+            <p className="text-gray-500 text-sm mb-1">Конкуренты</p>
+            <div className="flex flex-wrap gap-2">
               {company.overallInfo.competitors.map((competitor, index) => (
-                <span key={index} className={styles.competitorItem}>
+                <span
+                  key={index}
+                  className="bg-[rgba(128,0,0,0.05)] px-3 py-1 rounded-full text-sm text-[#800000]"
+                >
                   {competitor}
                 </span>
               ))}
-            </Box>
-          </Box>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      <Grid container spacing={3} className={styles.contentGrid}>
-        <Grid item xs={12} md={7}>
-          <Card className={styles.reviewCard}>
-            <CardContent>
-              <Typography variant="h6" className={styles.sectionHeading}>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
+        <div className="md:col-span-7">
+          <Card className="h-full shadow-sm">
+            <CardContent className="pt-6">
+              <h6 className="text-[#800000] font-semibold mb-4 pb-2 border-b border-[rgba(128,0,0,0.1)]">
                 Отзывы сотрудников
-              </Typography>
+              </h6>
               {singleReview ? (
-                <Box className={styles.reviewItem}>
-                  <Box className={styles.reviewHeader}>
-                    <Typography
-                      variant="subtitle1"
-                      className={styles.reviewTitle}
-                    >
+                <div className="py-2">
+                  <div className="flex justify-between items-center mb-2 flex-col sm:flex-row sm:items-center gap-2">
+                    <h6 className="font-semibold text-gray-800">
                       {singleReview.title}
-                    </Typography>
-                    <Box className={styles.reviewRating}>
-                      <span className={styles.ratingValue}>
+                    </h6>
+                    <div>
+                      <span className="font-semibold mr-1">
                         {singleReview.rating}
                       </span>
-                      <span className={styles.ratingStars}>
+                      <span className="text-[#f5b400] tracking-tighter">
                         {"★".repeat(Math.floor(singleReview.rating))}
                       </span>
-                    </Box>
-                  </Box>
-                  <Typography variant="body2" className={styles.reviewAuthor}>
+                    </div>
+                  </div>
+                  <p className="text-gray-500 mb-2 text-sm">
                     Автор: {singleReview.author}
-                  </Typography>
-                  <Typography variant="body1" className={styles.reviewBody}>
+                  </p>
+                  <p className="text-gray-800 mb-4 leading-relaxed">
                     {singleReview.body}
-                  </Typography>
+                  </p>
                   <Button
-                    className={styles.viewAllButton}
+                    variant="ghost"
+                    className="text-[#800000] p-0 font-medium hover:bg-transparent hover:underline"
                     onClick={handleSeeAllReviews}
                   >
                     Смотреть все отзывы ({company.reviews.length})
                   </Button>
-                </Box>
+                </div>
               ) : (
-                <Typography variant="body1">
-                  У этой компании пока нет отзывов
-                </Typography>
+                <p>У этой компании пока нет отзывов</p>
               )}
             </CardContent>
           </Card>
-        </Grid>
+        </div>
 
-        <Grid item xs={12} md={5}>
-          <Card className={styles.salaryCard}>
-            <CardContent>
-              <Typography variant="h6" className={styles.sectionHeading}>
+        <div className="md:col-span-5">
+          <Card className="h-full shadow-sm">
+            <CardContent className="pt-6">
+              <h6 className="text-[#800000] font-semibold mb-4 pb-2 border-b border-[rgba(128,0,0,0.1)]">
                 Зарплаты
-              </Typography>
+              </h6>
               {singleSalary ? (
-                <Box className={styles.salaryItem}>
-                  <Typography
-                    variant="subtitle1"
-                    className={styles.salaryPosition}
-                  >
+                <div className="py-2">
+                  <h6 className="font-semibold text-gray-800">
                     {singleSalary.position}
-                  </Typography>
-                  <Typography variant="h5" className={styles.salaryAmount}>
+                  </h6>
+                  <p className="text-[#800000] font-semibold text-xl my-2">
                     {singleSalary.amount}
-                  </Typography>
-                  <Typography variant="body2" className={styles.salaryRange}>
+                  </p>
+                  <p className="text-gray-500 mb-2 text-sm">
                     Диапазон: {singleSalary.min}-{singleSalary.max}{" "}
                     {singleSalary.currency}
-                  </Typography>
-                  <Typography variant="body2" className={styles.salaryLevel}>
+                  </p>
+                  <p className="text-gray-500 mb-2 text-sm">
                     Уровень: {singleSalary.experienceLevel}
-                  </Typography>
+                  </p>
                   <Button
-                    className={styles.viewAllButton}
+                    variant="ghost"
+                    className="text-[#800000] p-0 font-medium hover:bg-transparent hover:underline mt-2"
                     onClick={handleSeeAllSalaries}
                   >
                     Смотреть все зарплаты ({company.salaries.length})
                   </Button>
-                </Box>
+                </div>
               ) : (
-                <Typography variant="body1">
-                  У этой компании пока нет данных о зарплатах
-                </Typography>
+                <p>У этой компании пока нет данных о зарплатах</p>
               )}
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </div>
+      </div>
 
-      <Card className={styles.recommendedCard}>
-        <CardContent>
-          <Typography variant="h6" className={styles.sectionHeading}>
+      <Card className="mb-6 shadow-sm">
+        <CardContent className="pt-6">
+          <h6 className="text-[#800000] font-semibold mb-4 pb-2 border-b border-[rgba(128,0,0,0.1)]">
             Рекомендуемые компании
-          </Typography>
-          <Grid container spacing={2}>
+          </h6>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {recommendedCompanies.map((rec) => (
-              <Grid item xs={12} sm={6} md={4} key={rec.id}>
-                <Link
-                  href={`/companies/${rec.id}`}
-                  className={styles.companyLink}
-                >
-                  <Box className={styles.recommendedCompany}>
-                    <img
-                      src={rec.logoUrl}
-                      alt={rec.name}
-                      className={styles.companyLogo}
-                    />
-                    <Box className={styles.companyInfo}>
-                      <Typography
-                        variant="subtitle1"
-                        className={styles.companyName}
-                      >
-                        {rec.name}
-                      </Typography>
-                      <Box className={styles.companyRating}>
-                        <span className={styles.ratingValue}>{rec.rating}</span>
-                        <span className={styles.ratingStars}>
-                          {"★".repeat(Math.floor(rec.rating))}
-                        </span>
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        className={styles.compareLink}
-                      >
-                        Сравнить →
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Link>
-              </Grid>
+              <Link
+                href={`/companies/${rec.id}`}
+                className="no-underline text-inherit block"
+                key={rec.id}
+              >
+                <div className="flex items-center p-3 border border-gray-200 rounded-lg transition-all hover:border-[#800000] hover:shadow-md sm:flex-row flex-col sm:text-left text-center">
+                  <img
+                    src={rec.logoUrl}
+                    alt={rec.name}
+                    className="w-12 h-12 object-contain mr-4 rounded-lg border border-gray-200 p-1 sm:mr-4 sm:mb-0 mb-2"
+                  />
+                  <div className="flex-1">
+                    <h6 className="font-semibold text-gray-800 mb-1">
+                      {rec.name}
+                    </h6>
+                    <div className="flex items-center sm:justify-start justify-center">
+                      <span className="font-semibold mr-1">{rec.rating}</span>
+                      <span className="text-[#f5b400] tracking-tighter">
+                        {"★".repeat(Math.floor(rec.rating))}
+                      </span>
+                    </div>
+                    <p className="text-[#800000] font-medium mt-1">
+                      Сравнить →
+                    </p>
+                  </div>
+                </div>
+              </Link>
             ))}
-          </Grid>
+          </div>
         </CardContent>
       </Card>
 
-      <Card className={styles.topCompaniesCard}>
-        <CardContent>
-          <Typography variant="h6" className={styles.sectionHeading}>
+      <Card className="shadow-sm">
+        <CardContent className="pt-6">
+          <h6 className="text-[#800000] font-semibold mb-4 pb-2 border-b border-[rgba(128,0,0,0.1)]">
             Топ компании в отрасли
-          </Typography>
-          <Grid container spacing={2}>
+          </h6>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {topCompanies.map((tc) => (
-              <Grid item xs={12} sm={6} key={tc.id}>
-                <Link
-                  href={`/companies/${tc.id}`}
-                  className={styles.companyLink}
-                >
-                  <Box className={styles.topCompany}>
-                    <img
-                      src={tc.logoUrl || "/placeholder.svg"}
-                      alt={tc.name}
-                      className={styles.companyLogo}
-                    />
-                    <Box className={styles.companyInfo}>
-                      <Typography
-                        variant="subtitle1"
-                        className={styles.companyName}
-                      >
-                        {tc.name}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        className={styles.companyFeature}
-                      >
-                        Компенсации и льготы
-                      </Typography>
-                      <Box className={styles.companyRating}>
-                        <span className={styles.ratingValue}>{tc.rating}</span>
-                        <span className={styles.ratingStars}>
-                          {"★".repeat(Math.floor(tc.rating))}
-                        </span>
-                      </Box>
-                    </Box>
-                  </Box>
-                </Link>
-              </Grid>
+              <Link
+                href={`/companies/${tc.id}`}
+                className="no-underline text-inherit block"
+                key={tc.id}
+              >
+                <div className="flex items-center p-3 border border-gray-200 rounded-lg transition-all hover:border-[#800000] hover:shadow-md sm:flex-row flex-col sm:text-left text-center">
+                  <img
+                    src={tc.logoUrl || "/placeholder.svg"}
+                    alt={tc.name}
+                    className="w-12 h-12 object-contain mr-4 rounded-lg border border-gray-200 p-1 sm:mr-4 sm:mb-0 mb-2"
+                  />
+                  <div className="flex-1">
+                    <h6 className="font-semibold text-gray-800 mb-1">
+                      {tc.name}
+                    </h6>
+                    <p className="text-gray-500 text-sm mb-1">
+                      Компенсации и льготы
+                    </p>
+                    <div className="flex items-center sm:justify-start justify-center">
+                      <span className="font-semibold mr-1">{tc.rating}</span>
+                      <span className="text-[#f5b400] tracking-tighter">
+                        {"★".repeat(Math.floor(tc.rating))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             ))}
-          </Grid>
+          </div>
         </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }

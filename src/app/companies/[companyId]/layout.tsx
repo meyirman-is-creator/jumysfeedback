@@ -6,10 +6,9 @@ import {
   useSelectedLayoutSegments,
   useRouter,
 } from "next/navigation";
-import { Container } from "@/components/ui/container";
-import { Typography, Box, Button } from "@mui/material";
+import { Button } from "@/components/ui/button";
 import { mockCompanies } from "@/features/company/mockData";
-import styles from "./layout.module.scss";
+import { cn } from "@/lib/utils";
 
 export default function CompanyLayout({
   children,
@@ -25,9 +24,9 @@ export default function CompanyLayout({
 
   if (!company) {
     return (
-      <Container className={styles.notFound}>
-        <Typography variant="h4">Компания не найдена</Typography>
-      </Container>
+      <div className="max-w-7xl mx-auto p-4 mt-12 text-center">
+        <h4 className="text-2xl font-semibold">Компания не найдена</h4>
+      </div>
     );
   }
 
@@ -48,61 +47,62 @@ export default function CompanyLayout({
   };
 
   return (
-    <Container className={styles.companyLayout}>
+    <div className="max-w-7xl mx-auto px-4">
       {company.bannerImg && (
-        <Box className={styles.companyLayout__banner}>
-          <img src={company.bannerImg} alt={`${company.name} баннер`} />
-        </Box>
+        <div className="w-full rounded-2xl overflow-hidden mt-5">
+          <img
+            src={company.bannerImg}
+            alt={`${company.name} баннер`}
+            className="w-full h-auto object-cover max-h-64 block"
+          />
+        </div>
       )}
 
-      <Box className={styles.companyLayout__header}>
-        <Box className={styles.companyLayout__logo}>
-          <img src={company.logoUrl} alt={company.name} />
-        </Box>
-        <Box className={styles.companyLayout__info}>
-          <Typography variant="h4" className={styles.companyLayout__title}>
+      <div className="mt-5 flex items-center mb-6 border-b border-gray-200 pb-4 md:flex-row flex-col md:items-center items-start gap-4">
+        <div className="mr-4 md:mr-4 md:mb-0">
+          <img
+            src={company.logoUrl}
+            alt={company.name}
+            className="w-32 h-auto object-contain rounded-xl md:w-32 w-24"
+          />
+        </div>
+        <div className="flex flex-col gap-1 flex-1">
+          <h4 className="text-[#800000] font-semibold m-0 text-2xl md:text-2xl text-xl">
             {company.name}
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            className={styles.companyLayout__rating}
-          >
+          </h4>
+          <p className="text-gray-700 font-medium text-base">
             Рейтинг: {company.rating}
-          </Typography>
-          <Typography
-            variant="subtitle2"
-            className={styles.companyLayout__location}
-          >
+          </p>
+          <p className="text-[#d2691e] font-medium text-sm">
             {company.location}
-          </Typography>
-        </Box>
-        <Box className={styles.companyLayout__actions}>
+          </p>
+        </div>
+        <div className="md:w-auto w-full flex">
           <Button
-            variant="contained"
-            className={styles.companyLayout__addReviewBtn}
+            className="bg-[#800000] text-white px-4 py-2 font-medium hover:bg-[#660000] w-full"
             onClick={handleAddReview}
           >
             Добавить отзыв
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      <Box className={styles.companyLayout__tabsNav}>
-        {tabs.map((tab) => {
-          const activeClass = isActiveTab(tab.path) ? styles.activeTab : "";
-          return (
-            <Link
-              key={tab.label}
-              href={`/companies/${companyId}/${tab.path}`}
-              className={`${styles.companyLayout__tabBtn} ${activeClass}`}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </Box>
+      <div className="flex gap-6 mb-6 border-b border-gray-200 pb-2 overflow-x-auto md:gap-6 gap-4">
+        {tabs.map((tab) => (
+          <Link
+            key={tab.label}
+            href={`/companies/${companyId}/${tab.path}`}
+            className={cn(
+              "inline-block no-underline text-gray-700 font-medium pb-2 border-b-2 border-transparent transition-colors whitespace-nowrap hover:text-[#d2691e]",
+              isActiveTab(tab.path) && "text-[#800000] border-b-[#800000]"
+            )}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </div>
 
-      <Box>{children}</Box>
-    </Container>
+      <div>{children}</div>
+    </div>
   );
 }
