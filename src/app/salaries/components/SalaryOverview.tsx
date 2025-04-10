@@ -1,3 +1,4 @@
+// src/app/salaries/components/SalaryOverview.tsx
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,9 +22,9 @@ export default function SalaryOverview({
   position,
 }: SalaryOverviewProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("ru-KZ", {
       style: "currency",
-      currency: "USD",
+      currency: "KZT",
       maximumFractionDigits: 0,
     }).format(amount);
   };
@@ -44,22 +45,22 @@ export default function SalaryOverview({
     <Card className={styles.overviewCard}>
       <CardContent className={styles.cardContent}>
         <Typography variant="h5" className={styles.question}>
-          How much does a {position} make?
+          Сколько зарабатывает {position}?
         </Typography>
 
         <Box className={styles.salaryRange}>
           <Typography variant="h3" className={styles.rangeText}>
             {formatK(data.minSalary)} - {formatK(data.maxSalary)}{" "}
-            <span className={styles.periodText}>/yr</span>
+            <span className={styles.periodText}>/год</span>
           </Typography>
         </Box>
 
         <Box className={styles.medianContainer}>
           <Typography variant="body1" className={styles.medianLabel}>
-            {formatCurrency(data.medianSalary)}/yr
+            {formatCurrency(data.medianSalary)}/год
           </Typography>
           <Typography variant="body2" className={styles.medianSubtext}>
-            Median total pay
+            Средняя общая оплата
           </Typography>
         </Box>
 
@@ -72,33 +73,34 @@ export default function SalaryOverview({
 
         <Box className={styles.estimateContainer}>
           <Typography variant="body2" className={styles.estimateText}>
-            The estimated total pay for a {position} is{" "}
-            {formatCurrency(data.totalEstimate)} per year, with an average
-            salary of {formatCurrency(data.baseEstimate)} per year. These
-            numbers represent the median, which is the midpoint of the ranges
-            from our proprietary Total Pay Estimate model and based on salaries
-            collected from our users. The estimated additional pay is{" "}
-            {formatCurrency(data.additionalEstimate)} per year. Additional pay
-            could include cash bonus, commission, tips, and profit sharing.
+            Предполагаемая общая оплата для {position}а составляет{" "}
+            {formatCurrency(data.totalEstimate)} в год, при средней зарплате{" "}
+            {formatCurrency(data.baseEstimate)} в год. Эти цифры представляют
+            медиану, которая является серединой диапазонов из нашей модели
+            оценки общей оплаты и основана на данных о зарплатах, собранных от
+            наших пользователей. Предполагаемая дополнительная оплата составляет{" "}
+            {formatCurrency(data.additionalPay)} в год. Дополнительная оплата
+            может включать денежные бонусы, комиссии, чаевые и участие в
+            прибыли.
           </Typography>
         </Box>
 
         <Box className={styles.accuracyContainer}>
           <Typography variant="subtitle2" className={styles.accuracyLabel}>
-            How accurate is this pay range of {formatK(data.minSalary)}-
-            {formatK(data.maxSalary)}/yr?
+            Насколько точен этот диапазон зарплат {formatK(data.minSalary)}-
+            {formatK(data.maxSalary)}/год?
           </Typography>
           <Box className={styles.accuracyButtonGroup}>
-            <button className={styles.accuracyButton}>Low</button>
+            <button className={styles.accuracyButton}>Низкий</button>
             <button
               className={`${styles.accuracyButton} ${styles.accuracyButtonActive}`}
             >
-              Accurate
+              Точный
             </button>
-            <button className={styles.accuracyButton}>High</button>
+            <button className={styles.accuracyButton}>Высокий</button>
           </Box>
           <Typography variant="caption" className={styles.accuracyHelpText}>
-            Your input helps Glassdoor refine our pay estimates over time.
+            Ваш отзыв помогает нам со временем улучшать наши оценки зарплат.
           </Typography>
         </Box>
       </CardContent>

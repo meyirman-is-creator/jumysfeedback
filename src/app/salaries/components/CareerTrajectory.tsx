@@ -1,3 +1,4 @@
+// src/app/salaries/components/CareerTrajectory.tsx
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +19,7 @@ export default function CareerTrajectory({ data }: CareerTrajectoryProps) {
   return (
     <Box className={styles.trajectoryContainer}>
       <Typography variant="h5" className={styles.sectionTitle}>
-        Total pay trajectory
+        Динамика зарплаты по карьере
       </Typography>
 
       <Box className={styles.trajectoryCards}>
@@ -32,7 +33,7 @@ export default function CareerTrajectory({ data }: CareerTrajectoryProps) {
             <CardContent className={styles.cardContent}>
               <Box className={styles.cardHeader}>
                 {item.current && (
-                  <Badge className={styles.currentBadge}>Current</Badge>
+                  <Badge className={styles.currentBadge}>Текущий</Badge>
                 )}
                 <Typography variant="subtitle1" className={styles.roleTitle}>
                   {item.role}

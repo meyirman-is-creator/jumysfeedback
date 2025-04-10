@@ -1,3 +1,4 @@
+// src/app/companies/CompaniesPage.module.scss
 .companiesPage {
   padding: 2rem 0;
 }
@@ -79,6 +80,24 @@
   }
 }
 
+.mobileFilterToggle {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-color: #e2e8f0;
+
+  .filterIcon {
+    margin-right: 0.5rem;
+  }
+
+  @media (max-width: 1024px) {
+    display: flex;
+  }
+}
+
 .pageContent {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -100,6 +119,14 @@
 
   @media (max-width: 1024px) {
     position: static;
+    display: none;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.filtersPanelVisible {
+  @media (max-width: 1024px) {
+    display: block;
   }
 }
 
@@ -144,10 +171,10 @@
     box-shadow: 0 0 0 1px rgba(128, 0, 0, 0.2);
   }
 }
-.filterSelectContent{
+.filterSelectContent {
   background-color: #fff !important;
 }
-.filterSelectItem:hover{
+.filterSelectItem:hover {
   background-color: #d5d5d5 !important;
 }
 .ratingFilter,
@@ -249,7 +276,7 @@
     transform: translateY(-2px);
   }
 }
-.companyCardd{
+.companyCardd {
   height: 100% !important;
 }
 .companyCardContent {

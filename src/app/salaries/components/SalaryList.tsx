@@ -1,3 +1,4 @@
+// src/app/salaries/components/SalaryList.tsx
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import {
@@ -18,6 +19,7 @@ interface SalaryListItem {
   logo: string;
   salary: string;
   verified: boolean;
+  companyId?: string; // Optional company ID for linking
 }
 
 interface SalaryListProps {
@@ -30,8 +32,8 @@ export default function SalaryList({ data }: SalaryListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className={styles.tableHead}>Company</TableHead>
-            <TableHead className={styles.tableHead}>Salary</TableHead>
+            <TableHead className={styles.tableHead}>Компания</TableHead>
+            <TableHead className={styles.tableHead}>Зарплата</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -51,7 +53,7 @@ export default function SalaryList({ data }: SalaryListProps) {
                     </Typography>
                     {item.verified && (
                       <Badge variant="outline" className={styles.verifiedBadge}>
-                        Verified
+                        Проверено
                       </Badge>
                     )}
                   </Box>

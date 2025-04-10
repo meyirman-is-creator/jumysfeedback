@@ -1,3 +1,4 @@
+// src/app/companies/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -23,6 +24,9 @@ import {
   Search,
   Star,
   X,
+  Filter,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { mockCompanies } from "@/features/company/mockData";
 import styles from "./CompaniesPage.module.scss";
@@ -33,6 +37,7 @@ const CompaniesPage = () => {
   const [industry, setIndustry] = useState("");
   const [page, setPage] = useState(1);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(mockCompanies.length / itemsPerPage);
@@ -74,6 +79,10 @@ const CompaniesPage = () => {
     setSelectedFilters([]);
     setLocation("");
     setIndustry("");
+  };
+
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
   };
 
   const renderRating = (rating: number) => {
@@ -139,8 +148,22 @@ const CompaniesPage = () => {
           </div>
         )}
 
+        <Button
+          variant="outline"
+          onClick={toggleFilters}
+          className={styles.mobileFilterToggle}
+        >
+          <Filter size={16} className={styles.filterIcon} />
+          Фильтры
+          {showFilters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </Button>
+
         <div className={styles.pageContent}>
-          <div className={styles.filtersPanel}>
+          <div
+            className={`${styles.filtersPanel} ${
+              showFilters ? styles.filtersPanelVisible : ""
+            }`}
+          >
             <div className={styles.filterHeader}>
               <h2 className={styles.filterTitle}>Фильтры</h2>
               <Search className={styles.filterIcon} size={18} />
@@ -155,11 +178,33 @@ const CompaniesPage = () => {
                   <SelectValue placeholder="Выберите локацию" />
                 </SelectTrigger>
                 <SelectContent className={styles.filterSelectContent}>
-                  <SelectItem className={styles.filterSelectItem} value="all">Все локации</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="almaty">Алматы, Казахстан</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="astana">Астана, Казахстан</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="moscow">Москва, Россия</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="newyork">Нью-Йорк, США</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="all">
+                    Все локации
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="almaty"
+                  >
+                    Алматы, Казахстан
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="astana"
+                  >
+                    Астана, Казахстан
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="moscow"
+                  >
+                    Москва, Россия
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="newyork"
+                  >
+                    Нью-Йорк, США
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -171,11 +216,30 @@ const CompaniesPage = () => {
                   <SelectValue placeholder="Выберите отрасль" />
                 </SelectTrigger>
                 <SelectContent className={styles.filterSelectContent}>
-                  <SelectItem className={styles.filterSelectItem} value="all">Все отрасли</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="it">IT и технологии</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="finance">Финансы</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="manufacturing">Производство</SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="education">Образование</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="all">
+                    Все отрасли
+                  </SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="it">
+                    IT и технологии
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="finance"
+                  >
+                    Финансы
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="manufacturing"
+                  >
+                    Производство
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="education"
+                  >
+                    Образование
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -262,7 +326,11 @@ const CompaniesPage = () => {
                   variant={viewMode === "grid" ? "default" : "outline"}
                   size="icon"
                   onClick={handleSwitchToGrid}
-                  className={viewMode === "grid" ? styles.viewActive:styles.viewNoActive}
+                  className={
+                    viewMode === "grid"
+                      ? styles.viewActive
+                      : styles.viewNoActive
+                  }
                 >
                   <Grid size={18} />
                 </Button>
@@ -270,7 +338,11 @@ const CompaniesPage = () => {
                   variant={viewMode === "list" ? "default" : "outline"}
                   size="icon"
                   onClick={handleSwitchToList}
-                  className={viewMode === "list" ? styles.viewActive:styles.viewNoActive}
+                  className={
+                    viewMode === "list"
+                      ? styles.viewActive
+                      : styles.viewNoActive
+                  }
                 >
                   <List size={18} />
                 </Button>
