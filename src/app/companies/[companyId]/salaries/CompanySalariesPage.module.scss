@@ -305,3 +305,22 @@
     color: #666;
   }
 }
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 2rem;
+}
+
+.paginationBtn {
+  min-width: 2rem;
+
+  &[data-state="on"] {
+    background-color: #800000;
+    color: #fff;
+
+    &:hover {
+      background-color: #660000;
+    }
+  }
+}

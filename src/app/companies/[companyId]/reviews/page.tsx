@@ -1,15 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  Typography,
-  Box,
-  Grid,
-  Avatar,
-  Rating,
-  Pagination,
-} from "@mui/material";
+import { Typography, Box, Grid, Avatar, Rating } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectTrigger,
@@ -36,34 +30,28 @@ const CompanyReviewsPage = () => {
   const [page, setPage] = useState(1);
   const reviewsPerPage = 5;
 
-  // Расширяем тестовые отзывы для примера
   const allReviews = company
     ? [...company.reviews, ...generateExtraReviews(company.name)]
     : [];
 
-  // Применяем фильтрацию по рейтингу
   const filteredReviews = allReviews.filter((review) => {
     if (ratingFilter === "all") return true;
     const rating = parseInt(ratingFilter);
     return review.rating === rating;
   });
 
-  // Применяем сортировку
   const sortedReviews = [...filteredReviews].sort((a, b) => {
     if (sortOption === "highest") return b.rating - a.rating;
     if (sortOption === "lowest") return a.rating - b.rating;
-    // По умолчанию - самые новые первыми (в данном случае произвольно)
     return Math.random() - 0.5;
   });
 
-  // Пагинация
   const totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
   const currentReviews = sortedReviews.slice(
     (page - 1) * reviewsPerPage,
     page * reviewsPerPage
   );
 
-  // Функция для генерации дополнительных отзывов
   function generateExtraReviews(companyName) {
     const extraReviews = [
       {
@@ -110,6 +98,10 @@ const CompanyReviewsPage = () => {
 
     return extraReviews;
   }
+
+  const handleChangePage = (pageNumber) => {
+    setPage(pageNumber);
+  };
 
   return (
     <Box className={styles.companyReviews}>
@@ -291,12 +283,18 @@ const CompanyReviewsPage = () => {
 
           {totalPages > 1 && (
             <Box className={styles.pagination}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(e, value) => setPage(value)}
-                color="primary"
-              />
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button
+                  key={i + 1}
+                  variant={page === i + 1 ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleChangePage(i + 1)}
+                  className={styles.paginationBtn}
+                  data-state={page === i + 1 ? "on" : "off"}
+                >
+                  {i + 1}
+                </Button>
+              ))}
             </Box>
           )}
         </>

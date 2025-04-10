@@ -1,17 +1,17 @@
 "use client";
 import React from "react";
 import { useParams } from "next/navigation";
-import { Container, Typography, Box, Grid } from "@mui/material";
+import { Container, Typography, Box, Grid, Tooltip } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsivePie } from "@nivo/pie";
+import { Info } from "lucide-react";
 import styles from "./CompanyStockes.module.scss";
 
 const CompanyStockesPage = () => {
   const { companyId } = useParams() as { companyId: string };
 
-  // Default mock data (Adobe Inc. sample)
   const defaultCompanyData = {
     id: 15,
     name: "Adobe Inc.",
@@ -230,7 +230,6 @@ const CompanyStockesPage = () => {
     ],
   };
 
-  // Подготовка данных для графика цен акций
   const stockPriceData = defaultCompanyData.historical_stock_data.data.map(
     (item) => ({
       x: item.date,
@@ -238,21 +237,18 @@ const CompanyStockesPage = () => {
     })
   );
 
-  // Подготовка данных для объема торгов
   const volumeData = defaultCompanyData.historical_stock_data.data.map(
     (item) => ({
       date: item.date,
-      volume: item.volume / 1000000, // Конвертируем в миллионы
+      volume: item.volume / 1000000,
     })
   );
 
-  // Подготовка данных для сравнения P/E с индустрией
   const peRatioData = defaultCompanyData.industry_comparison.map((company) => ({
     company: company.name,
     "P/E": company.pe_ratio,
   }));
 
-  // Подготовка данных для структуры рыночной капитализации
   const marketCapTotal = defaultCompanyData.industry_comparison.reduce(
     (sum, company) => sum + company.market_cap,
     0
@@ -262,11 +258,10 @@ const CompanyStockesPage = () => {
     (company) => ({
       id: company.name,
       label: company.name,
-      value: (company.market_cap / marketCapTotal) * 100, // процент от общей капитализации
+      value: (company.market_cap / marketCapTotal) * 100,
     })
   );
 
-  // Подготовка данных для связи выручки и капитализации
   const revenueCapRatio = [];
   if (
     defaultCompanyData.industry_comparison &&
@@ -278,18 +273,17 @@ const CompanyStockesPage = () => {
     revenueCapRatio.push({
       company: "Adobe",
       type: "Выручка",
-      value: adobeRevenue / 1e9, // в миллиардах
+      value: adobeRevenue / 1e9,
     });
 
     revenueCapRatio.push({
       company: "Adobe",
       type: "Капитализация",
-      value: adobeMarketCap / 1e9, // в миллиардах
+      value: adobeMarketCap / 1e9,
     });
 
-    // Добавляем приблизительные данные для конкурентов
     const competitors = ["Apple", "Microsoft", "Google"];
-    const revenueEstimates = [380, 220, 300]; // приблизительные данные выручки в миллиардах
+    const revenueEstimates = [380, 220, 300];
 
     for (let i = 0; i < competitors.length; i++) {
       const companyInfo = defaultCompanyData.industry_comparison.find((c) =>
@@ -312,6 +306,14 @@ const CompanyStockesPage = () => {
     }
   }
 
+  const tradingVolumeData = defaultCompanyData.historical_stock_data.data.map(
+    (item) => ({
+      date: item.date,
+      volume: item.volume / 1000000,
+      price: item.close,
+    })
+  );
+
   return (
     <Box className={styles.container}>
       <Typography variant="h4" className={styles.title}>
@@ -322,9 +324,21 @@ const CompanyStockesPage = () => {
         <Grid item xs={12} md={6}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Динамика цены акций за последний год
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" className={styles.cardTitle}>
+                  Динамика цены акций за последний год
+                </Typography>
+                <Tooltip title="Отображает изменение стоимости акций компании за последние 12 месяцев">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
                 <ResponsiveLine
                   data={[
@@ -383,6 +397,13 @@ const CompanyStockesPage = () => {
                   )}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                График отображает динамику цены акций компании за последний год.
+                Обратите внимание на ключевые тренды: пик в сентябре 2024
+                (587.75$) и последующее снижение к апрелю 2025 (371.76$). Такие
+                колебания могут отражать как общие рыночные тенденции, так и
+                бизнес-факторы компании.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -390,9 +411,21 @@ const CompanyStockesPage = () => {
         <Grid item xs={12} md={6}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Объем торгов (млн)
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" className={styles.cardTitle}>
+                  Объем торгов (млн)
+                </Typography>
+                <Tooltip title="Показывает объем торгов акциями компании в миллионах акций по месяцам">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
                 <ResponsiveBar
                   data={volumeData}
@@ -434,6 +467,13 @@ const CompanyStockesPage = () => {
                   role="application"
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                Гистограмма отображает месячный объем торгов акциями компании.
+                Пиковый объем в декабре 2024 (105.6 млн акций) может указывать
+                на повышенную волатильность, связанную с корпоративными
+                событиями или существенными рыночными изменениями. Высокий объем
+                часто сопровождает значительные движения цены.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -441,9 +481,21 @@ const CompanyStockesPage = () => {
         <Grid item xs={12} md={4}>
           <Card className={styles.keyMetricsCard}>
             <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Ключевые показатели
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" className={styles.cardTitle}>
+                  Ключевые показатели
+                </Typography>
+                <Tooltip title="Основные финансовые метрики, характеризующие текущее состояние акций компании">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.metricsGrid}>
                 <Box className={styles.metric}>
                   <Typography
@@ -539,6 +591,13 @@ const CompanyStockesPage = () => {
                   </Typography>
                 </Box>
               </Box>
+              <Typography variant="body2" sx={{ mt: 3, color: "#666" }}>
+                Ключевые показатели дают общее представление о финансовом
+                здоровье компании и оценке ее акций рынком. P/E коэффициент
+                24.27 указывает на умеренно высокую оценку акций, при отсутствии
+                дивидендных выплат компания реинвестирует прибыль в развитие
+                бизнеса.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -546,9 +605,21 @@ const CompanyStockesPage = () => {
         <Grid item xs={12} md={8}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Сравнение P/E с конкурентами
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" className={styles.cardTitle}>
+                  Сравнение P/E с конкурентами
+                </Typography>
+                <Tooltip title="Сравнивает показатель цена/прибыль компании с основными конкурентами в отрасли">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
                 <ResponsiveBar
                   data={peRatioData}
@@ -593,6 +664,13 @@ const CompanyStockesPage = () => {
                   )}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                График сравнивает P/E коэффициенты с основными конкурентами. P/E
+                (Price/Earnings) показывает, сколько инвесторы готовы платить за
+                $1 прибыли компании. Более низкий P/E Adobe (24.27) по сравнению
+                с Apple (32.25) и Microsoft (30.04) может указывать на возможную
+                недооценку акций или более медленный ожидаемый рост.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -600,9 +678,21 @@ const CompanyStockesPage = () => {
         <Grid item xs={12} md={6}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Структура рыночной капитализации в индустрии
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" className={styles.cardTitle}>
+                  Структура рыночной капитализации в индустрии
+                </Typography>
+                <Tooltip title="Показывает долю компании в общей рыночной капитализации среди ключевых игроков отрасли">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
                 <ResponsivePie
                   data={marketCapPieData}
@@ -657,6 +747,13 @@ const CompanyStockesPage = () => {
                   )}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                Диаграмма показывает долю каждой компании в общей рыночной
+                капитализации представленных технологических гигантов. Небольшая
+                доля Adobe относительно Apple и Microsoft отражает различие в
+                масштабах бизнеса и специализации компаний. Эта метрика важна
+                для понимания относительного веса компании в отрасли.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -664,75 +761,123 @@ const CompanyStockesPage = () => {
         <Grid item xs={12} md={6}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Соотношение выручки и капитализации (млрд $)
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" className={styles.cardTitle}>
+                  Соотношение объема торгов и цены
+                </Typography>
+                <Tooltip title="Отображает зависимость между объемом торгов и ценой акций, помогая выявить ключевые моменты активности">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
-                <ResponsiveBar
-                  data={revenueCapRatio}
-                  keys={["value"]}
-                  indexBy="company"
-                  groupMode="grouped"
-                  margin={{ top: 40, right: 130, bottom: 50, left: 60 }}
-                  padding={0.3}
-                  valueScale={{ type: "linear" }}
-                  indexScale={{ type: "band", round: true }}
-                  colors={({ id, data }) =>
-                    data.type === "Выручка" ? "#4DAF4A" : "#377EB8"
-                  }
-                  borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
+                <ResponsiveLine
+                  data={[
+                    {
+                      id: "Цена",
+                      data: tradingVolumeData.map((d) => ({
+                        x: d.date,
+                        y: d.price,
+                      })),
+                      color: "#800000",
+                    },
+                    {
+                      id: "Объем",
+                      data: tradingVolumeData.map((d) => ({
+                        x: d.date,
+                        y: d.volume / 5,
+                      })),
+                      color: "#336699",
+                    },
+                  ]}
+                  margin={{ top: 40, right: 100, bottom: 50, left: 60 }}
+                  xScale={{ type: "point" }}
+                  yScale={{
+                    type: "linear",
+                    min: "auto",
+                    max: "auto",
+                    stacked: false,
+                    reverse: false,
+                  }}
                   axisTop={null}
-                  axisRight={null}
-                  axisBottom={{
+                  axisRight={{
+                    orient: "right",
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
-                    legend: "Компания",
+                    legend: "Объем (млн × 5)",
+                    legendOffset: 60,
                     legendPosition: "middle",
-                    legendOffset: 32,
+                    format: (v) => Math.round(v * 5),
+                  }}
+                  axisBottom={{
+                    orient: "bottom",
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 45,
+                    legend: "Дата",
+                    legendOffset: 40,
+                    legendPosition: "middle",
                   }}
                   axisLeft={{
+                    orient: "left",
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
-                    legend: "Значение (млрд $)",
-                    legendPosition: "middle",
+                    legend: "Цена (USD)",
                     legendOffset: -50,
+                    legendPosition: "middle",
                   }}
-                  enableLabel={false}
+                  colors={["#800000", "#336699"]}
+                  pointSize={6}
+                  pointColor={{ theme: "background" }}
+                  pointBorderWidth={2}
+                  pointBorderColor={{ from: "serieColor" }}
+                  pointLabelYOffset={-12}
+                  useMesh={true}
+                  enableSlices="x"
                   legends={[
                     {
-                      dataFrom: "keys",
-                      anchor: "bottom-right",
+                      anchor: "top-right",
                       direction: "column",
                       justify: false,
-                      translateX: 120,
+                      translateX: 100,
                       translateY: 0,
-                      itemsSpacing: 2,
-                      itemWidth: 100,
-                      itemHeight: 20,
+                      itemsSpacing: 0,
                       itemDirection: "left-to-right",
-                      itemOpacity: 0.85,
-                      symbolSize: 20,
+                      itemWidth: 80,
+                      itemHeight: 20,
+                      itemOpacity: 0.75,
+                      symbolSize: 12,
+                      symbolShape: "circle",
+                      symbolBorderColor: "rgba(0, 0, 0, .5)",
                       effects: [
                         {
                           on: "hover",
                           style: {
+                            itemBackground: "rgba(0, 0, 0, .03)",
                             itemOpacity: 1,
                           },
                         },
                       ],
                     },
                   ]}
-                  tooltip={({ id, value, color, data }) => (
-                    <div className={styles.tooltip} style={{ color: color }}>
-                      <strong>{data.company}</strong>
-                      <br />
-                      {data.type}: {value.toFixed(1)} млрд $
-                    </div>
-                  )}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                График показывает взаимосвязь между ценой акций и объемом
+                торгов. Периоды высокого объема торгов часто совпадают с резкими
+                изменениями цены, что видно в декабре 2024, когда высокий объем
+                торгов сопровождал снижение цены. Это важный индикатор для
+                технического анализа, помогающий подтвердить силу тренда или
+                выявить потенциальные развороты.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>

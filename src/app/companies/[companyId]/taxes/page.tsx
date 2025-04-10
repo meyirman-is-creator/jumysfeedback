@@ -1,13 +1,19 @@
 "use client";
 import React from "react";
-import { Container, Typography, Box, Grid } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { Typography, Box, Grid, Paper, Button, Tooltip } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsivePie } from "@nivo/pie";
+import { Info } from "lucide-react";
 import styles from "./CompanyTaxesPage.module.scss";
 
 const CompanyTaxesPage = () => {
+  const router = useRouter();
+  const { companyId } = useParams() as { companyId: string };
+
   const defaultCompanyData = {
     id: 15,
     name: "Adobe Inc.",
@@ -139,7 +145,6 @@ const CompanyTaxesPage = () => {
     ],
   };
 
-  // Подготовка данных для налоговой диаграммы
   const taxEntries = defaultCompanyData.tax_data.yearly_taxes;
   const aggregatedTaxes = taxEntries.reduce((acc, tax) => {
     const year = tax.year;
@@ -150,24 +155,34 @@ const CompanyTaxesPage = () => {
 
   const taxBarData = Object.keys(aggregatedTaxes).map((year) => ({
     year,
-    Налоги: aggregatedTaxes[year] / 1e6, // Конвертируем в миллионы
+    Налоги: aggregatedTaxes[year] / 1e6,
   }));
 
-  // Данные для линейного графика выручки
   const revenueData = defaultCompanyData.revenue_trend.map((item) => ({
     x: item.year.toString(),
-    y: item.revenue / 1e9, // Конвертируем в миллиарды
+    y: item.revenue / 1e9,
   }));
 
-  // Данные для сравнения с индустрией
   const industryData = defaultCompanyData.industry_comparison.map(
     (company) => ({
       id: company.name,
-      value: company.market_cap / 1e9, // Конвертируем в миллиарды
+      value: company.market_cap / 1e9,
       label: company.name,
       color: `hsl(${Math.random() * 360}, 70%, 50%)`,
     })
   );
+
+  const taxEffectiveRateData = [
+    { category: "Стандартная ставка", value: 21, color: "#888888" },
+    { category: "Эффективная ставка", value: 15.2, color: "#800000" },
+  ];
+
+  const handleTaxDetailClick = () => {
+    const taxSection = document.getElementById("tax-details");
+    if (taxSection) {
+      taxSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <Box className={styles.container}>
@@ -179,9 +194,21 @@ const CompanyTaxesPage = () => {
         <Grid item xs={12} md={6}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Ежегодные налоговые отчисления (млн $)
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6">
+                  Ежегодные налоговые отчисления (млн $)
+                </Typography>
+                <Tooltip title="Показывает динамику ежегодных налоговых отчислений компании в миллионах долларов">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
                 <ResponsiveBar
                   data={taxBarData}
@@ -221,6 +248,11 @@ const CompanyTaxesPage = () => {
                   motionDamping={15}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                График демонстрирует динамику налоговых отчислений компании по
+                годам. Показатели приведены в миллионах долларов США на основе
+                финансовой отчетности.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -228,9 +260,19 @@ const CompanyTaxesPage = () => {
         <Grid item xs={12} md={6}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Выручка компании (млрд $)
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6">Выручка компании (млрд $)</Typography>
+                <Tooltip title="Отображает изменение выручки компании по годам в миллиардах долларов">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
                 <ResponsiveLine
                   data={[
@@ -280,6 +322,12 @@ const CompanyTaxesPage = () => {
                   areaOpacity={0.1}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                Линейный график отображает динамику выручки компании по годам в
+                миллиардах долларов. Обратите внимание на тренды роста или
+                снижения, которые могут указывать на изменение положения
+                компании на рынке.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -287,9 +335,21 @@ const CompanyTaxesPage = () => {
         <Grid item xs={12} md={6}>
           <Card className={styles.card}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Соотношение налогов к выручке
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6">
+                  Соотношение налогов к выручке
+                </Typography>
+                <Tooltip title="Показывает долю налоговых отчислений относительно общей выручки компании">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Typography variant="subtitle1" gutterBottom>
                 Годовые налоги: {(aggregatedTaxes[2024] / 1e6).toFixed(2)} млн $
               </Typography>
@@ -371,33 +431,42 @@ const CompanyTaxesPage = () => {
                   ]}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                Диаграмма показывает долю налоговых отчислений в структуре
+                выручки компании. Налоговая нагрузка является важным показателем
+                эффективности финансового управления и может значительно влиять
+                на итоговую прибыль.
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Card className={styles.card}>
+          <Card className={styles.card} id="tax-details">
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Сравнение рыночной капитализации с конкурентами (млрд $)
-              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6">
+                  Эффективная налоговая ставка
+                </Typography>
+                <Tooltip title="Сравнивает стандартную налоговую ставку с эффективной ставкой, которую фактически платит компания">
+                  <Info size={16} color="#800000" />
+                </Tooltip>
+              </Box>
               <Box className={styles.chartContainer}>
                 <ResponsiveBar
-                  data={defaultCompanyData.industry_comparison.map(
-                    (company) => ({
-                      company: company.name,
-                      "Рыночная капитализация": parseFloat(
-                        (company.market_cap / 1e9).toFixed(1)
-                      ),
-                    })
-                  )}
-                  keys={["Рыночная капитализация"]}
-                  indexBy="company"
-                  margin={{ top: 50, right: 130, bottom: 70, left: 80 }}
+                  data={taxEffectiveRateData}
+                  keys={["value"]}
+                  indexBy="category"
+                  margin={{ top: 50, right: 30, bottom: 50, left: 60 }}
                   padding={0.3}
-                  layout="horizontal"
-                  colors={{ scheme: "category10" }}
-                  colorBy="indexValue"
+                  colors={({ data }) => data.color}
                   borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
                   axisTop={null}
                   axisRight={null}
@@ -405,52 +474,42 @@ const CompanyTaxesPage = () => {
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
-                    legend: "Капитализация (млрд $)",
+                    legend: "Тип ставки",
                     legendPosition: "middle",
-                    legendOffset: 42,
+                    legendOffset: 32,
                   }}
                   axisLeft={{
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
+                    legend: "Процент (%)",
                     legendPosition: "middle",
-                    legendOffset: -50,
+                    legendOffset: -40,
                   }}
                   labelSkipWidth={12}
                   labelSkipHeight={12}
-                  labelTextColor={{
-                    from: "color",
-                    modifiers: [["darker", 1.6]],
-                  }}
-                  legends={[
-                    {
-                      dataFrom: "keys",
-                      anchor: "bottom-right",
-                      direction: "column",
-                      justify: false,
-                      translateX: 120,
-                      translateY: 0,
-                      itemsSpacing: 2,
-                      itemWidth: 100,
-                      itemHeight: 20,
-                      itemDirection: "left-to-right",
-                      itemOpacity: 0.85,
-                      symbolSize: 20,
-                      effects: [
-                        {
-                          on: "hover",
-                          style: {
-                            itemOpacity: 1,
-                          },
-                        },
-                      ],
-                    },
-                  ]}
+                  labelTextColor="#fff"
                   animate={true}
                   motionStiffness={90}
                   motionDamping={15}
                 />
               </Box>
+              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
+                График демонстрирует разницу между стандартной налоговой ставкой
+                (21%) и эффективной налоговой ставкой (15.2%), которую
+                фактически платит компания. Эффективная ставка часто ниже из-за
+                налоговых льгот, вычетов и международной структуры бизнеса.
+              </Typography>
+              <Button
+                variant="outlined"
+                color="primary"
+                sx={{ mt: 2, borderColor: "#800000", color: "#800000" }}
+                onClick={() =>
+                  router.push(`/companies/${companyId}/taxes/details`)
+                }
+              >
+                Подробный налоговый анализ
+              </Button>
             </CardContent>
           </Card>
         </Grid>

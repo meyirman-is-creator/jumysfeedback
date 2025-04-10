@@ -73,9 +73,7 @@ export default function CompanyLayout({
           <p className="text-gray-700 font-medium text-base">
             Рейтинг: {company.rating}
           </p>
-          <p className="text-[black] font-medium text-sm">
-            {company.location}
-          </p>
+          <p className="text-[black] font-medium text-sm">{company.location}</p>
         </div>
         <div className="md:w-auto w-full flex">
           <Button

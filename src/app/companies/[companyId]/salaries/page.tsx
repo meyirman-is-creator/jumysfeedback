@@ -1,15 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  Typography,
-  Box,
-  Grid,
-  TextField,
-  Chip,
-  Pagination,
-} from "@mui/material";
+import { Typography, Box, Grid, TextField, Chip } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectTrigger,
@@ -17,7 +11,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsivePie } from "@nivo/pie";
@@ -77,6 +70,10 @@ const CompanySalariesPage = () => {
     (page - 1) * salariesPerPage,
     page * salariesPerPage
   );
+
+  const handleChangePage = (pageNumber) => {
+    setPage(pageNumber);
+  };
 
   // Подготовка данных для визуализации
   const avgSalaryByLevel = {
@@ -570,14 +567,19 @@ const CompanySalariesPage = () => {
       </Box>
 
       {totalPages > 1 && (
-        <Box className={styles.pagination}>
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={(e, value) => setPage(value)}
-            color="primary"
-          />
-        </Box>
+        <div className={styles.pagination}>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <Button
+              key={i + 1}
+              variant={page === i + 1 ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleChangePage(i + 1)}
+              className={styles.paginationBtn}
+            >
+              {i + 1}
+            </Button>
+          ))}
+        </div>
       )}
     </Box>
   );
