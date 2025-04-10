@@ -139,13 +139,17 @@
 .filterSelect {
   width: 100%;
   border-color: #e2e8f0;
-
   &:focus {
     border-color: #800000;
     box-shadow: 0 0 0 1px rgba(128, 0, 0, 0.2);
   }
 }
-
+.filterSelectContent{
+  background-color: #fff !important;
+}
+.filterSelectItem:hover{
+  background-color: #d5d5d5 !important;
+}
 .ratingFilter,
 .sizeFilter {
   display: flex;
@@ -219,17 +223,13 @@
   gap: 0.5rem;
 }
 
-.viewToggleBtn {
-  &[data-state="on"] {
-    background-color: #800000;
-    color: #fff;
-
-    &:hover {
-      background-color: #660000;
-    }
-  }
+.viewNoActive {
+  background-color: #fff;
 }
-
+.viewNoActive:hover,
+.viewActive:hover {
+  background-color: none !important;
+}
 .companyGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -249,13 +249,15 @@
     transform: translateY(-2px);
   }
 }
-
+.companyCardd{
+  height: 100% !important;
+}
 .companyCardContent {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 1.5rem !important;
-
+  height: 100%;
   .listView & {
     flex-direction: row;
   }

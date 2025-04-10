@@ -22,8 +22,6 @@ import {
   List,
   Search,
   Star,
-  StarIcon,
-  StarOutline,
   X,
 } from "lucide-react";
 import { mockCompanies } from "@/features/company/mockData";
@@ -36,7 +34,7 @@ const CompaniesPage = () => {
   const [page, setPage] = useState(1);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  const itemsPerPage = 9;
+  const itemsPerPage = 10;
   const totalPages = Math.ceil(mockCompanies.length / itemsPerPage);
   const startIndex = (page - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -156,12 +154,12 @@ const CompaniesPage = () => {
                 <SelectTrigger className={styles.filterSelect}>
                   <SelectValue placeholder="Выберите локацию" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все локации</SelectItem>
-                  <SelectItem value="almaty">Алматы, Казахстан</SelectItem>
-                  <SelectItem value="astana">Астана, Казахстан</SelectItem>
-                  <SelectItem value="moscow">Москва, Россия</SelectItem>
-                  <SelectItem value="newyork">Нью-Йорк, США</SelectItem>
+                <SelectContent className={styles.filterSelectContent}>
+                  <SelectItem className={styles.filterSelectItem} value="all">Все локации</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="almaty">Алматы, Казахстан</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="astana">Астана, Казахстан</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="moscow">Москва, Россия</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="newyork">Нью-Йорк, США</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -172,12 +170,12 @@ const CompaniesPage = () => {
                 <SelectTrigger className={styles.filterSelect}>
                   <SelectValue placeholder="Выберите отрасль" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все отрасли</SelectItem>
-                  <SelectItem value="it">IT и технологии</SelectItem>
-                  <SelectItem value="finance">Финансы</SelectItem>
-                  <SelectItem value="manufacturing">Производство</SelectItem>
-                  <SelectItem value="education">Образование</SelectItem>
+                <SelectContent className={styles.filterSelectContent}>
+                  <SelectItem className={styles.filterSelectItem} value="all">Все отрасли</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="it">IT и технологии</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="finance">Финансы</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="manufacturing">Производство</SelectItem>
+                  <SelectItem className={styles.filterSelectItem} value="education">Образование</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -264,7 +262,7 @@ const CompaniesPage = () => {
                   variant={viewMode === "grid" ? "default" : "outline"}
                   size="icon"
                   onClick={handleSwitchToGrid}
-                  className={styles.viewToggleBtn}
+                  className={viewMode === "grid" ? styles.viewActive:styles.viewNoActive}
                 >
                   <Grid size={18} />
                 </Button>
@@ -272,7 +270,7 @@ const CompaniesPage = () => {
                   variant={viewMode === "list" ? "default" : "outline"}
                   size="icon"
                   onClick={handleSwitchToList}
-                  className={styles.viewToggleBtn}
+                  className={viewMode === "list" ? styles.viewActive:styles.viewNoActive}
                 >
                   <List size={18} />
                 </Button>
@@ -290,7 +288,7 @@ const CompaniesPage = () => {
                   key={company.id}
                   className={styles.companyCard}
                 >
-                  <Card>
+                  <Card className={styles.companyCardd}>
                     <CardContent className={styles.companyCardContent}>
                       <div className={styles.companyLogo}>
                         <img
