@@ -109,20 +109,20 @@ export default function Header() {
                         Мой профиль
                       </DropdownMenuItem>
                     </Link>
-                    <Link href="/reviews" className={styles.profileLink}>
+                    <Link href="/profile/reviews" className={styles.profileLink}>
                       <DropdownMenuItem>
                         <FileText size={16} className={styles.menuIcon} />
                         Мои отзывы
                       </DropdownMenuItem>
                     </Link>
-                    <Link href="/salaries" className={styles.profileLink}>
+                    <Link href="/profile/salaries" className={styles.profileLink}>
                       <DropdownMenuItem>
                         <DollarSign size={16} className={styles.menuIcon} />
                         Мои зарплаты
                       </DropdownMenuItem>
                     </Link>
                     <div className={styles.dropdownDivider}></div>
-                    <Link href="/create/review">
+                    <Link href="/profile/add">
                       <Button size="sm" className={styles.reviewButton}>
                         Оставить отзыв
                       </Button>

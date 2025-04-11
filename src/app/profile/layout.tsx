@@ -40,21 +40,21 @@ export default function ProfileLayout({
     },
     {
       label: "Мои отзывы",
-      href: "/reviews",
+      href: "/profile/reviews",
       icon: <FileText size={20} />,
-      active: pathname === "/reviews",
+      active: pathname === "/profile/reviews",
     },
     {
       label: "Мои зарплаты",
-      href: "/salaries",
+      href: "/profile/salaries",
       icon: <DollarSign size={20} />,
-      active: pathname === "/salaries",
+      active: pathname === "/profile/salaries",
     },
     {
       label: "Добавить контент",
-      href: "/add",
+      href: "/profile/add",
       icon: <PlusCircle size={20} />,
-      active: pathname === "/add",
+      active: pathname === "/profile/add",
     },
   ];
 
