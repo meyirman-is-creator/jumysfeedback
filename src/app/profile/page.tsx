@@ -1,25 +1,41 @@
-// src/app/profile/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
-  Typography,
-  Box,
-  Grid,
-  Paper,
-  Button,
-  Divider,
-  Chip,
-} from "@mui/material";
-import { Edit, Share, ArrowRight } from "lucide-react";
-import styles from "./ProfilePage.module.scss";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Edit, ArrowRight, KeyRound } from "lucide-react";
 
 export default function ProfilePage() {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+
   const user = {
-    name: "John Doe",
-    jobTitle: "Software Engineer",
+    name: "Иван Иванов",
+    jobTitle: "Разработчик ПО",
     location: "Алматы, Казахстан",
-    email: "john.doe@example.com",
+    email: "ivan@example.com",
     phone: "+7 (777) 123-4567",
     joinDate: "Май 2022",
     company: "Kaspi.kz",
@@ -28,168 +44,403 @@ export default function ProfilePage() {
     interviewCount: 3,
   };
 
+  const profileFormSchema = z.object({
+    name: z.string().min(2, {
+      message: "Имя должно содержать минимум 2 символа",
+    }),
+    jobTitle: z.string().min(2, {
+      message: "Должность должна содержать минимум 2 символа",
+    }),
+    company: z.string(),
+    location: z.string(),
+    email: z.string().email({
+      message: "Введите корректный email",
+    }),
+    phone: z.string(),
+  });
+
+  const passwordFormSchema = z
+    .object({
+      currentPassword: z.string().min(8, {
+        message: "Пароль должен содержать минимум 8 символов",
+      }),
+      newPassword: z.string().min(8, {
+        message: "Пароль должен содержать минимум 8 символов",
+      }),
+      confirmPassword: z.string().min(8, {
+        message: "Пароль должен содержать минимум 8 символов",
+      }),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: "Пароли не совпадают",
+      path: ["confirmPassword"],
+    });
+
+  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: user.name,
+      jobTitle: user.jobTitle,
+      company: user.company,
+      location: user.location,
+      email: user.email,
+      phone: user.phone,
+    },
+  });
+
+  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
+    resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
+    console.log(values);
+    setIsEditDialogOpen(false);
+  }
+
+  function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
+    console.log(values);
+    setIsPasswordDialogOpen(false);
+  }
+
   return (
-    <div className={styles.profilePage}>
-      <Box className={styles.header}>
-        <Typography variant="h4" className={styles.title}>
-          Мой профиль
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<Edit size={18} />}
-          className={styles.editButton}
-        >
-          Редактировать
-        </Button>
-      </Box>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-slate-900">Мой профиль</h1>
+        <div className="flex flex-wrap gap-2">
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Edit className="h-4 w-4" />
+                Редактировать
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] bg-white">
+              <DialogHeader>
+                <DialogTitle>Редактировать профиль</DialogTitle>
+                <DialogDescription>
+                  Внесите изменения в профиль и нажмите сохранить, когда
+                  закончите.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...profileForm}>
+                <form
+                  onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={profileForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ФИО</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="jobTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Должность</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="company"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Компания</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Локация</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Телефон</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Сохранить</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Paper className={styles.infoCard}>
-            <Typography variant="h6" className={styles.cardTitle}>
+          <Dialog
+            open={isPasswordDialogOpen}
+            onOpenChange={setIsPasswordDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4" />
+                Сменить пароль
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px] bg-white">
+              <DialogHeader>
+                <DialogTitle>Сменить пароль</DialogTitle>
+                <DialogDescription>
+                  Введите текущий и новый пароль для смены.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...passwordForm}>
+                <form
+                  onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={passwordForm.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Текущий пароль</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={passwordForm.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Новый пароль</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={passwordForm.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Подтвердите пароль</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Сохранить</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-[#800000]">
               Основная информация
-            </Typography>
-            <Divider className={styles.divider} />
+            </CardTitle>
+            <Separator className="bg-[#800000]/10" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">ФИО</span>
+                <span className="col-span-2 text-slate-900">{user.name}</span>
+              </div>
 
-            <Grid container spacing={2} className={styles.infoGrid}>
-              <Grid item xs={4}>
-                <Typography variant="body2" className={styles.infoLabel}>
-                  ФИО
-                </Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body1" className={styles.infoValue}>
-                  {user.name}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={4}>
-                <Typography variant="body2" className={styles.infoLabel}>
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">
                   Должность
-                </Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body1" className={styles.infoValue}>
+                </span>
+                <span className="col-span-2 text-slate-900">
                   {user.jobTitle}
-                </Typography>
-              </Grid>
+                </span>
+              </div>
 
-              <Grid item xs={4}>
-                <Typography variant="body2" className={styles.infoLabel}>
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">
                   Компания
-                </Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body1" className={styles.infoValue}>
+                </span>
+                <span className="col-span-2 text-slate-900">
                   {user.company}
-                </Typography>
-              </Grid>
+                </span>
+              </div>
 
-              <Grid item xs={4}>
-                <Typography variant="body2" className={styles.infoLabel}>
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">
                   Локация
-                </Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body1" className={styles.infoValue}>
+                </span>
+                <span className="col-span-2 text-slate-900">
                   {user.location}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} md={6}>
-          <Paper className={styles.infoCard}>
-            <Typography variant="h6" className={styles.cardTitle}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-[#800000]">
               Контактная информация
-            </Typography>
-            <Divider className={styles.divider} />
-
-            <Grid container spacing={2} className={styles.infoGrid}>
-              <Grid item xs={4}>
-                <Typography variant="body2" className={styles.infoLabel}>
+            </CardTitle>
+            <Separator className="bg-[#800000]/10" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">
                   Email
-                </Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body1" className={styles.infoValue}>
-                  {user.email}
-                </Typography>
-              </Grid>
+                </span>
+                <span className="col-span-2 text-slate-900">{user.email}</span>
+              </div>
 
-              <Grid item xs={4}>
-                <Typography variant="body2" className={styles.infoLabel}>
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">
                   Телефон
-                </Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body1" className={styles.infoValue}>
-                  {user.phone}
-                </Typography>
-              </Grid>
+                </span>
+                <span className="col-span-2 text-slate-900">{user.phone}</span>
+              </div>
 
-              <Grid item xs={4}>
-                <Typography variant="body2" className={styles.infoLabel}>
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">
                   С нами с
-                </Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body1" className={styles.infoValue}>
+                </span>
+                <span className="col-span-2 text-slate-900">
                   {user.joinDate}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <Grid item xs={12}>
-          <Paper className={styles.statsCard}>
-            <Typography variant="h6" className={styles.cardTitle}>
-              Ваш вклад в сообщество
-            </Typography>
-            <Divider className={styles.divider} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-[#800000]">
+            Ваш вклад в сообщество
+          </CardTitle>
+          <Separator className="bg-[#800000]/10" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg">
+              <span className="text-3xl font-bold text-[#800000]">
+                {user.reviewCount}
+              </span>
+              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
+                Отзывов о компаниях
+              </span>
+              <Button
+                variant="link"
+                className="text-[#800000] no-underline"
+                size="sm"
+                asChild
+              >
+                <a href="/reviews" className="flex items-center">
+                  Просмотреть
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </a>
+              </Button>
+            </div>
 
-            <Grid container spacing={3} className={styles.statsGrid}>
-              <Grid item xs={12} sm={4}>
-                <Box className={styles.statItem}>
-                  <Typography variant="h4" className={styles.statNumber}>
-                    {user.reviewCount}
-                  </Typography>
-                  <Typography variant="body2" className={styles.statLabel}>
-                    Отзывов о компаниях
-                  </Typography>
-                  <Button
-                    endIcon={<ArrowRight size={16} />}
-                    className={styles.viewButton}
-                    href="/reviews"
-                  >
-                    Просмотреть
-                  </Button>
-                </Box>
-              </Grid>
+            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg">
+              <span className="text-3xl font-bold text-[#800000]">
+                {user.salaryCount}
+              </span>
+              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
+                Записей о зарплатах
+              </span>
+              <Button
+                variant="link"
+                className="text-[#800000] no-underline"
+                size="sm"
+                asChild
+              >
+                <a href="/salaries" className="flex items-center">
+                  Просмотреть
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </a>
+              </Button>
+            </div>
 
-              <Grid item xs={12} sm={4}>
-                <Box className={styles.statItem}>
-                  <Typography variant="h4" className={styles.statNumber}>
-                    {user.salaryCount}
-                  </Typography>
-                  <Typography variant="body2" className={styles.statLabel}>
-                    Записей о зарплатах
-                  </Typography>
-                  <Button
-                    endIcon={<ArrowRight size={16} />}
-                    className={styles.viewButton}
-                    href="/salaries"
-                  >
-                    Просмотреть
-                  </Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-      </Grid>
+            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg">
+              <span className="text-3xl font-bold text-[#800000]">
+                {user.interviewCount}
+              </span>
+              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
+                Интервью
+              </span>
+              <Button
+                variant="link"
+                className="text-[#800000] no-underline"
+                size="sm"
+                asChild
+              >
+                <a href="/interviews" className="flex items-center">
+                  Просмотреть
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </a>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

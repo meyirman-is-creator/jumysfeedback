@@ -1,27 +1,21 @@
-
 "use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Container,
-  Box,
-  Typography,
-  List,
-  ListItem,
-  Divider,
-  Avatar,
-} from "@mui/material";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import {
   User,
   FileText,
   DollarSign,
-  Settings,
-  LogOut,
   PlusCircle,
+  LogOut,
+  Menu,
 } from "lucide-react";
-import styles from "./ProfileLayout.module.scss";
+import { cn } from "@/lib/utils";
 
 export default function ProfileLayout({
   children,
@@ -29,7 +23,8 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isAdmin = true; // Replace with actual auth check logic
+  const isAdmin = true;
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
     {
@@ -58,56 +53,104 @@ export default function ProfileLayout({
     },
   ];
 
+  const renderMenuItems = () => (
+    <nav className="space-y-1 mt-4">
+      {menuItems.map((item) => (
+        <Link key={item.href} href={item.href} className="block">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-left font-normal mb-1",
+              item.active
+                ? "bg-[#800000]/10 text-[#800000] font-medium"
+                : "text-slate-600 hover:bg-[#800000]/5 hover:text-[#800000]"
+            )}
+          >
+            <span className="mr-2 text-[#800000]">{item.icon}</span>
+            {item.label}
+          </Button>
+        </Link>
+      ))}
+
+      <Separator className="my-4 bg-[#800000]/10" />
+
+      <Link href="/auth/logout" className="block">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-left font-normal text-slate-600 hover:bg-[#800000]/5 hover:text-[#800000]"
+        >
+          <LogOut size={20} className="mr-2 text-[#800000]" />
+          Выйти
+        </Button>
+      </Link>
+    </nav>
+  );
+
   return (
-    <Container maxWidth="lg" className={styles.profileLayout}>
-      <Box className={styles.profileGrid}>
-        <Box className={styles.sidebar}>
-          <Box className={styles.userInfo}>
-            <Avatar
-              src="/images/avatar-placeholder.jpg"
-              alt="User profile"
-              className={styles.avatar}
-            />
-            <Typography variant="h6" className={styles.userName}>
-              John Doe
-            </Typography>
-            <Typography variant="body2" className={styles.userRole}>
-              {isAdmin ? "Администратор" : "Пользователь"}
-            </Typography>
-          </Box>
+    <div className="container mx-auto py-6 px-4 md:px-6">
+      <div className="lg:grid lg:grid-cols-[280px_1fr] gap-8">
+        {/* Mobile menu toggle button */}
+        <div className="lg:hidden flex justify-between items-center mb-6">
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="h-10 w-10">
+                <Menu className="h-4 w-4" />
+                <span className="sr-only">Открыть меню</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] bg-white sm:max-w-none">
+              <div className="flex flex-col items-center py-4">
+                <Avatar className="h-16 w-16 mb-2">
+                  <AvatarImage
+                    src="/images/avatar-placeholder.jpg"
+                    alt="аватар"
+                  />
+                  <AvatarFallback>ИИ</AvatarFallback>
+                </Avatar>
+                <div className="text-center">
+                  <h3 className="font-medium text-slate-900">Иван Иванов</h3>
+                  <p className="text-sm text-[#800000] font-medium">
+                    {isAdmin ? "Администратор" : "Пользователь"}
+                  </p>
+                </div>
+              </div>
+              <Separator className="bg-[#800000]/10" />
+              {renderMenuItems()}
+            </SheetContent>
+          </Sheet>
+          <h1 className="text-xl font-bold text-slate-900">Личный кабинет</h1>
+        </div>
 
-          <Divider className={styles.divider} />
+        {/* Desktop sidebar */}
+        <aside className="hidden lg:block">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+            <div className="flex flex-col items-center p-6">
+              <Avatar className="h-24 w-24 mb-4">
+                <AvatarImage
+                  src="/images/avatar-placeholder.jpg"
+                  alt="аватар"
+                />
+                <AvatarFallback>ИИ</AvatarFallback>
+              </Avatar>
+              <div className="text-center">
+                <h3 className="text-xl font-medium text-slate-900">
+                  Иван Иванов
+                </h3>
+                <p className="text-sm text-[#800000] font-medium">
+                  {isAdmin ? "Администратор" : "Пользователь"}
+                </p>
+              </div>
+            </div>
+            <Separator className="bg-[#800000]/10" />
+            <div className="p-4">{renderMenuItems()}</div>
+          </div>
+        </aside>
 
-          <List className={styles.menuList}>
-            {menuItems.map((item) => (
-              <ListItem key={item.href} disablePadding>
-                <Link
-                  href={item.href}
-                  className={`${styles.menuItem} ${
-                    item.active ? styles.activeMenuItem : ""
-                  }`}
-                >
-                  <span className={styles.menuIcon}>{item.icon}</span>
-                  {item.label}
-                </Link>
-              </ListItem>
-            ))}
-
-            <Divider className={styles.divider} sx={{ my: 2 }} />
-
-            <ListItem disablePadding>
-              <Link href="/auth/logout" className={styles.menuItem}>
-                <span className={styles.menuIcon}>
-                  <LogOut size={20} />
-                </span>
-                Выйти
-              </Link>
-            </ListItem>
-          </List>
-        </Box>
-
-        <Box className={styles.content}>{children}</Box>
-      </Box>
-    </Container>
+        {/* Main content */}
+        <main className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }
