@@ -1,3 +1,4 @@
+// src/profile/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -22,14 +23,30 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Edit, ArrowRight, KeyRound } from "lucide-react";
+import {
+  Edit,
+  ArrowRight,
+  KeyRound,
+  User,
+  Briefcase,
+  Building,
+  MapPin,
+  Mail,
+  Phone,
+  EyeOff,
+  Eye,
+} from "lucide-react";
 
 export default function ProfilePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const user = {
     name: "Иван Иванов",
@@ -41,7 +58,6 @@ export default function ProfilePage() {
     company: "Kaspi.kz",
     reviewCount: 12,
     salaryCount: 5,
-    interviewCount: 3,
   };
 
   const profileFormSchema = z.object({
@@ -139,7 +155,13 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>ФИО</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <div className="relative">
+                            <User
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input {...field} className="pl-10" />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -152,7 +174,13 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Должность</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <div className="relative">
+                            <Briefcase
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input {...field} className="pl-10" />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -165,7 +193,13 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Компания</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <div className="relative">
+                            <Building
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input {...field} className="pl-10" />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -178,7 +212,13 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Локация</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <div className="relative">
+                            <MapPin
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input {...field} className="pl-10" />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -191,7 +231,13 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <div className="relative">
+                            <Mail
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input {...field} className="pl-10" />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -204,7 +250,13 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Телефон</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <div className="relative">
+                            <Phone
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input {...field} className="pl-10" />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -247,7 +299,32 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Текущий пароль</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <div className="relative">
+                            <KeyRound
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input
+                              type={showCurrentPassword ? "text" : "password"}
+                              {...field}
+                              className="pl-10 pr-10"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2"
+                              onClick={() =>
+                                setShowCurrentPassword(!showCurrentPassword)
+                              }
+                            >
+                              {showCurrentPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-500" />
+                              )}
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -260,7 +337,32 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Новый пароль</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <div className="relative">
+                            <KeyRound
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input
+                              type={showNewPassword ? "text" : "password"}
+                              {...field}
+                              className="pl-10 pr-10"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2"
+                              onClick={() =>
+                                setShowNewPassword(!showNewPassword)
+                              }
+                            >
+                              {showNewPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-500" />
+                              )}
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -273,7 +375,32 @@ export default function ProfilePage() {
                       <FormItem>
                         <FormLabel>Подтвердите пароль</FormLabel>
                         <FormControl>
-                          <Input type="password" {...field} />
+                          <div className="relative">
+                            <KeyRound
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                              size={16}
+                            />
+                            <Input
+                              type={showConfirmPassword ? "text" : "password"}
+                              {...field}
+                              className="pl-10 pr-10"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2"
+                              onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                              }
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-500" />
+                              )}
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -378,67 +505,54 @@ export default function ProfilePage() {
           <Separator className="bg-[#800000]/10" />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg">
-              <span className="text-3xl font-bold text-[#800000]">
-                {user.reviewCount}
-              </span>
-              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
-                Отзывов о компаниях
-              </span>
-              <Button
-                variant="link"
-                className="text-[#800000] no-underline"
-                size="sm"
-                asChild
-              >
-                <a href="/reviews" className="flex items-center">
-                  Просмотреть
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </a>
-              </Button>
-            </div>
-
-            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg">
-              <span className="text-3xl font-bold text-[#800000]">
-                {user.salaryCount}
-              </span>
-              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
-                Записей о зарплатах
-              </span>
-              <Button
-                variant="link"
-                className="text-[#800000] no-underline"
-                size="sm"
-                asChild
-              >
-                <a href="/salaries" className="flex items-center">
-                  Просмотреть
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </a>
-              </Button>
-            </div>
-
-            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg">
-              <span className="text-3xl font-bold text-[#800000]">
-                {user.interviewCount}
-              </span>
-              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
-                Интервью
-              </span>
-              <Button
-                variant="link"
-                className="text-[#800000] no-underline"
-                size="sm"
-                asChild
-              >
-                <a href="/interviews" className="flex items-center">
-                  Просмотреть
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </a>
-              </Button>
-            </div>
-          </div>
+          <Tabs defaultValue="reviews" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
+              <TabsTrigger value="reviews">Отзывы</TabsTrigger>
+              <TabsTrigger value="salaries">Зарплаты</TabsTrigger>
+            </TabsList>
+            <TabsContent value="reviews">
+              <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md mx-auto">
+                <span className="text-3xl font-bold text-[#800000]">
+                  {user.reviewCount}
+                </span>
+                <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
+                  Отзывов о компаниях
+                </span>
+                <Button
+                  variant="link"
+                  className="text-[#800000] no-underline"
+                  size="sm"
+                  asChild
+                >
+                  <a href="/profile/reviews" className="flex items-center">
+                    Просмотреть
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </a>
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent value="salaries">
+              <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md mx-auto">
+                <span className="text-3xl font-bold text-[#800000]">
+                  {user.salaryCount}
+                </span>
+                <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
+                  Записей о зарплатах
+                </span>
+                <Button
+                  variant="link"
+                  className="text-[#800000] no-underline"
+                  size="sm"
+                  asChild
+                >
+                  <a href="/profile/salaries" className="flex items-center">
+                    Просмотреть
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </a>
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

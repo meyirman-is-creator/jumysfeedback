@@ -1,32 +1,29 @@
-// src/app/profile/add/review/page.tsx
+// src/profile/add/review/page.tsx
 "use client";
 
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Container } from "@/components/ui/container";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Rating } from "@/components/ui/rating";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  FormControlLabel,
-  Checkbox,
-  Rating,
-  Stepper,
-  Step,
-  StepLabel,
-  FormHelperText,
-  Radio,
-  RadioGroup,
-  Divider,
-} from "@mui/material";
-import { ChevronLeft, ChevronRight, Save, X } from "lucide-react";
-import styles from "./AddReviewPage.module.scss";
-import './AddReviewPage.scss'
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  X,
+  Building,
+  Briefcase,
+  Star,
+} from "lucide-react";
+
 export default function AddReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -62,7 +59,7 @@ export default function AddReviewPage() {
     confirmTruthful: false,
   });
 
-  // Form validation
+  // Form errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateStep = (step: number) => {
@@ -111,7 +108,9 @@ export default function AddReviewPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }
+    >
   ) => {
     const { name, value } = e.target;
     if (name) {
@@ -128,8 +127,7 @@ export default function AddReviewPage() {
     }
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
+  const handleCheckboxChange = (name: string, checked: boolean) => {
     setFormData((prev) => ({ ...prev, [name]: checked }));
 
     // Clear error when field is changed
@@ -142,15 +140,15 @@ export default function AddReviewPage() {
     }
   };
 
-  const handleRatingChange = (name: string, value: number | null) => {
-    setFormData((prev) => ({ ...prev, [name]: value || 0 }));
+  const handleRatingChange = (name: string, value: number) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
     if (validateStep(activeStep)) {
       // Handle submission logic here
       console.log("Form submitted:", formData);
-      router.push("/reviews");
+      router.push("/profile/reviews");
     }
   };
 
@@ -158,445 +156,488 @@ export default function AddReviewPage() {
     router.back();
   };
 
-  // Render steps
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box className={styles.stepContent}>
-            <Typography variant="h6" className={styles.stepTitle}>
-              Информация о компании и должности
-            </Typography>
-
-            <FormControl fullWidth className={styles.formField}>
-              <InputLabel id="company-label">Компания *</InputLabel>
-              <Select
-                labelId="company-label"
-                name="companyName"
-                value={formData.companyName}
-                onChange={handleChange}
-                label="Компания *"
-                error={!!errors.companyName}
-              >
-                <MenuItem value="Kaspi.kz">Kaspi.kz</MenuItem>
-                <MenuItem value="Google">Google</MenuItem>
-                <MenuItem value="Microsoft">Microsoft</MenuItem>
-                <MenuItem value="Amazon">Amazon</MenuItem>
-              </Select>
-              {errors.companyName && (
-                <FormHelperText error>{errors.companyName}</FormHelperText>
-              )}
-            </FormControl>
-
-            <TextField
-              label="Должность *"
-              name="position"
-              value={formData.position}
-              onChange={handleChange}
-              fullWidth
-              className={styles.formField}
-              error={!!errors.position}
-              helperText={errors.position}
-            />
-
-            <FormControl component="fieldset" className={styles.formField}>
-              <Typography variant="subtitle2" className={styles.fieldLabel}>
-                Статус работы *
-              </Typography>
-              <RadioGroup
-                name="employmentStatus"
-                value={formData.employmentStatus}
-                onChange={handleChange}
-                row
-              >
-                <FormControlLabel
-                  value="current"
-                  control={<Radio />}
-                  label="Текущий сотрудник"
-                />
-                <FormControlLabel
-                  value="former"
-                  control={<Radio />}
-                  label="Бывший сотрудник"
-                />
-              </RadioGroup>
-            </FormControl>
-
-            <FormControl fullWidth className={styles.formField}>
-              <InputLabel id="employment-type-label">Тип занятости</InputLabel>
-              <Select
-                labelId="employment-type-label"
-                name="employmentType"
-                value={formData.employmentType}
-                onChange={handleChange}
-                label="Тип занятости"
-              >
-                <MenuItem value="full-time">Полная занятость</MenuItem>
-                <MenuItem value="part-time">Частичная занятость</MenuItem>
-                <MenuItem value="contract">Контракт</MenuItem>
-                <MenuItem value="internship">Стажировка</MenuItem>
-                <MenuItem value="freelance">Фриланс</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        );
-      case 1:
-        return (
-          <Box className={styles.stepContent}>
-            <Typography variant="h6" className={styles.stepTitle}>
-              Оцените свой опыт работы
-            </Typography>
-
-            <Box className={styles.ratingField}>
-              <Typography variant="subtitle2" className={styles.ratingLabel}>
-                Общая оценка *
-              </Typography>
-              <Rating
-                name="overallRating"
-                value={formData.overallRating}
-                onChange={(event, newValue) =>
-                  handleRatingChange("overallRating", newValue)
-                }
-                size="large"
-                className={styles.ratingStars}
-              />
-            </Box>
-
-            <Divider className={styles.divider} />
-
-            <Typography variant="subtitle1" className={styles.sectionTitle}>
-              Оцените по категориям
-            </Typography>
-
-            <Box className={styles.ratingField}>
-              <Typography variant="subtitle2" className={styles.ratingLabel}>
-                Карьерные возможности
-              </Typography>
-              <Rating
-                name="careerOpportunities"
-                value={formData.careerOpportunities}
-                onChange={(event, newValue) =>
-                  handleRatingChange("careerOpportunities", newValue)
-                }
-                size="medium"
-                className={styles.ratingStars}
-              />
-            </Box>
-
-            <Box className={styles.ratingField}>
-              <Typography variant="subtitle2" className={styles.ratingLabel}>
-                Баланс работы и личной жизни
-              </Typography>
-              <Rating
-                name="workLifeBalance"
-                value={formData.workLifeBalance}
-                onChange={(event, newValue) =>
-                  handleRatingChange("workLifeBalance", newValue)
-                }
-                size="medium"
-                className={styles.ratingStars}
-              />
-            </Box>
-
-            <Box className={styles.ratingField}>
-              <Typography variant="subtitle2" className={styles.ratingLabel}>
-                Компенсация и льготы
-              </Typography>
-              <Rating
-                name="compensation"
-                value={formData.compensation}
-                onChange={(event, newValue) =>
-                  handleRatingChange("compensation", newValue)
-                }
-                size="medium"
-                className={styles.ratingStars}
-              />
-            </Box>
-
-            <Box className={styles.ratingField}>
-              <Typography variant="subtitle2" className={styles.ratingLabel}>
-                Стабильность работы
-              </Typography>
-              <Rating
-                name="jobSecurity"
-                value={formData.jobSecurity}
-                onChange={(event, newValue) =>
-                  handleRatingChange("jobSecurity", newValue)
-                }
-                size="medium"
-                className={styles.ratingStars}
-              />
-            </Box>
-
-            <Box className={styles.ratingField}>
-              <Typography variant="subtitle2" className={styles.ratingLabel}>
-                Качество управления
-              </Typography>
-              <Rating
-                name="management"
-                value={formData.management}
-                onChange={(event, newValue) =>
-                  handleRatingChange("management", newValue)
-                }
-                size="medium"
-                className={styles.ratingStars}
-              />
-            </Box>
-          </Box>
-        );
-      case 2:
-        return (
-          <Box className={styles.stepContent}>
-            <Typography variant="h6" className={styles.stepTitle}>
-              Подробности вашего отзыва
-            </Typography>
-
-            <TextField
-              label="Заголовок отзыва *"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              fullWidth
-              className={styles.formField}
-              error={!!errors.title}
-              helperText={errors.title}
-              placeholder="Кратко опишите ваш опыт работы в компании"
-            />
-
-            <TextField
-              label="Плюсы *"
-              name="pros"
-              value={formData.pros}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              rows={4}
-              className={styles.formField}
-              error={!!errors.pros}
-              helperText={errors.pros || "Что вам нравилось в компании?"}
-            />
-
-            <TextField
-              label="Минусы *"
-              name="cons"
-              value={formData.cons}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              rows={4}
-              className={styles.formField}
-              error={!!errors.cons}
-              helperText={errors.cons || "Что можно было бы улучшить?"}
-            />
-
-            <TextField
-              label="Советы руководству"
-              name="advice"
-              value={formData.advice}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              rows={3}
-              className={styles.formField}
-              helperText="Необязательно"
-            />
-
-            <FormControl component="fieldset" className={styles.formField}>
-              <Typography variant="subtitle2" className={styles.fieldLabel}>
-                Рекомендуете ли вы эту компанию?
-              </Typography>
-              <RadioGroup
-                name="recommendToFriend"
-                value={formData.recommendToFriend}
-                onChange={handleChange}
-                row
-              >
-                <FormControlLabel value="yes" control={<Radio />} label="Да" />
-                <FormControlLabel value="no" control={<Radio />} label="Нет" />
-              </RadioGroup>
-            </FormControl>
-          </Box>
-        );
-      case 3:
-        return (
-          <Box className={styles.stepContent}>
-            <Typography variant="h6" className={styles.stepTitle}>
-              Подтверждение и отправка
-            </Typography>
-
-            <Paper className={styles.reviewSummary}>
-              <Typography variant="subtitle1" className={styles.summaryTitle}>
-                Предварительный просмотр
-              </Typography>
-
-              <Box className={styles.summaryContent}>
-                <Box className={styles.summaryHeader}>
-                  <Typography variant="h6">{formData.title}</Typography>
-                  <Box className={styles.summaryRating}>
-                    <Rating
-                      value={formData.overallRating}
-                      readOnly
-                      size="small"
-                    />
-                    <Typography variant="body2">
-                      {formData.overallRating} / 5
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Box className={styles.summaryDetails}>
-                  <Typography variant="body2" className={styles.summaryCompany}>
-                    {formData.companyName} | {formData.position}
-                  </Typography>
-                  <Typography variant="body2" className={styles.summaryStatus}>
-                    {formData.employmentStatus === "current"
-                      ? "Текущий сотрудник"
-                      : "Бывший сотрудник"}{" "}
-                    |{" "}
-                    {
-                      {
-                        "full-time": "Полная занятость",
-                        "part-time": "Частичная занятость",
-                        contract: "Контракт",
-                        internship: "Стажировка",
-                        freelance: "Фриланс",
-                      }[formData.employmentType]
-                    }
-                  </Typography>
-                </Box>
-
-                <Box className={styles.summarySection}>
-                  <Typography
-                    variant="subtitle2"
-                    className={styles.sectionTitle}
-                  >
-                    Плюсы
-                  </Typography>
-                  <Typography variant="body2">{formData.pros}</Typography>
-                </Box>
-
-                <Box className={styles.summarySection}>
-                  <Typography
-                    variant="subtitle2"
-                    className={styles.sectionTitle}
-                  >
-                    Минусы
-                  </Typography>
-                  <Typography variant="body2">{formData.cons}</Typography>
-                </Box>
-
-                {formData.advice && (
-                  <Box className={styles.summarySection}>
-                    <Typography
-                      variant="subtitle2"
-                      className={styles.sectionTitle}
-                    >
-                      Советы руководству
-                    </Typography>
-                    <Typography variant="body2">{formData.advice}</Typography>
-                  </Box>
-                )}
-              </Box>
-            </Paper>
-
-            <Box className={styles.confirmationOptions}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="anonymous"
-                    checked={formData.anonymous}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Оставить отзыв анонимно"
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="confirmTruthful"
-                    checked={formData.confirmTruthful}
-                    onChange={handleCheckboxChange}
-                    required
-                  />
-                }
-                label="Я подтверждаю, что этот отзыв основан на моем личном опыте работы, и информация в нем достоверна"
-              />
-              {errors.confirmTruthful && (
-                <FormHelperText error>{errors.confirmTruthful}</FormHelperText>
-              )}
-            </Box>
-          </Box>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className={styles.addReviewPage}>
-      <Box className={styles.header}>
-        <Typography variant="h4" className={styles.title}>
-          {isEditing ? "Редактирование отзыва" : "Добавление отзыва"}
-        </Typography>
-        <Typography variant="body1" className={styles.subtitle}>
-          Ваш отзыв поможет другим соискателям принять осознанное решение о
-          трудоустройстве
-        </Typography>
-      </Box>
+    <Container className="py-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {isEditing ? "Редактирование отзыва" : "Добавление отзыва"}
+          </h1>
+          <p className="text-gray-600">
+            Ваш отзыв поможет другим соискателям принять осознанное решение о
+            трудоустройстве
+          </p>
+        </div>
 
-      <Paper className={styles.formContainer}>
-        <Stepper activeStep={activeStep} className={styles.stepper}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            {/* Stepper */}
+            <div className="mb-6">
+              <Tabs value={activeStep.toString()} className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  {steps.map((label, index) => (
+                    <TabsTrigger
+                      key={index}
+                      value={index.toString()}
+                      disabled={true}
+                      className={
+                        index <= activeStep ? "text-[#800000] font-medium" : ""
+                      }
+                    >
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
 
-        <Box className={styles.formContent}>
-          {renderStepContent(activeStep)}
-        </Box>
+            {/* Step content */}
+            <div className="min-h-[350px] mb-6">
+              {activeStep === 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-[#800000] mb-4">
+                    Информация о компании и должности
+                  </h2>
 
-        <Box className={styles.formActions}>
-          <Button
-            onClick={handleCancel}
-            className={styles.cancelButton}
-            startIcon={<X size={18} />}
-          >
-            Отмена
-          </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Компания *</Label>
+                    <div className="relative">
+                      <Building
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        size={16}
+                      />
+                      <Input
+                        id="companyName"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        className={`pl-10 ${
+                          errors.companyName ? "border-red-500" : ""
+                        }`}
+                        placeholder="Название компании"
+                      />
+                    </div>
+                    {errors.companyName && (
+                      <p className="text-red-500 text-sm">
+                        {errors.companyName}
+                      </p>
+                    )}
+                  </div>
 
-          <Box className={styles.navigationButtons}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              className={styles.backButton}
-              startIcon={<ChevronLeft size={18} />}
-            >
-              Назад
-            </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="position">Должность *</Label>
+                    <div className="relative">
+                      <Briefcase
+                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        size={16}
+                      />
+                      <Input
+                        id="position"
+                        name="position"
+                        value={formData.position}
+                        onChange={handleChange}
+                        className={`pl-10 ${
+                          errors.position ? "border-red-500" : ""
+                        }`}
+                        placeholder="Ваша должность в компании"
+                      />
+                    </div>
+                    {errors.position && (
+                      <p className="text-red-500 text-sm">{errors.position}</p>
+                    )}
+                  </div>
 
-            {activeStep === steps.length - 1 ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="employmentStatus">Статус работы *</Label>
+                    <RadioGroup
+                      id="employmentStatus"
+                      name="employmentStatus"
+                      value={formData.employmentStatus}
+                      onValueChange={(value) =>
+                        handleChange({
+                          target: { name: "employmentStatus", value },
+                        })
+                      }
+                      className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="current" id="current" />
+                        <Label htmlFor="current">Текущий сотрудник</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="former" id="former" />
+                        <Label htmlFor="former">Бывший сотрудник</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="employmentType">Тип занятости</Label>
+                    <select
+                      id="employmentType"
+                      name="employmentType"
+                      value={formData.employmentType}
+                      onChange={(e) => handleChange(e)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="full-time">Полная занятость</option>
+                      <option value="part-time">Частичная занятость</option>
+                      <option value="contract">Контракт</option>
+                      <option value="internship">Стажировка</option>
+                      <option value="freelance">Фриланс</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {activeStep === 1 && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-[#800000] mb-4">
+                    Оцените свой опыт работы
+                  </h2>
+
+                  <div className="space-y-2">
+                    <Label>Общая оценка *</Label>
+                    <div className="flex items-center gap-2">
+                      <Rating
+                        value={formData.overallRating}
+                        onValueChange={(value) =>
+                          handleRatingChange("overallRating", value)
+                        }
+                        icon={
+                          <Star className="fill-[#f5b400] stroke-[#f5b400]" />
+                        }
+                        emptyIcon={
+                          <Star className="fill-gray-200 stroke-gray-200" />
+                        }
+                        className="text-2xl"
+                      />
+                      <span className="text-gray-600">
+                        {formData.overallRating} / 5
+                      </span>
+                    </div>
+                  </div>
+
+                  <Separator className="my-4 bg-[#800000]/10" />
+
+                  <h3 className="text-lg font-medium text-[#800000]">
+                    Оцените по категориям
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <Label className="min-w-[180px]">
+                        Карьерные возможности
+                      </Label>
+                      <Rating
+                        value={formData.careerOpportunities}
+                        onValueChange={(value) =>
+                          handleRatingChange("careerOpportunities", value)
+                        }
+                        className="text-xl"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <Label className="min-w-[180px]">
+                        Баланс работы и личной жизни
+                      </Label>
+                      <Rating
+                        value={formData.workLifeBalance}
+                        onValueChange={(value) =>
+                          handleRatingChange("workLifeBalance", value)
+                        }
+                        className="text-xl"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <Label className="min-w-[180px]">
+                        Компенсация и льготы
+                      </Label>
+                      <Rating
+                        value={formData.compensation}
+                        onValueChange={(value) =>
+                          handleRatingChange("compensation", value)
+                        }
+                        className="text-xl"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <Label className="min-w-[180px]">
+                        Стабильность работы
+                      </Label>
+                      <Rating
+                        value={formData.jobSecurity}
+                        onValueChange={(value) =>
+                          handleRatingChange("jobSecurity", value)
+                        }
+                        className="text-xl"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <Label className="min-w-[180px]">
+                        Качество управления
+                      </Label>
+                      <Rating
+                        value={formData.management}
+                        onValueChange={(value) =>
+                          handleRatingChange("management", value)
+                        }
+                        className="text-xl"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeStep === 2 && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-[#800000] mb-4">
+                    Подробности вашего отзыва
+                  </h2>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Заголовок отзыва *</Label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      className={errors.title ? "border-red-500" : ""}
+                      placeholder="Кратко опишите ваш опыт работы в компании"
+                    />
+                    {errors.title && (
+                      <p className="text-red-500 text-sm">{errors.title}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pros">Плюсы *</Label>
+                    <Textarea
+                      id="pros"
+                      name="pros"
+                      value={formData.pros}
+                      onChange={handleChange}
+                      className={`min-h-[100px] ${
+                        errors.pros ? "border-red-500" : ""
+                      }`}
+                      placeholder="Что вам нравилось в компании?"
+                    />
+                    {errors.pros && (
+                      <p className="text-red-500 text-sm">{errors.pros}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cons">Минусы *</Label>
+                    <Textarea
+                      id="cons"
+                      name="cons"
+                      value={formData.cons}
+                      onChange={handleChange}
+                      className={`min-h-[100px] ${
+                        errors.cons ? "border-red-500" : ""
+                      }`}
+                      placeholder="Что можно было бы улучшить?"
+                    />
+                    {errors.cons && (
+                      <p className="text-red-500 text-sm">{errors.cons}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="advice">Советы руководству</Label>
+                    <Textarea
+                      id="advice"
+                      name="advice"
+                      value={formData.advice}
+                      onChange={handleChange}
+                      className="min-h-[80px]"
+                      placeholder="Что бы вы посоветовали руководству компании?"
+                    />
+                    <p className="text-gray-500 text-sm">Необязательно</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Рекомендуете ли вы эту компанию?</Label>
+                    <RadioGroup
+                      name="recommendToFriend"
+                      value={formData.recommendToFriend}
+                      onValueChange={(value) =>
+                        handleChange({
+                          target: { name: "recommendToFriend", value },
+                        })
+                      }
+                      className="flex space-x-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="recommend-yes" />
+                        <Label htmlFor="recommend-yes">Да</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="recommend-no" />
+                        <Label htmlFor="recommend-no">Нет</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              )}
+
+              {activeStep === 3 && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-[#800000] mb-4">
+                    Подтверждение и отправка
+                  </h2>
+
+                  <Card className="border border-[#800000]/10">
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold text-lg text-[#800000] mb-2 pb-2 border-b border-[#800000]/10">
+                        Предварительный просмотр
+                      </h3>
+
+                      <div className="space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                          <h4 className="text-xl font-medium">
+                            {formData.title}
+                          </h4>
+                          <div className="flex items-center">
+                            <Rating
+                              value={formData.overallRating}
+                              readOnly
+                              className="text-lg"
+                            />
+                            <span className="ml-2 text-sm font-medium">
+                              {formData.overallRating} / 5
+                            </span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-[#800000] font-medium">
+                            {formData.companyName} | {formData.position}
+                          </p>
+                          <p className="text-gray-500 text-sm">
+                            {formData.employmentStatus === "current"
+                              ? "Текущий сотрудник"
+                              : "Бывший сотрудник"}{" "}
+                            |{" "}
+                            {
+                              {
+                                "full-time": "Полная занятость",
+                                "part-time": "Частичная занятость",
+                                contract: "Контракт",
+                                internship: "Стажировка",
+                                freelance: "Фриланс",
+                              }[formData.employmentType]
+                            }
+                          </p>
+                        </div>
+
+                        <div>
+                          <h5 className="font-medium">Плюсы</h5>
+                          <p className="text-gray-700">{formData.pros}</p>
+                        </div>
+
+                        <div>
+                          <h5 className="font-medium">Минусы</h5>
+                          <p className="text-gray-700">{formData.cons}</p>
+                        </div>
+
+                        {formData.advice && (
+                          <div>
+                            <h5 className="font-medium">Советы руководству</h5>
+                            <p className="text-gray-700">{formData.advice}</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="anonymous"
+                        checked={formData.anonymous}
+                        onCheckedChange={(checked) =>
+                          handleCheckboxChange("anonymous", checked as boolean)
+                        }
+                      />
+                      <Label htmlFor="anonymous">Оставить отзыв анонимно</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="confirmTruthful"
+                        checked={formData.confirmTruthful}
+                        onCheckedChange={(checked) =>
+                          handleCheckboxChange(
+                            "confirmTruthful",
+                            checked as boolean
+                          )
+                        }
+                      />
+                      <Label htmlFor="confirmTruthful">
+                        Я подтверждаю, что этот отзыв основан на моем личном
+                        опыте работы, и информация в нем достоверна
+                      </Label>
+                    </div>
+                    {errors.confirmTruthful && (
+                      <p className="text-red-500 text-sm">
+                        {errors.confirmTruthful}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between pt-4 border-t border-[#800000]/10">
               <Button
-                onClick={handleSubmit}
-                className={styles.submitButton}
-                startIcon={<Save size={18} />}
+                variant="outline"
+                onClick={handleCancel}
+                className="text-red-500 hover:text-red-700 hover:bg-red-50"
               >
-                {isEditing ? "Сохранить изменения" : "Отправить отзыв"}
+                <X size={18} className="mr-2" />
+                Отмена
               </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
-                className={styles.nextButton}
-                endIcon={<ChevronRight size={18} />}
-              >
-                Далее
-              </Button>
-            )}
-          </Box>
-        </Box>
-      </Paper>
-    </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={activeStep === 0}
+                  className="text-gray-600"
+                >
+                  <ChevronLeft size={18} className="mr-1" />
+                  Назад
+                </Button>
+
+                {activeStep === steps.length - 1 ? (
+                  <Button
+                    onClick={handleSubmit}
+                    className="bg-[#2e7d32] hover:bg-[#1b5e20]"
+                  >
+                    <Save size={18} className="mr-2" />
+                    {isEditing ? "Сохранить изменения" : "Отправить отзыв"}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    className="bg-[#800000] hover:bg-[#660000]"
+                  >
+                    Далее
+                    <ChevronRight size={18} className="ml-1" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </Container>
   );
 }

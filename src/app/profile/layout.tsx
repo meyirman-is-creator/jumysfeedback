@@ -1,3 +1,4 @@
+// src/profile/layout.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -7,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Container } from "@/components/ui/container";
 import {
   User,
   FileText,
@@ -87,7 +89,7 @@ export default function ProfileLayout({
   );
 
   return (
-    <div className="container mx-auto py-6 px-4 md:px-6">
+    <Container className="py-6">
       <div className="lg:grid lg:grid-cols-[280px_1fr] gap-8">
         {/* Mobile menu toggle button */}
         <div className="lg:hidden flex justify-between items-center mb-6">
@@ -98,7 +100,10 @@ export default function ProfileLayout({
                 <span className="sr-only">Открыть меню</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[280px] bg-white sm:max-w-none">
+            <SheetContent
+              side="left"
+              className="w-[280px] bg-white sm:max-w-none"
+            >
               <div className="flex flex-col items-center py-4">
                 <Avatar className="h-16 w-16 mb-2">
                   <AvatarImage
@@ -151,6 +156,6 @@ export default function ProfileLayout({
           {children}
         </main>
       </div>
-    </div>
+    </Container>
   );
 }
