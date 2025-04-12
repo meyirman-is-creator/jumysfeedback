@@ -13,6 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Search,
   User,
   Menu,
@@ -21,6 +28,8 @@ import {
   FileText,
   DollarSign,
   LogOut,
+  Building,
+  BarChart2,
 } from "lucide-react";
 import styles from "./Header.module.scss";
 
@@ -28,27 +37,35 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   // Mock authentication state - in real app this would come from auth context
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const pathname = usePathname();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   // Toggle login status for demo purposes
-  const toggleLogin = () => setIsLoggedIn(!isLoggedIn);
+  const toggleLogin = () => {
+    setIsLoggedIn(!isLoggedIn);
+    setIsMenuOpen(false); // Close the drawer after logout
+  };
 
   // Check if the given path is active
-  const isActive = (path: string) => {
+  const isActive = (path:string) => {
     if (path === "/companies") {
       return pathname === "/companies" || pathname?.startsWith("/companies/");
     }
-    return pathname === path || pathname?.startsWith(path + "/");
+    return pathname === path;
+  };
+
+  // Function to close the drawer
+  const closeDrawer = () => {
+    setIsMenuOpen(false);
   };
 
   return (
     <header className={styles.header}>
       <Container>
         <div className={styles.headerContent}>
-          <Link href="/" className={styles.logo}>
+          <Link href="/" className={styles.logo} onClick={closeDrawer}>
             iWork
           </Link>
 
@@ -63,11 +80,16 @@ export default function Header() {
                 className={styles.searchInput}
               />
             </div>
-            <Button size="sm" className={styles.searchButton}>
+            <Button
+              size="sm"
+              className={styles.searchButton}
+              onClick={closeDrawer}
+            >
               Найти
             </Button>
           </div>
 
+          {/* Desktop Navigation */}
           <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ""}`}>
             <Link
               href="/companies"
@@ -86,7 +108,7 @@ export default function Header() {
               Зарплаты
             </Link>
 
-            {!isLoggedIn ? (
+            {isLoggedIn ? (
               <div className={styles.profileSection}>
                 <DropdownMenu>
                   <DropdownMenuTrigger className={styles.profileTrigger}>
@@ -172,9 +194,134 @@ export default function Header() {
             )}
           </nav>
 
-          <button className={styles.menuToggle} onClick={toggleMenu}>
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Navigation Drawer */}
+          <div className={styles.mobileNav}>
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <button className={styles.menuToggle} onClick={toggleMenu}>
+                  <Menu size={24} />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className={styles.mobileMenu}>
+                <SheetHeader className={styles.mobileMenuHeader}>
+                  <SheetTitle className={styles.mobileLogo}>iWork</SheetTitle>
+                </SheetHeader>
+
+                <div className={styles.mobileMenuContent}>
+                  <div className={styles.mobileMenuPrimary}>
+                    <Link
+                      href="/companies"
+                      className={`${styles.mobileMenuItem} ${
+                        isActive("/companies")
+                          ? styles.mobileMenuItemActive
+                          : ""
+                      }`}
+                      onClick={closeDrawer}
+                    >
+                      <Building size={20} />
+                      <span>Компании</span>
+                    </Link>
+                    <Link
+                      href="/salaries"
+                      className={`${styles.mobileMenuItem} ${
+                        isActive("/salaries") ? styles.mobileMenuItemActive : ""
+                      }`}
+                      onClick={closeDrawer}
+                    >
+                      <BarChart2 size={20} />
+                      <span>Зарплаты</span>
+                    </Link>
+                  </div>
+
+                  <div className={styles.mobileMenuDivider}></div>
+
+                  {isLoggedIn ? (
+                    <div className={styles.mobileMenuSecondary}>
+                      <div className={styles.mobileProfileInfo}>
+                        <User size={24} className={styles.mobileProfileIcon} />
+                        <div>
+                          <div className={styles.mobileUserName}>
+                            Иван Иванов
+                          </div>
+                          <div className={styles.mobileUserEmail}>
+                            ivan@example.com
+                          </div>
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/profile"
+                        className={`${styles.mobileMenuItem} ${
+                          isActive("/profile")
+                            ? styles.mobileMenuItemActive
+                            : ""
+                        }`}
+                        onClick={closeDrawer}
+                      >
+                        <User size={20} />
+                        <span>Мой профиль</span>
+                      </Link>
+                      <Link
+                        href="/profile/reviews"
+                        className={`${styles.mobileMenuItem} ${
+                          isActive("/profile/reviews")
+                            ? styles.mobileMenuItemActive
+                            : ""
+                        }`}
+                        onClick={closeDrawer}
+                      >
+                        <FileText size={20} />
+                        <span>Мои отзывы</span>
+                      </Link>
+                      <Link
+                        href="/profile/salaries"
+                        className={`${styles.mobileMenuItem} ${
+                          isActive("/profile/salaries")
+                            ? styles.mobileMenuItemActive
+                            : ""
+                        }`}
+                        onClick={closeDrawer}
+                      >
+                        <DollarSign size={20} />
+                        <span>Мои зарплаты</span>
+                      </Link>
+
+                      <Link href="/profile/add" onClick={closeDrawer}>
+                        <Button className={styles.mobileAddButton}>
+                          Оставить отзыв
+                        </Button>
+                      </Link>
+
+                      <Button
+                        variant="outline"
+                        className={styles.mobileLogoutButton}
+                        onClick={toggleLogin}
+                      >
+                        <LogOut size={18} />
+                        <span>Выйти</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className={styles.mobileAuthButtons}>
+                      <Link href="/auth/login" onClick={closeDrawer}>
+                        <Button
+                          variant="outline"
+                          className={styles.mobileLoginButton}
+                        >
+                          Войти
+                        </Button>
+                      </Link>
+                      <Link href="/auth/register" onClick={closeDrawer}>
+                        <Button className={styles.mobileRegisterButton}>
+                          Регистрация
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </Container>
     </header>

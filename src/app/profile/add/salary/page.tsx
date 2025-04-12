@@ -20,6 +20,7 @@ import {
   DollarSign,
   Users,
   MapPin,
+  FileUp,
 } from "lucide-react";
 
 export default function AddSalaryPage() {
@@ -43,6 +44,7 @@ export default function AddSalaryPage() {
     department: "",
     employmentStatus: "current", // 'current' or 'former'
     employmentType: "full-time", // 'full-time', 'part-time', 'contract', etc.
+    employmentContract: null, // To store the uploaded file
     salary: "",
     currency: "USD",
     payPeriod: "monthly", // 'monthly', 'yearly'
@@ -132,6 +134,15 @@ export default function AddSalaryPage() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData((prev) => ({
+        ...prev,
+        employmentContract: e.target.files ? e.target.files[0] : null,
+      }));
+    }
+  };
+
   const handleSubmit = () => {
     if (validateStep(activeStep)) {
       // Handle submission logic here
@@ -147,16 +158,22 @@ export default function AddSalaryPage() {
   return (
     <Container className="py-6">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">
             {isEditing
               ? "Редактирование данных о зарплате"
               : "Добавление данных о зарплате"}
           </h1>
-          <p className="text-gray-600">
-            Ваша информация поможет другим специалистам в переговорах о зарплате
-            и оценке рыночной стоимости
-          </p>
+
+          {/* Mobile Cancel Button */}
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            className="md:hidden flex items-center text-red-500 hover:text-red-700 hover:bg-red-50"
+          >
+            <X size={18} className="mr-1" />
+            Отмена
+          </Button>
         </div>
 
         <Card className="mb-6">
@@ -185,7 +202,14 @@ export default function AddSalaryPage() {
                       ${activeStep >= index ? "bg-[#800000]" : "bg-gray-200"}
                     `}
                     ></div>
-                    <span className="mt-2 text-center">{label}</span>
+                    <div className="mt-2 text-center flex flex-col items-center">
+                      {/* Mobile - show numbers */}
+                      <span className="md:hidden text-lg font-semibold flex items-center justify-center w-7 h-7 rounded-full border border-current">
+                        {index + 1}
+                      </span>
+                      {/* Desktop - show text */}
+                      <span className="hidden md:block">{label}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -305,6 +329,43 @@ export default function AddSalaryPage() {
                       <option value="internship">Стажировка</option>
                       <option value="freelance">Фриланс</option>
                     </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="employmentContract"
+                      className="flex items-center"
+                    >
+                      Трудовой договор{" "}
+                      <span className="text-gray-400 text-sm ml-2">
+                        (необязательно)
+                      </span>
+                    </Label>
+                    <div className="relative">
+                      <Label
+                        htmlFor="employmentContract"
+                        className="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-md p-4 cursor-pointer hover:bg-gray-50"
+                      >
+                        <FileUp size={20} className="text-[#800000]" />
+                        <span>
+                          {formData.employmentContract
+                            ? formData.employmentContract.name
+                            : "Загрузить трудовой договор"}
+                        </span>
+                      </Label>
+                      <Input
+                        id="employmentContract"
+                        name="employmentContract"
+                        type="file"
+                        onChange={handleFileChange}
+                        className="sr-only"
+                        accept=".pdf,.doc,.docx"
+                      />
+                    </div>
+                    <p className="text-gray-500 text-sm">
+                      Загрузите документ, подтверждающий вашу зарплату и
+                      трудоустройство. Это поможет верифицировать ваши данные.
+                    </p>
                   </div>
                 </div>
               )}
@@ -469,6 +530,12 @@ export default function AddSalaryPage() {
                           <p className="text-[#800000] font-medium">
                             {formData.companyName}
                           </p>
+                          {formData.employmentContract && (
+                            <p className="text-green-600 text-sm flex items-center gap-1 mt-1">
+                              <span className="w-2 h-2 inline-block bg-green-600 rounded-full"></span>
+                              Верифицировано трудовым договором
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -603,13 +670,13 @@ export default function AddSalaryPage() {
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 hidden md:flex"
               >
                 <X size={18} className="mr-2" />
                 Отмена
               </Button>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 w-full md:w-auto justify-end">
                 <Button
                   variant="outline"
                   onClick={handleBack}
