@@ -86,7 +86,7 @@ export default function LoginPage() {
                         />
                       </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -114,7 +114,7 @@ export default function LoginPage() {
                         </button>
                       </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />

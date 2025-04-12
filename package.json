@@ -37,6 +37,7 @@
     "button": "^1.1.1",
     "card": "^2.5.4",
     "class-variance-authority": "^0.7.1",
+    "input-otp": "^1.4.2",
     "lucide-react": "^0.487.0",
     "next": "15.1.7",
     "progress": "^2.0.3",

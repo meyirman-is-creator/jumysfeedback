@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FiMail, FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
@@ -13,20 +13,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 export default function VerifyPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [verificationCode, setVerificationCode] = useState<string[]>(
-    Array(6).fill("")
-  );
+  const [verificationCode, setVerificationCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
-
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     if (countdown > 0 && isResendDisabled) {
@@ -36,54 +37,6 @@ export default function VerifyPage() {
       setIsResendDisabled(false);
     }
   }, [countdown, isResendDisabled]);
-
-  const handleChange = (index: number, value: string) => {
-    // Allow only numbers
-    if (!/^\d*$/.test(value)) return;
-
-    const newCode = [...verificationCode];
-    newCode[index] = value;
-    setVerificationCode(newCode);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    // Move to previous input on backspace if current input is empty
-    if (e.key === "Backspace" && !verificationCode[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData("text/plain");
-    if (!pastedData.match(/^\d+$/)) return;
-
-    const digits = pastedData.slice(0, 6).split("");
-    const newCode = [...verificationCode];
-
-    digits.forEach((digit, index) => {
-      if (index < 6) {
-        newCode[index] = digit;
-      }
-    });
-
-    setVerificationCode(newCode);
-
-    // Focus the appropriate input after pasting
-    if (digits.length < 6) {
-      inputRefs.current[digits.length]?.focus();
-    } else {
-      inputRefs.current[5]?.focus();
-    }
-  };
 
   const handleResendCode = () => {
     toast({
@@ -95,8 +48,7 @@ export default function VerifyPage() {
   };
 
   const handleSubmit = () => {
-    const code = verificationCode.join("");
-    if (code.length !== 6) {
+    if (verificationCode.length !== 6) {
       toast({
         title: "Ошибка",
         description: "Пожалуйста, введите полный 6-значный код",
@@ -107,7 +59,6 @@ export default function VerifyPage() {
 
     setIsSubmitting(true);
 
-    // Simulate verification
     setTimeout(() => {
       setIsSubmitting(false);
       toast({
@@ -134,28 +85,27 @@ export default function VerifyPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-6 gap-2 mb-6">
-            {[0, 1, 2, 3, 4, 5].map((index) => (
-              <div key={index} className="relative">
-                <Input
-                  ref={(el) => (inputRefs.current[index] = el)}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={verificationCode[index]}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={index === 0 ? handlePaste : undefined}
-                  className="text-center text-xl font-bold h-14"
-                  autoFocus={index === 0}
-                />
-              </div>
-            ))}
+          <div className="mb-6 flex justify-center">
+            <InputOTP
+              maxLength={6}
+              value={verificationCode}
+              onChange={setVerificationCode}
+              render={({ slots }) => (
+                <InputOTPGroup>
+                  {slots.map((slot, index) => (
+                    <React.Fragment key={index}>
+                      {index === 3 && <InputOTPSeparator />}
+                      <InputOTPSlot {...slot} />
+                    </React.Fragment>
+                  ))}
+                </InputOTPGroup>
+              )}
+            />
           </div>
 
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || verificationCode.join("").length !== 6}
+            disabled={isSubmitting || verificationCode.length !== 6}
             className="w-full bg-[#800000] hover:bg-[#660000]"
           >
             {isSubmitting ? "Проверка..." : "Подтвердить аккаунт"}
