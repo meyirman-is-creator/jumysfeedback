@@ -130,8 +130,8 @@ export default function LoginPage() {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <div className="leading-none">
-                      <FormLabel className="text-sm text-gray-600">
+                    <div className="leading-none !mt-0">
+                      <FormLabel className="text-sm m-0 text-gray-600">
                         Запомнить меня
                       </FormLabel>
                     </div>
@@ -167,11 +167,6 @@ export default function LoginPage() {
           >
             <Link href="/auth/register">Создать аккаунт</Link>
           </Button>
-          <p className="text-center text-sm text-gray-500 mt-4">
-            <Link href="#" className="text-[#800000] hover:underline">
-              Забыли пароль?
-            </Link>
-          </p>
         </CardFooter>
       </Card>
     </div>
