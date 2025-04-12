@@ -44,7 +44,7 @@ export default function ProfileLayout({
       label: "Добавить контент",
       href: "/profile/add",
       icon: <PlusCircle size={20} />,
-      active: pathname === "/profile/add",
+      active: pathname.includes("/profile/add"),
     },
   ];
 
