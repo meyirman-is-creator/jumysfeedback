@@ -26,6 +26,7 @@ export default function AddPage() {
             отзывов, данных о зарплатах и другой полезной информации
           </p>
         </div>
+        
         <div className="flex flex-col md:flex-row gap-6">
           <Card className="flex-1 border border-gray-300 rounded-lg hover:shadow-lg transition-shadow">
             <CardContent>

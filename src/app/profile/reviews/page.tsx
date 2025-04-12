@@ -139,7 +139,7 @@ export default function ReviewsPage() {
   const [adminComment, setAdminComment] = useState("");
 
   // Role check (replace with actual auth logic)
-  const isAdmin = false;
+  const isAdmin = true;
 
   const statusTabs = ["Все", "Новые", "Одобренные", "Отклоненные"];
 
@@ -230,7 +230,7 @@ export default function ReviewsPage() {
   };
 
   const getStatusBadgeVariant = (status: string) => {
-    if (status === "Одобрено") return "success";
+    if (status === "Одобрено") return "primary";
     if (status === "Отказано") return "destructive";
     return "secondary";
   };

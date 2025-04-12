@@ -43,7 +43,7 @@ export default function AddReviewPage() {
     position: "",
     employmentStatus: "current", // 'current' or 'former'
     employmentType: "full-time", // 'full-time', 'part-time', 'contract', etc.
-    employmentContract: null, // To store the uploaded file
+    employmentContract: null as File | null, // To store the uploaded file
     overallRating: 3,
     careerOpportunities: 3,
     workLifeBalance: 3,
@@ -144,14 +144,14 @@ export default function AddReviewPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        employmentContract: e.target.files ? e.target.files[0] : null,
+        employmentContract: files[0],
       }));
     }
   };
-
   const handleSubmit = () => {
     if (validateStep(activeStep)) {
       // Handle submission logic here

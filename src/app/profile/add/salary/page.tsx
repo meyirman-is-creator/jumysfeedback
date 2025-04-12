@@ -44,7 +44,7 @@ export default function AddSalaryPage() {
     department: "",
     employmentStatus: "current", // 'current' or 'former'
     employmentType: "full-time", // 'full-time', 'part-time', 'contract', etc.
-    employmentContract: null, // To store the uploaded file
+    employmentContract: null as File | null, // To store the uploaded file
     salary: "",
     currency: "USD",
     payPeriod: "monthly", // 'monthly', 'yearly'

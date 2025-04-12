@@ -214,7 +214,7 @@ export default function SalariesPage() {
   };
 
   const getStatusBadgeVariant = (status: string) => {
-    if (status === "Одобрено") return "success";
+    if (status === "Одобрено") return "primary";
     if (status === "Отказано") return "destructive";
     return "secondary";
   };
