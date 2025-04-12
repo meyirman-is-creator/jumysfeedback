@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -263,203 +263,224 @@ export default function ReviewsPage() {
         )}
       </div>
 
-      <Tabs
-        defaultValue="Все"
-        value={currentTab}
-        onValueChange={setCurrentTab}
-        className="w-full"
-      >
-        <TabsList className="grid grid-cols-4 mb-4">
+      <Tabs defaultValue="Все" onValueChange={setCurrentTab} className="w-full">
+        <TabsList className="bg-gray-100 p-1 rounded-lg mb-6 w-full grid grid-cols-4 ">
           {statusTabs.map((tab) => (
-            <TabsTrigger key={tab} value={tab}>
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="data-[state=active]:bg-white data-[state=active]:text-[#800000] data-[state=active]:shadow-sm py-2 font-medium"
+            >
               {tab}
             </TabsTrigger>
           ))}
         </TabsList>
-      </Tabs>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Компания</TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Должность
-                  </TableHead>
-                  <TableHead>Рейтинг</TableHead>
-                  <TableHead className="hidden sm:table-cell">
-                    Заголовок
-                  </TableHead>
-                  <TableHead className="hidden lg:table-cell">Дата</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="text-right">Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getFilteredReviews().map((review) => (
-                  <TableRow key={review.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>{review.companyName}</span>
-                        {review.verified && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs bg-blue-50 text-blue-600 border-blue-200"
-                          >
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {review.position}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">{review.rating}</span>
-                        <span className="hidden sm:flex">
-                          {renderStarRating(review.rating)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <p className="truncate max-w-[150px]">{review.title}</p>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {review.date}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Badge variant={getStatusBadgeVariant(review.status)}>
-                          {review.status}
-                        </Badge>
-                        {review.hasComment && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <MessageCircle className="w-4 h-4 text-[#800000]" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Есть комментарий от модератора</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewDetails(review)}
+        {statusTabs.map((tab) => (
+          <TabsContent key={tab} value={tab} className="mt-0">
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-[#800000] font-semibold">
+                          Компания
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold hidden md:table-cell">
+                          Должность
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold">
+                          Рейтинг
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold hidden sm:table-cell">
+                          Заголовок
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold hidden lg:table-cell">
+                          Дата
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold">
+                          Статус
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold text-right">
+                          Действия
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getFilteredReviews().map((review) => (
+                        <TableRow key={review.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span>{review.companyName}</span>
+                              {review.verified && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                                >
+                                  Verified
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {review.position}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">
+                                {review.rating}
+                              </span>
+                              <span className="hidden sm:flex">
+                                {renderStarRating(review.rating)}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <p className="truncate max-w-[150px]">
+                              {review.title}
+                            </p>
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {review.date}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Badge
+                                variant={getStatusBadgeVariant(review.status)}
                               >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Просмотреть</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                                {review.status}
+                              </Badge>
+                              {review.hasComment && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <MessageCircle className="w-4 h-4 text-[#800000]" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Есть комментарий от модератора</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleViewDetails(review)}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Просмотреть</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
 
-                        {!isAdmin && (
-                          <>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditReview(review.id)}
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Редактировать</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                              {!isAdmin && (
+                                <>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleEditReview(review.id)
+                                          }
+                                        >
+                                          <Edit2 className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Редактировать</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
 
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                      handleDeleteReview(review.id)
-                                    }
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Удалить</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </>
-                        )}
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleDeleteReview(review.id)
+                                          }
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Удалить</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </>
+                              )}
 
-                        {isAdmin && review.status === "Новый" && (
-                          <>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                      handleModerate(review.id, "approve")
-                                    }
-                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Одобрить</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                              {isAdmin && review.status === "Новый" && (
+                                <>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleModerate(review.id, "approve")
+                                          }
+                                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                        >
+                                          <CheckCircle className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Одобрить</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
 
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                      handleModerate(review.id, "reject")
-                                    }
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <XCircle className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Отклонить</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleModerate(review.id, "reject")
+                                          }
+                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                          <XCircle className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Отклонить</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
+      </Tabs>
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -113,7 +113,7 @@ export default function ProfileLayout({
 
         {/* Main content - Full width if not authenticated */}
         <main
-          className={`bg-white rounded-lg border border-slate-200 shadow-sm p-6 ${
+          className={`overflow-auto bg-white rounded-lg border border-slate-200 shadow-sm p-6 ${
             !isAuthenticated ? "lg:col-span-2" : ""
           }`}
         >

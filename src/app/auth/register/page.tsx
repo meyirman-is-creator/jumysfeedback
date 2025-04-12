@@ -1,252 +1,216 @@
 "use client";
 
-import React from "react";
-import {
-  Button,
-  TextField,
-  Typography,
-  Container,
-  Box,
-  InputAdornment,
-  IconButton,
-} from "@mui/material";
-import {
-  AccountCircle,
-  Email,
-  Lock,
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./RegisterPage.module.scss";
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+const formSchema = z
+  .object({
+    username: z.string().min(2, {
+      message: "Имя пользователя должно содержать минимум 2 символа",
+    }),
+    email: z.string().email({
+      message: "Введите корректный email адрес",
+    }),
+    password: z
+      .string()
+      .min(8, {
+        message: "Пароль должен содержать минимум 8 символов",
+      })
+      .regex(/[A-Z]/, {
+        message: "Пароль должен содержать хотя бы одну заглавную букву",
+      })
+      .regex(/[a-z]/, {
+        message: "Пароль должен содержать хотя бы одну строчную букву",
+      })
+      .regex(/[0-9]/, {
+        message: "Пароль должен содержать хотя бы одну цифру",
+      }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Пароли не совпадают",
+    path: ["confirmPassword"],
+  });
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [username, setUsername] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  const [usernameError, setUsernameError] = React.useState("");
-  const [emailError, setEmailError] = React.useState("");
-  const [passwordError, setPasswordError] = React.useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = React.useState("");
-
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    let isValid = true;
-
-    // Validation for username
-    if (username.trim() === "") {
-      setUsernameError("Username is required");
-      isValid = false;
-    } else {
-      setUsernameError("");
-    }
-
-    // Validation for email
-    if (email.trim() === "") {
-      setEmailError("Email is required");
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError("Invalid email address");
-      isValid = false;
-    } else {
-      setEmailError("");
-    }
-
-    // Validation for password
-    if (password === "") {
-      setPasswordError("Password is required");
-      isValid = false;
-    } else if (password.length < 8 || password.length > 20) {
-      setPasswordError("Password must be between 8 and 20 characters");
-      isValid = false;
-    } else if (!/[A-Z]/.test(password)) {
-      setPasswordError("Password must contain at least one uppercase letter");
-      isValid = false;
-    } else if (!/[a-z]/.test(password)) {
-      setPasswordError("Password must contain at least one lowercase letter");
-      isValid = false;
-    } else if (!/[0-9]/.test(password)) {
-      setPasswordError("Password must contain at least one digit");
-      isValid = false;
-    } else {
-      setPasswordError("");
-    }
-
-    // Validation for confirm password
-    if (confirmPassword === "") {
-      setConfirmPasswordError("Please confirm your password");
-      isValid = false;
-    } else if (confirmPassword !== password) {
-      setConfirmPasswordError("Passwords do not match");
-      isValid = false;
-    } else {
-      setConfirmPasswordError("");
-    }
-
-    if (!isValid) return;
-
-    // Registration logic (e.g., API call) goes here
-    // After successful registration, navigate to the home page
-    router.push("/");
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    console.log(values);
+    router.push("/auth/verify");
   };
 
   return (
-    <Container maxWidth="sm" className={styles["register-page"]}>
-      <Typography variant="h4" className={styles["register-page__title"]}>
-        LOGO
-      </Typography>
-      <Typography variant="h6" className={styles["register-page__subtitle"]}>
-        Customer Registration
-      </Typography>
+    <div className="flex justify-center items-center my-[50px] px-4">
+      <Card className="w-full max-w-md border-0 shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold text-[#800000]">
+            Создание аккаунта
+          </CardTitle>
+          <CardDescription>
+            Введите данные для регистрации нового аккаунта
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Имя пользователя</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        <Input
+                          className="pl-10"
+                          placeholder="Введите имя пользователя"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-      <Box
-        component="form"
-        className={styles["register-page__form"]}
-        onSubmit={handleSubmit}
-      >
-        <TextField
-          label="Username"
-          variant="outlined"
-          required
-          fullWidth
-          className={styles["register-page__input"]}
-          value={username}
-          onChange={(e) => {
-            setUsername(e.target.value);
-            if (e.target.value.trim() !== "") {
-              setUsernameError("");
-            }
-          }}
-          error={Boolean(usernameError)}
-          helperText={usernameError}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <AccountCircle />
-              </InputAdornment>
-            ),
-          }}
-        />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        <Input
+                          className="pl-10"
+                          placeholder="Введите email адрес"
+                          type="email"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <TextField
-          label="Email"
-          variant="outlined"
-          required
-          fullWidth
-          className={styles["register-page__input"]}
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (e.target.value.trim() !== "") {
-              setEmailError("");
-            }
-          }}
-          error={Boolean(emailError)}
-          helperText={emailError}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Email />
-              </InputAdornment>
-            ),
-          }}
-        />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Пароль</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        <Input
+                          className="pl-10 pr-10"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Введите пароль"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          {showPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <TextField
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          variant="outlined"
-          required
-          fullWidth
-          className={styles["register-page__input"]}
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            if (e.target.value !== "") {
-              setPasswordError("");
-            }
-          }}
-          error={Boolean(passwordError)}
-          helperText={passwordError}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Подтверждение пароля</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        <Input
+                          className="pl-10 pr-10"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Повторите пароль"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <TextField
-          label="Confirm password"
-          type={showConfirmPassword ? "text" : "password"}
-          variant="outlined"
-          required
-          fullWidth
-          className={styles["register-page__input"]}
-          value={confirmPassword}
-          onChange={(e) => {
-            setConfirmPassword(e.target.value);
-            if (e.target.value !== "") {
-              setConfirmPasswordError("");
-            }
-          }}
-          error={Boolean(confirmPasswordError)}
-          helperText={confirmPasswordError}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() =>
-                    setShowConfirmPassword((prev) => !prev)
-                  }
-                  edge="end"
-                >
-                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        <Button
-          variant="contained"
-          type="submit"
-          className={styles["register-page__submit"]}
-        >
-          Sign Up
-        </Button>
-
-        <Button
-          variant="outlined"
-          onClick={() => router.push("/auth/login")}
-          className={styles["register-page__signin"]}
-        >
-          Sign In
-        </Button>
-      </Box>
-    </Container>
+              <Button
+                type="submit"
+                className="w-full bg-[#800000] hover:bg-[#660000]"
+              >
+                Зарегистрироваться
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-center text-sm text-gray-500">
+            Уже есть аккаунт?{" "}
+            <Link href="/auth/login" className="text-[#800000] hover:underline">
+              Войти
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

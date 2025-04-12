@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -237,176 +237,199 @@ export default function SalariesPage() {
         )}
       </div>
 
-      <Tabs
-        defaultValue="Все"
-        value={currentTab}
-        onValueChange={setCurrentTab}
-        className="w-full"
-      >
-        <TabsList className="grid grid-cols-4 mb-4">
+      <Tabs defaultValue="Все" onValueChange={setCurrentTab} className="w-full">
+        <TabsList className="bg-gray-100 p-1 rounded-lg mb-6 w-full grid grid-cols-4">
           {statusTabs.map((tab) => (
-            <TabsTrigger key={tab} value={tab}>
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="data-[state=active]:bg-white data-[state=active]:text-[#800000] data-[state=active]:shadow-sm py-2 font-medium rounder-[5px]"
+            >
               {tab}
             </TabsTrigger>
           ))}
         </TabsList>
+
+        {statusTabs.map((tab) => (
+          <TabsContent key={tab} value={tab} className="mt-0">
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-[#800000] font-semibold">
+                          Компания
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold">
+                          Должность
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold">
+                          Зарплата
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold hidden sm:table-cell">
+                          Опыт
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold hidden md:table-cell">
+                          Дата
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold">
+                          Статус
+                        </TableHead>
+                        <TableHead className="text-[#800000] font-semibold text-right">
+                          Действия
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getFilteredSalaries().map((salary) => (
+                        <TableRow key={salary.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span>{salary.companyName}</span>
+                              {salary.verified && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                                >
+                                  Verified
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>{salary.position}</TableCell>
+                          <TableCell className="font-semibold text-[#800000]">
+                            {salary.amount}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {salary.experience}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {salary.date}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={getStatusBadgeVariant(salary.status)}
+                            >
+                              {salary.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleViewDetails(salary)}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Просмотреть</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+
+                              {!isAdmin && (
+                                <>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleEditSalary(salary.id)
+                                          }
+                                        >
+                                          <Edit2 className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Редактировать</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleDeleteSalary(salary.id)
+                                          }
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Удалить</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </>
+                              )}
+
+                              {isAdmin && salary.status === "Новый" && (
+                                <>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleApproveClick(salary.id)
+                                          }
+                                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                        >
+                                          <CheckCircle className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Одобрить</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() =>
+                                            handleRejectClick(salary.id)
+                                          }
+                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                          <XCircle className="w-4 h-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Отклонить</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
       </Tabs>
-
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Компания</TableHead>
-                  <TableHead>Должность</TableHead>
-                  <TableHead>Зарплата</TableHead>
-                  <TableHead className="hidden sm:table-cell">Опыт</TableHead>
-                  <TableHead className="hidden md:table-cell">Дата</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="text-right">Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getFilteredSalaries().map((salary) => (
-                  <TableRow key={salary.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span>{salary.companyName}</span>
-                        {salary.verified && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs bg-blue-50 text-blue-600 border-blue-200"
-                          >
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{salary.position}</TableCell>
-                    <TableCell className="font-semibold text-[#800000]">
-                      {salary.amount}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {salary.experience}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {salary.date}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(salary.status)}>
-                        {salary.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewDetails(salary)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Просмотреть</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        {!isAdmin && (
-                          <>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditSalary(salary.id)}
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Редактировать</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                      handleDeleteSalary(salary.id)
-                                    }
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Удалить</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </>
-                        )}
-
-                        {isAdmin && salary.status === "Новый" && (
-                          <>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                      handleApproveClick(salary.id)
-                                    }
-                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Одобрить</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleRejectClick(salary.id)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <XCircle className="w-4 h-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Отклонить</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -431,7 +454,7 @@ export default function SalariesPage() {
       </AlertDialog>
 
       {/* Approve confirmation dialog */}
-      <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen} >
+      <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Подтверждение одобрения</AlertDialogTitle>

@@ -1,152 +1,179 @@
 "use client";
 
-import React from "react";
-import {
-  Button,
-  TextField,
-  Typography,
-  Container,
-  Box,
-  InputAdornment,
-  Checkbox,
-  FormControlLabel,
-  IconButton,
-} from "@mui/material";
-import { AccountCircle, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./LoginPage.module.scss";
+import { FiUser, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+const formSchema = z.object({
+  username: z.string().min(1, {
+    message: "Имя пользователя не может быть пустым",
+  }),
+  password: z.string().min(1, {
+    message: "Пароль не может быть пустым",
+  }),
+  rememberMe: z.boolean().optional(),
+});
 
 export default function LoginPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [usernameError, setUsernameError] = React.useState(false);
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [showPassword, setShowPassword] = React.useState(false);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    let valid = true;
-
-    if (username.trim() === "") {
-      setUsernameError(true);
-      valid = false;
-    } else {
-      setUsernameError(false);
-    }
-
-    if (password.trim() === "") {
-      setPasswordError(true);
-      valid = false;
-    } else {
-      setPasswordError(false);
-    }
-
-    if (!valid) return;
-
-    // Логика входа (например, запрос к серверу)
-
-    // После успешного входа делаем редирект на главную страницу "/"
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    console.log(values);
     router.push("/");
   };
 
   return (
-    <Container maxWidth="sm" className={styles["login-page"]}>
-      <Typography variant="h4" className={styles["login-page__title"]}>
-        LOGO
-      </Typography>
-      <Typography variant="h6" className={styles["login-page__subtitle"]}>
-        Customer Login
-      </Typography>
+    <div className="flex justify-center items-center my-[50px] px-4">
+      <Card className="w-full max-w-md border-0 shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold text-[#800000]">
+            Добро пожаловать
+          </CardTitle>
+          <CardDescription>
+            Введите данные для входа в ваш аккаунт
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Имя пользователя</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        <Input
+                          className="pl-10"
+                          placeholder="Введите имя пользователя"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Пароль</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                        <Input
+                          className="pl-10 pr-10"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Введите пароль"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                        >
+                          {showPassword ? <FiEyeOff /> : <FiEye />}
+                        </button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-      <Box
-        component="form"
-        className={styles["login-page__form"]}
-        onSubmit={handleSubmit}
-      >
-        <TextField
-          label="Username"
-          variant="outlined"
-          fullWidth
-          required
-          className={styles["login-page__input"]}
-          value={username}
-          onChange={(e) => {
-            setUsername(e.target.value);
-            if (usernameError && e.target.value.trim() !== "") {
-              setUsernameError(false);
-            }
-          }}
-          error={usernameError}
-          helperText={usernameError ? "Username is required" : ""}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <AccountCircle />
-              </InputAdornment>
-            ),
-          }}
-        />
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="leading-none">
+                      <FormLabel className="text-sm text-gray-600">
+                        Запомнить меня
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
-        <TextField
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          variant="outlined"
-          fullWidth
-          required
-          className={styles["login-page__input"]}
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            if (passwordError && e.target.value.trim() !== "") {
-              setPasswordError(false);
-            }
-          }}
-          error={passwordError}
-          helperText={passwordError ? "Password is required" : ""}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
+              <Button
+                type="submit"
+                className="w-full bg-[#800000] hover:bg-[#660000]"
+              >
+                Войти
+              </Button>
+            </form>
+          </Form>
 
-        <FormControlLabel
-          control={<Checkbox className={styles["login-page__checkbox"]} />}
-          label="Remember me"
-          className={styles["login-page__remember"]}
-        />
-
-        <Button
-          variant="contained"
-          type="submit"
-          className={styles["login-page__submit"]}
-        >
-          LOGIN
-        </Button>
-
-        <Button
-          variant="outlined"
-          onClick={() => router.push("/auth/register")}
-          className={styles["login-page__signup"]}
-        >
-          SIGN UP
-        </Button>
-      </Box>
-    </Container>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-2 text-gray-500">или</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col">
+          <Button
+            variant="outline"
+            className="w-full border-[#800000] text-[#800000] hover:bg-[#800000]/5 mt-2"
+            asChild
+          >
+            <Link href="/auth/register">Создать аккаунт</Link>
+          </Button>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            <Link href="#" className="text-[#800000] hover:underline">
+              Забыли пароль?
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
