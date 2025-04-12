@@ -1,4 +1,3 @@
-// src/profile/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -23,7 +22,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -505,54 +503,47 @@ export default function ProfilePage() {
           <Separator className="bg-[#800000]/10" />
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="reviews" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-              <TabsTrigger value="reviews">Отзывы</TabsTrigger>
-              <TabsTrigger value="salaries">Зарплаты</TabsTrigger>
-            </TabsList>
-            <TabsContent value="reviews">
-              <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md mx-auto">
-                <span className="text-3xl font-bold text-[#800000]">
-                  {user.reviewCount}
-                </span>
-                <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
-                  Отзывов о компаниях
-                </span>
-                <Button
-                  variant="link"
-                  className="text-[#800000] no-underline"
-                  size="sm"
-                  asChild
-                >
-                  <a href="/profile/reviews" className="flex items-center">
-                    Просмотреть
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </a>
-                </Button>
-              </div>
-            </TabsContent>
-            <TabsContent value="salaries">
-              <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md mx-auto">
-                <span className="text-3xl font-bold text-[#800000]">
-                  {user.salaryCount}
-                </span>
-                <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
-                  Записей о зарплатах
-                </span>
-                <Button
-                  variant="link"
-                  className="text-[#800000] no-underline"
-                  size="sm"
-                  asChild
-                >
-                  <a href="/profile/salaries" className="flex items-center">
-                    Просмотреть
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </a>
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+          <div className="flex flex-col md:flex-row gap-6 justify-center">
+            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md w-full">
+              <span className="text-3xl font-bold text-[#800000]">
+                {user.reviewCount}
+              </span>
+              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
+                Отзывов о компаниях
+              </span>
+              <Button
+                variant="link"
+                className="text-[#800000] no-underline"
+                size="sm"
+                asChild
+              >
+                <a href="/profile/reviews" className="flex items-center">
+                  Просмотреть
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </a>
+              </Button>
+            </div>
+
+            <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md w-full">
+              <span className="text-3xl font-bold text-[#800000]">
+                {user.salaryCount}
+              </span>
+              <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
+                Записей о зарплатах
+              </span>
+              <Button
+                variant="link"
+                className="text-[#800000] no-underline"
+                size="sm"
+                asChild
+              >
+                <a href="/profile/salaries" className="flex items-center">
+                  Просмотреть
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </a>
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,4 +1,3 @@
-// src/profile/add/review/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -13,7 +12,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ChevronLeft,
   ChevronRight,
@@ -108,15 +106,14 @@ export default function AddReviewPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }
-    >
+    e:
+      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+      | { target: { name?: string; value: unknown } }
   ) => {
     const { name, value } = e.target;
     if (name) {
       setFormData((prev) => ({ ...prev, [name]: value }));
 
-      // Clear error when field is changed
       if (errors[name]) {
         setErrors((prev) => {
           const newErrors = { ...prev };
@@ -126,7 +123,6 @@ export default function AddReviewPage() {
       }
     }
   };
-
   const handleCheckboxChange = (name: string, checked: boolean) => {
     setFormData((prev) => ({ ...prev, [name]: checked }));
 
@@ -171,24 +167,34 @@ export default function AddReviewPage() {
 
         <Card className="mb-6">
           <CardContent className="p-6">
-            {/* Stepper */}
+            {/* Stepper - Indicators at top */}
             <div className="mb-6">
-              <Tabs value={activeStep.toString()} className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  {steps.map((label, index) => (
-                    <TabsTrigger
-                      key={index}
-                      value={index.toString()}
-                      disabled={true}
-                      className={
-                        index <= activeStep ? "text-[#800000] font-medium" : ""
+              <div className="flex justify-between w-full mb-2">
+                {steps.map((label, index) => (
+                  <div
+                    key={index}
+                    className={`flex flex-col items-center text-xs md:text-sm w-full ${
+                      activeStep >= index
+                        ? "text-[#800000] font-medium"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    <div
+                      className={`
+                      h-2 w-full ${
+                        index === 0
+                          ? "ml-auto w-1/2"
+                          : index === steps.length - 1
+                          ? "mr-auto w-1/2"
+                          : ""
                       }
-                    >
-                      {label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
+                      ${activeStep >= index ? "bg-[#800000]" : "bg-gray-200"}
+                    `}
+                    ></div>
+                    <span className="mt-2 text-center">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Step content */}

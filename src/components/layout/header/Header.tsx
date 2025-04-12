@@ -109,13 +109,19 @@ export default function Header() {
                         Мой профиль
                       </DropdownMenuItem>
                     </Link>
-                    <Link href="/profile/reviews" className={styles.profileLink}>
+                    <Link
+                      href="/profile/reviews"
+                      className={styles.profileLink}
+                    >
                       <DropdownMenuItem>
                         <FileText size={16} className={styles.menuIcon} />
                         Мои отзывы
                       </DropdownMenuItem>
                     </Link>
-                    <Link href="/profile/salaries" className={styles.profileLink}>
+                    <Link
+                      href="/profile/salaries"
+                      className={styles.profileLink}
+                    >
                       <DropdownMenuItem>
                         <DollarSign size={16} className={styles.menuIcon} />
                         Мои зарплаты
@@ -154,7 +160,6 @@ export default function Header() {
                     Регистрация
                   </Button>
                 </Link>
-                {/* For demo purposes only */}
                 <Button
                   variant="outline"
                   size="sm"
