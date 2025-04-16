@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,19 @@ export default function ProfileLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logoutUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
   // Redirect if not authenticated
-  React.useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/auth/login");
-    }
+  useEffect(() => {
+    // Short timeout to allow auth state to stabilize
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      if (!isAuthenticated) {
+        router.push("/auth/login");
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [isAuthenticated, router]);
 
   const menuItems = [
@@ -91,8 +98,9 @@ export default function ProfileLayout({
     </nav>
   );
 
-  if (!isAuthenticated) {
-    return null; // Don't render until authenticated
+  // Show loading or redirect if not authenticated
+  if (isLoading || !isAuthenticated) {
+    return null;
   }
 
   return (

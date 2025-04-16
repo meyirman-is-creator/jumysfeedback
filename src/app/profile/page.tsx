@@ -62,10 +62,14 @@ export default function ProfilePage() {
 
   // Fetch profile data when component mounts
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchProfile();
+    // Only fetch if authenticated and we don't already have profile data
+    if (isAuthenticated && !profileData && !profileLoading) {
+      fetchProfile().catch((error) => {
+        console.error("Error fetching profile:", error);
+        // API client will handle auth errors
+      });
     }
-  }, [isAuthenticated, fetchProfile]);
+  }, [isAuthenticated, fetchProfile, profileData, profileLoading]);
 
   // Use profile data if available, otherwise fall back to auth user data
   const userData = {
@@ -205,7 +209,14 @@ export default function ProfilePage() {
   // Determine user role for display
   const roleDisplayText =
     userData.role === "ROLE_ADMIN" ? "Администратор" : "Пользователь";
-
+  // Add loading indicator
+  if (profileLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

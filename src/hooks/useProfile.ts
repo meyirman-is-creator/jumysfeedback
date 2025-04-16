@@ -14,12 +14,21 @@ import {
 export const useProfile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const profile = useSelector((state: RootState) => state.profile);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  const fetchProfile = () => dispatch(getProfile());
+  const fetchProfile = () => {
+    if (isAuthenticated) {
+      return dispatch(getProfile());
+    }
+    return Promise.resolve();
+  };
+
   const updateUserProfile = (data: UpdateProfileRequest) =>
-    dispatch(updateProfile(data));
+    isAuthenticated ? dispatch(updateProfile(data)) : Promise.resolve();
+
   const changePassword = (data: UpdatePasswordRequest) =>
-    dispatch(updatePassword(data));
+    isAuthenticated ? dispatch(updatePassword(data)) : Promise.resolve();
+
   const resetProfile = () => dispatch(resetProfileState());
 
   return {

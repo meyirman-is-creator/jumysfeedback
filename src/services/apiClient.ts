@@ -1,5 +1,4 @@
-// src/services/apiClient.ts
-import axios, { AxiosRequestConfig } from "axios";
+import axios from "axios";
 import Cookies from "js-cookie";
 
 const API_URL = "https://iwork-production.up.railway.app/api";
@@ -32,18 +31,14 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      try {
-        const refreshToken = Cookies.get("refreshToken");
-        if (refreshToken) {
-          // Implement token refresh here if API supports it
-          // For now, we'll just redirect to login
-          window.location.href = "/auth/login";
-        }
-      } catch (refreshError) {
-        Cookies.remove("accessToken");
-        Cookies.remove("refreshToken");
-        window.location.href = "/auth/login";
-      }
+
+      // Clear cookies directly instead of using the store
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
+
+      // Redirect to login
+      window.location.href = "/auth/login";
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }

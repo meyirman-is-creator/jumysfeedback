@@ -20,24 +20,33 @@ export const useAuth = () => {
   const auth = useSelector((state: RootState) => state.auth);
 
   const signupUser = (data: SignupRequest) => dispatch(signup(data));
-  const verifyUserEmail = (data: VerifyEmailRequest) =>
-    dispatch(verifyEmail(data));
+  const verifyUserEmail = (data: VerifyEmailRequest) => dispatch(verifyEmail(data));
   const loginUser = (data: LoginRequest) => dispatch(login(data));
-  const logoutUser = () => dispatch(logout());
+  
+  const logoutUser = () => {
+    dispatch(logout());
+    return Promise.resolve();
+  };
+  
   const resetAuth = () => dispatch(resetAuthState());
 
-  const updateProfile = (profileData) => dispatch(updateUserProfile(profileData));
+  const updateProfile = (profileData) => {
+    if (auth.isAuthenticated) {
+      return dispatch(updateUserProfile(profileData));
+    }
+    return Promise.resolve();
+  };
 
   const updatePassword = async (passwordData) => {
-    try {
-      const response = await apiClient.post(
-        "/profile/update-password",
-        passwordData
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
+    if (auth.isAuthenticated) {
+      try {
+        const response = await apiClient.post("/profile/update-password", passwordData);
+        return response.data;
+      } catch (error) {
+        throw error;
+      }
     }
+    return Promise.resolve();
   };
 
   return {

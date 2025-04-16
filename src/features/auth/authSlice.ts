@@ -54,11 +54,11 @@ export const login = createAsyncThunk(
     try {
       const response = await authAPI.login(data);
 
-      Cookies.set("accessToken", response.accessToken, {
+      Cookies.set("accessToken", response.data.accessToken, {
         secure: true,
         sameSite: "strict",
       });
-      Cookies.set("refreshToken", response.refreshToken, {
+      Cookies.set("refreshToken", response.data.refreshToken, {
         secure: true,
         sameSite: "strict",
       });

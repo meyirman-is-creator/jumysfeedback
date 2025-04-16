@@ -37,8 +37,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
   data: {
     username: string;
     jobTitle: string;
@@ -50,5 +48,7 @@ export interface LoginResponse {
     role: string;
     reviewsCount: number;
     salaryCount: number;
+    accessToken: string;
+    refreshToken: string;
   };
 }
