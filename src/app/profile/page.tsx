@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -33,7 +34,6 @@ import {
   Briefcase,
   Building,
   MapPin,
-  Mail,
   Phone,
   EyeOff,
   Eye,
@@ -42,6 +42,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/components/ui/use-toast";
+import apiClient from "@/services/apiClient";
+import debounce from "lodash/debounce";
 
 export default function ProfilePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -50,21 +52,27 @@ export default function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [jobSuggestions, setJobSuggestions] = useState<any[]>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const { toast } = useToast();
 
   const { user, isAuthenticated } = useAuth();
   const {
     data: profileData,
     isLoading: profileLoading,
+    error: profileError,
     fetchProfile,
     updateUserProfile,
     changePassword,
+    fetchedOnce,
   } = useProfile();
 
   // Fetch profile data when component mounts
   useEffect(() => {
     const loadProfile = async () => {
-      if (isAuthenticated) {
+      if (isAuthenticated && !fetchedOnce) {
         try {
           await fetchProfile();
         } catch (error) {
@@ -80,7 +88,58 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchedOnce]);
+
+  // Create debounced fetch functions for jobs and locations
+  const fetchJobs = useMemo(
+    () =>
+      debounce(async (search: string) => {
+        if (!search) return;
+
+        setIsLoadingJobs(true);
+        try {
+          const response = await apiClient.get(`/jobs?search=${search}`);
+          if (response.data && response.data.data) {
+            setJobSuggestions(response.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching jobs:", error);
+        } finally {
+          setIsLoadingJobs(false);
+        }
+      }, 300),
+    []
+  );
+
+  const fetchLocations = useMemo(
+    () =>
+      debounce(async (search: string) => {
+        if (!search) return;
+
+        setIsLoadingLocations(true);
+        try {
+          const response = await apiClient.get(
+            `/locations?search=${search}`
+          );
+          if (response.data && response.data.data) {
+            setLocationSuggestions(response.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching locations:", error);
+        } finally {
+          setIsLoadingLocations(false);
+        }
+      }, 300),
+    []
+  );
+
+  // Clean up debounce on unmount
+  useEffect(() => {
+    return () => {
+      fetchJobs.cancel();
+      fetchLocations.cancel();
+    };
+  }, [fetchJobs, fetchLocations]);
 
   // Use profile data if available, otherwise fall back to auth user data
   const userData = {
@@ -96,6 +155,9 @@ export default function ProfilePage() {
     role: profileData?.role || user?.role || "ROLE_USER",
   };
 
+  // Phone validation for +7XXXXXXXXXX format
+  const phoneRegex = /^\+7\d{10}$/;
+
   const profileFormSchema = z.object({
     name: z.string().min(2, {
       message: "Имя должно содержать минимум 2 символа",
@@ -105,10 +167,9 @@ export default function ProfilePage() {
     }),
     company: z.string(),
     location: z.string(),
-    email: z.string().email({
-      message: "Введите корректный email",
+    phone: z.string().regex(phoneRegex, {
+      message: "Номер телефона должен быть в формате +7XXXXXXXXXX",
     }),
-    phone: z.string(),
   });
 
   const passwordFormSchema = z
@@ -136,7 +197,6 @@ export default function ProfilePage() {
       jobTitle: userData.jobTitle,
       company: userData.company,
       location: userData.location,
-      email: userData.email,
       phone: userData.phone,
     },
   });
@@ -149,7 +209,6 @@ export default function ProfilePage() {
         jobTitle: profileData.jobTitle || userData.jobTitle,
         company: profileData.company || userData.company,
         location: profileData.location || userData.location,
-        email: profileData.email || userData.email,
         phone: profileData.phone || userData.phone,
       });
     } else if (user) {
@@ -158,7 +217,6 @@ export default function ProfilePage() {
         jobTitle: user.jobTitle || userData.jobTitle,
         company: user.company || userData.company,
         location: user.location || userData.location,
-        email: user.email || userData.email,
         phone: user.phone || userData.phone,
       });
     }
@@ -181,7 +239,6 @@ export default function ProfilePage() {
         jobTitle: values.jobTitle,
         company: values.company,
         location: values.location,
-        email: values.email,
         phone: values.phone,
       });
 
@@ -230,15 +287,30 @@ export default function ProfilePage() {
   const roleDisplayText =
     userData.role === "ROLE_ADMIN" ? "Администратор" : "Пользователь";
 
-  // Add loading indicator
-  
-
   // Helper function to display fields that might be empty
   const displayField = (value: string) => {
     if (!value) {
       return <span className="text-gray-400 italic">Не указано</span>;
     }
     return <span className="text-slate-900">{value}</span>;
+  };
+
+  // Format phone number input to ensure +7 prefix
+  const formatPhoneNumber = (value: string) => {
+    if (!value) return "";
+
+    // If it doesn't start with +7, add it
+    if (!value.startsWith("+7")) {
+      return "+7";
+    }
+
+    // Remove any non-digit characters after +7
+    const digitsOnly = value.slice(2).replace(/\D/g, "");
+
+    // Ensure we only have up to 10 digits after +7
+    const truncated = digitsOnly.slice(0, 10);
+
+    return "+7" + truncated;
   };
 
   return (
@@ -275,7 +347,7 @@ export default function ProfilePage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>ФИО</FormLabel>
+                        <FormLabel>Пользователь</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User
@@ -301,9 +373,38 @@ export default function ProfilePage() {
                               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                               size={16}
                             />
-                            <Input {...field} className="pl-10" />
+                            <Input
+                              {...field}
+                              className="pl-10"
+                              onChange={(e) => {
+                                field.onChange(e);
+                                fetchJobs(e.target.value);
+                              }}
+                            />
+                            {isLoadingJobs && (
+                              <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2" />
+                            )}
+                            {jobSuggestions.length > 0 && (
+                              <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
+                                {jobSuggestions.map((job) => (
+                                  <div
+                                    key={job.id}
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => {
+                                      field.onChange(job.title);
+                                      setJobSuggestions([]);
+                                    }}
+                                  >
+                                    {job.title}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </FormControl>
+                        <FormDescription>
+                          Укажите должность на английском языке
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -339,28 +440,38 @@ export default function ProfilePage() {
                               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                               size={16}
                             />
-                            <Input {...field} className="pl-10" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={profileForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Mail
-                              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                              size={16}
+                            <Input
+                              {...field}
+                              className="pl-10"
+                              onChange={(e) => {
+                                field.onChange(e);
+                                fetchLocations(e.target.value);
+                              }}
                             />
-                            <Input {...field} className="pl-10" />
+                            {isLoadingLocations && (
+                              <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2" />
+                            )}
+                            {locationSuggestions.length > 0 && (
+                              <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
+                                {locationSuggestions.map((location) => (
+                                  <div
+                                    key={location.id}
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => {
+                                      field.onChange(location.locationValue);
+                                      setLocationSuggestions([]);
+                                    }}
+                                  >
+                                    {location.locationValue}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </FormControl>
+                        <FormDescription>
+                          Укажите локацию на русском языке
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -377,13 +488,29 @@ export default function ProfilePage() {
                               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                               size={16}
                             />
-                            <Input {...field} className="pl-10" />
+                            <Input
+                              {...field}
+                              className="pl-10"
+                              value={formatPhoneNumber(field.value)}
+                              onChange={(e) => {
+                                const formatted = formatPhoneNumber(
+                                  e.target.value
+                                );
+                                field.onChange(formatted);
+                              }}
+                            />
                           </div>
                         </FormControl>
+                        <FormDescription>
+                          Формат: +7XXXXXXXXXX (введите только цифры после +7)
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  {profileError && (
+                    <p className="text-red-500 text-sm">{profileError}</p>
+                  )}
                   <DialogFooter>
                     <Button type="submit" disabled={isLoading}>
                       {isLoading ? (

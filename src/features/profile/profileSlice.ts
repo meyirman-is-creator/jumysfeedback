@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import profileAPI from "./profileAPI";
+import { syncWithProfile } from "../auth/authSlice";
 
 interface ProfileState {
   data: any;
@@ -17,9 +18,15 @@ const initialState: ProfileState = {
 
 export const getProfile = createAsyncThunk(
   "profile/getProfile",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       const response = await profileAPI.getProfile();
+
+      // Keep auth store in sync with profile data
+      if (response.data) {
+        dispatch(syncWithProfile(response.data));
+      }
+
       return response.data || null;
     } catch (error: any) {
       console.error("Error fetching profile:", error);
@@ -32,10 +39,15 @@ export const getProfile = createAsyncThunk(
 
 export const updateProfile = createAsyncThunk(
   "profile/updateProfile",
-  async (data: any, { rejectWithValue }) => {
+  async (data: any, { rejectWithValue, dispatch }) => {
     try {
       const response = await profileAPI.updateProfile(data);
-      return response.data.data || data;
+
+      // Keep auth store in sync with profile data
+      const updatedData = response.data.data || data;
+      dispatch(syncWithProfile(updatedData));
+
+      return updatedData;
     } catch (error: any) {
       console.error("Error updating profile:", error);
       return rejectWithValue(

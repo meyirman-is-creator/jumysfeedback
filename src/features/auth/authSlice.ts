@@ -23,13 +23,14 @@ const initialState: AuthState = {
 
 export const initializeAuth = createAsyncThunk(
   "auth/initialize",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       const token = Cookies.get("accessToken");
       if (!token) {
         return null;
       }
 
+      // This will trigger profile data to be cached
       const response = await profileAPI.getProfile();
       return response.data || null;
     } catch (error: any) {
@@ -126,7 +127,7 @@ export const updateUserProfile = createAsyncThunk(
 
 export const logout = createAsyncThunk(
   "auth/logout",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");
@@ -159,6 +160,14 @@ const authSlice = createSlice({
       state.error = null;
     },
     clearAuth: () => initialState,
+    syncWithProfile: (state, action) => {
+      if (state.user && action.payload) {
+        state.user = {
+          ...state.user,
+          ...action.payload,
+        };
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(initializeAuth.pending, (state) => {
@@ -253,6 +262,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { resetAuthState, clearAuth } = authSlice.actions;
+export const { resetAuthState, clearAuth, syncWithProfile } = authSlice.actions;
 
 export default authSlice.reducer;

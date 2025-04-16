@@ -14,7 +14,7 @@ export const useProfile = () => {
   const profileState = useSelector((state: RootState) => state.profile);
 
   const fetchProfile = async () => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !profileState.fetchedOnce) {
       try {
         return await dispatch(getProfile()).unwrap();
       } catch (error) {
@@ -22,7 +22,7 @@ export const useProfile = () => {
         throw error;
       }
     }
-    return Promise.resolve(null);
+    return Promise.resolve(profileState.data || user);
   };
 
   const updateUserProfile = async (data) => {
@@ -48,7 +48,9 @@ export const useProfile = () => {
   return {
     data: profileState.data || user,
     isLoading: profileState.isLoading,
+    error: profileState.error,
     isAuthenticated,
+    fetchedOnce: profileState.fetchedOnce,
     fetchProfile,
     updateUserProfile,
     changePassword,
