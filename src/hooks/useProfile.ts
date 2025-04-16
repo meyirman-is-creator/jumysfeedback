@@ -1,53 +1,35 @@
-import { useDispatch, useSelector } from "react-redux";
-import { RootState, AppDispatch } from "@/store";
-import {
-  getProfile,
-  updateProfile,
-  updatePassword,
-  resetProfileState,
-  clearProfileData,
-} from "@/features/profile/profileSlice";
-import {
-  UpdateProfileRequest,
-  UpdatePasswordRequest,
-} from "@/features/profile/types";
+// src/hooks/useProfile.ts
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useAuth } from "./useAuth";
 
 export const useProfile = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const profile = useSelector((state: RootState) => state.profile);
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated, isLoading, initAuth } = useAuth();
 
-  // Modified to implement caching logic
   const fetchProfile = () => {
-    if (isAuthenticated) {
-      // Only fetch if we're authenticated and haven't fetched before or if we force refresh
-      if (!profile.fetchedOnce || profile.data === null) {
-        return dispatch(getProfile());
-      }
-      // Return a resolved promise with existing data if already fetched
-      return Promise.resolve(profile.data);
+    if (isAuthenticated && !user) {
+      return initAuth();
     }
-    return Promise.resolve();
+    return Promise.resolve(user);
   };
 
-  const updateUserProfile = (data: UpdateProfileRequest) =>
-    isAuthenticated ? dispatch(updateProfile(data)) : Promise.resolve();
+  const updateUserProfile = (data) => {
+    const { updateProfile } = useAuth();
+    return updateProfile(data);
+  };
 
-  const changePassword = (data: UpdatePasswordRequest) =>
-    isAuthenticated ? dispatch(updatePassword(data)) : Promise.resolve();
-
-  const resetProfile = () => dispatch(resetProfileState());
-
-  // Add method to clear profile data (useful for logout)
-  const clearProfile = () => dispatch(clearProfileData());
+  const changePassword = (data) => {
+    const { updatePassword } = useAuth();
+    return updatePassword(data);
+  };
 
   return {
-    ...profile,
+    data: user,
+    isLoading,
+    isAuthenticated,
     fetchProfile,
     updateUserProfile,
     changePassword,
-    resetProfile,
-    clearProfile,
   };
 };
 

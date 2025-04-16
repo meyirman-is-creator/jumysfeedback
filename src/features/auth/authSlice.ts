@@ -1,6 +1,8 @@
+// src/features/auth/authSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 import authAPI from "./authAPI";
+import profileAPI from "../profile/profileAPI";
 import {
   AuthState,
   SignupRequest,
@@ -18,6 +20,23 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
 };
+
+export const initializeAuth = createAsyncThunk(
+  "auth/initialize",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = Cookies.get("accessToken");
+      if (!token) {
+        return null;
+      }
+
+      const response = await profileAPI.getProfile();
+      return response.data || null;
+    } catch (error: any) {
+      return rejectWithValue("Не удалось загрузить профиль");
+    }
+  }
+);
 
 export const signup = createAsyncThunk(
   "auth/signup",
@@ -63,7 +82,9 @@ export const login = createAsyncThunk(
         sameSite: "strict",
       });
 
-      const user: User = {
+      const profileResponse = await profileAPI.getProfile();
+
+      const user: User = profileResponse.data || {
         username: response.data.username,
         jobTitle: response.data.jobTitle,
         company: response.data.company,
@@ -78,8 +99,8 @@ export const login = createAsyncThunk(
 
       return {
         user,
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
+        accessToken: response.data.accessToken,
+        refreshToken: response.data.refreshToken,
       };
     } catch (error: any) {
       return rejectWithValue(
@@ -95,7 +116,7 @@ export const updateUserProfile = createAsyncThunk(
     try {
       const response = await apiClient.put("/profile/edit", data);
       return {
-        username: data.fullName,
+        username: data.username,
         jobTitle: data.jobTitle,
         company: data.company,
         location: data.location,
@@ -147,6 +168,24 @@ const authSlice = createSlice({
     clearAuth: () => initialState,
   },
   extraReducers: (builder) => {
+    builder.addCase(initializeAuth.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(initializeAuth.fulfilled, (state, action) => {
+      state.isLoading = false;
+      if (action.payload) {
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      }
+    });
+    builder.addCase(initializeAuth.rejected, (state) => {
+      state.isLoading = false;
+      state.isAuthenticated = false;
+      state.user = null;
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
+    });
+
     builder.addCase(signup.pending, (state) => {
       state.isLoading = true;
       state.error = null;

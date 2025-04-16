@@ -5,14 +5,14 @@ interface ProfileState {
   data: any;
   isLoading: boolean;
   error: string | null;
-  fetchedOnce: boolean; // Add flag to track if data has been fetched at least once
+  fetchedOnce: boolean;
 }
 
 const initialState: ProfileState = {
   data: null,
   isLoading: false,
   error: null,
-  fetchedOnce: false, // Initialize to false
+  fetchedOnce: false,
 };
 
 export const getProfile = createAsyncThunk(
@@ -20,9 +20,10 @@ export const getProfile = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await profileAPI.getProfile();
-      // Return only the data field from the response
-      return response.data; // Correctly extract just the data field
+      // Make sure we're returning the data in the expected format
+      return response.data || null;
     } catch (error: any) {
+      console.error("Error fetching profile:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to get profile"
       );
@@ -35,8 +36,9 @@ export const updateProfile = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await profileAPI.updateProfile(data);
-      return response.data; // Extract data from the response
+      return response.data || data; // Fallback to the input data if no response
     } catch (error: any) {
+      console.error("Error updating profile:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to update profile"
       );
@@ -52,8 +54,9 @@ export const updatePassword = createAsyncThunk(
   ) => {
     try {
       const response = await profileAPI.updatePassword(data);
-      return response.data; // Extract data from the response
+      return response.data;
     } catch (error: any) {
+      console.error("Error updating password:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to update password"
       );
@@ -81,11 +84,13 @@ const profileSlice = createSlice({
     builder.addCase(getProfile.fulfilled, (state, action) => {
       state.isLoading = false;
       state.data = action.payload;
-      state.fetchedOnce = true; // Mark that data has been fetched
+      state.fetchedOnce = true;
     });
     builder.addCase(getProfile.rejected, (state, action) => {
       state.isLoading = false;
       state.error = action.payload as string;
+      // Even if it fails, we've attempted a fetch
+      state.fetchedOnce = true;
     });
 
     builder.addCase(updateProfile.pending, (state) => {
@@ -94,6 +99,7 @@ const profileSlice = createSlice({
     });
     builder.addCase(updateProfile.fulfilled, (state, action) => {
       state.isLoading = false;
+      // Create a merged state of existing data and new data
       state.data = { ...state.data, ...action.payload };
     });
     builder.addCase(updateProfile.rejected, (state, action) => {

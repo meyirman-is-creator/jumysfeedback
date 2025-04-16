@@ -65,6 +65,12 @@ export default function ProfilePage() {
     if (isAuthenticated) {
       fetchProfile().catch((error) => {
         console.error("Error fetching profile:", error);
+        toast({
+          title: "Ошибка загрузки профиля",
+          description:
+            "Не удалось загрузить данные профиля. Пожалуйста, попробуйте позже.",
+          variant: "destructive",
+        });
       });
     }
   }, [isAuthenticated]);
@@ -76,7 +82,7 @@ export default function ProfilePage() {
     location: profileData?.location || user?.location || "Неизвестно",
     email: profileData?.email || user?.email || "Неизвестно",
     phone: profileData?.phone || user?.phone || "Неизвестно",
-    joinDate: profileData?.withUsSince || user?.withUsSince || "Неизвестно",
+    joinDate: profileData?.withUsSince || user?.withUsSince || "Апрель 2025",
     company: profileData?.company || user?.company || "Неизвестно",
     reviewCount: profileData?.reviewsCount || user?.reviewsCount || 0,
     salaryCount: profileData?.salaryCount || user?.salaryCount || 0,
@@ -139,8 +145,17 @@ export default function ProfilePage() {
         email: profileData.email || userData.email,
         phone: profileData.phone || userData.phone,
       });
+    } else if (user) {
+      profileForm.reset({
+        name: user.username || userData.name,
+        jobTitle: user.jobTitle || userData.jobTitle,
+        company: user.company || userData.company,
+        location: user.location || userData.location,
+        email: user.email || userData.email,
+        phone: user.phone || userData.phone,
+      });
     }
-  }, [profileData]);
+  }, [profileData, user]);
 
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
     resolver: zodResolver(passwordFormSchema),
@@ -207,6 +222,7 @@ export default function ProfilePage() {
   // Determine user role for display
   const roleDisplayText =
     userData.role === "ROLE_ADMIN" ? "Администратор" : "Пользователь";
+
   // Add loading indicator
   if (profileLoading) {
     return (
@@ -215,6 +231,7 @@ export default function ProfilePage() {
       </div>
     );
   }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
