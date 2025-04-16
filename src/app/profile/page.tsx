@@ -1,6 +1,7 @@
+// src/app/profile/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,8 @@ import {
   Eye,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
+import apiClient from "@/services/apiClient";
 
 export default function ProfilePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -46,20 +49,39 @@ export default function ProfilePage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
+  // Fetch user profile data when page loads
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfileData();
+    }
+  }, [isAuthenticated]);
+
+  const fetchProfileData = async () => {
+    try {
+      const response = await apiClient.get("/profile");
+      // No need to update anything as we're using Redux state
+    } catch (error) {
+      console.error("Failed to fetch profile data:", error);
+    }
+  };
 
   // Use user data from auth store, fallback to default values if not available
   const userData = {
-    name: user?.fullName || "Неизвестно",
+    name: user?.username || "Неизвестно",
     jobTitle: user?.jobTitle || "Неизвестно",
     location: user?.location || "Неизвестно",
     email: user?.email || "Неизвестно",
     phone: user?.phone || "Неизвестно",
     joinDate: user?.withUsSince || "Неизвестно",
     company: user?.company || "Неизвестно",
-    reviewCount: 12,
-    salaryCount: 5,
+    reviewCount: user?.reviewsCount || 0,
+    salaryCount: user?.salaryCount || 0,
+    role: user?.role || "ROLE_USER",
   };
 
   const profileFormSchema = z.object({
@@ -79,7 +101,7 @@ export default function ProfilePage() {
 
   const passwordFormSchema = z
     .object({
-      currentPassword: z.string().min(8, {
+      oldPassword: z.string().min(8, {
         message: "Пароль должен содержать минимум 8 символов",
       }),
       newPassword: z.string().min(8, {
@@ -109,21 +131,69 @@ export default function ProfilePage() {
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
     resolver: zodResolver(passwordFormSchema),
     defaultValues: {
-      currentPassword: "",
+      oldPassword: "",
       newPassword: "",
       confirmPassword: "",
     },
   });
 
-  function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
-    console.log(values);
-    setIsEditDialogOpen(false);
+  async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.put("/profile/edit", {
+        fullName: values.name,
+        jobTitle: values.jobTitle,
+        company: values.company,
+        location: values.location,
+        email: values.email,
+        phone: values.phone,
+      });
+
+      toast({
+        title: "Профиль обновлен",
+        description: "Данные профиля успешно обновлены",
+      });
+      setIsEditDialogOpen(false);
+      // Refresh profile data
+      fetchProfileData();
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось обновить профиль",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
-    console.log(values);
-    setIsPasswordDialogOpen(false);
+  async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.post("/profile/update-password", {
+        oldPassword: values.oldPassword,
+        newPassword: values.newPassword,
+      });
+
+      toast({
+        title: "Пароль изменен",
+        description: "Ваш пароль успешно изменен",
+      });
+      setIsPasswordDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось изменить пароль",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
+
+  // Determine user role for display
+  const roleDisplayText =
+    userData.role === "ROLE_ADMIN" ? "Администратор" : "Пользователь";
 
   return (
     <div className="space-y-6">
@@ -265,7 +335,9 @@ export default function ProfilePage() {
                     )}
                   />
                   <DialogFooter>
-                    <Button type="submit">Сохранить</Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Сохранение..." : "Сохранить"}
+                    </Button>
                   </DialogFooter>
                 </form>
               </Form>
@@ -296,7 +368,7 @@ export default function ProfilePage() {
                 >
                   <FormField
                     control={passwordForm.control}
-                    name="currentPassword"
+                    name="oldPassword"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Текущий пароль</FormLabel>
@@ -409,7 +481,9 @@ export default function ProfilePage() {
                     )}
                   />
                   <DialogFooter>
-                    <Button type="submit">Сохранить</Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Сохранение..." : "Сохранить"}
+                    </Button>
                   </DialogFooter>
                 </form>
               </Form>
@@ -429,7 +503,16 @@ export default function ProfilePage() {
           <CardContent>
             <div className="grid grid-cols-1 gap-4">
               <div className="grid grid-cols-3 items-center">
-                <span className="text-sm font-medium text-slate-500">Пользователь</span>
+                <span className="text-sm font-medium text-slate-500">Роль</span>
+                <span className="col-span-2 text-slate-900">
+                  {roleDisplayText}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 items-center">
+                <span className="text-sm font-medium text-slate-500">
+                  Пользователь
+                </span>
                 <span className="col-span-2 text-slate-900">
                   {userData.name}
                 </span>

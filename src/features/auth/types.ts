@@ -1,6 +1,6 @@
 // src/features/auth/types.ts
 export interface User {
-  fullName: string;
+  username: string;
   jobTitle: string;
   company: string;
   location: string;
@@ -8,8 +8,9 @@ export interface User {
   phone: string;
   withUsSince: string;
   role: string;
+  reviewsCount?: number;
+  salaryCount?: number;
 }
-
 export interface AuthState {
   user: User | null;
   accessToken: string | null;
@@ -38,12 +39,16 @@ export interface LoginRequest {
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
-  fullName: string;
-  jobTitle: string;
-  company: string;
-  location: string;
-  email: string;
-  phone: string;
-  withUsSince: string;
-  role: string;
+  data: {
+    fullName: string;
+    jobTitle: string;
+    company: string;
+    location: string;
+    email: string;
+    phone: string;
+    withUsSince: string;
+    role: string;
+    reviewsCount: number;
+    salaryCount: number;
+  };
 }

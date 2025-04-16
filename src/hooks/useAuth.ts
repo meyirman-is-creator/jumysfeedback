@@ -13,6 +13,7 @@ import {
   SignupRequest,
   VerifyEmailRequest,
 } from "@/features/auth/types";
+import apiClient from "@/services/apiClient";
 
 export const useAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -25,6 +26,27 @@ export const useAuth = () => {
   const logoutUser = () => dispatch(logout());
   const resetAuth = () => dispatch(resetAuthState());
 
+  const updateProfile = async (profileData) => {
+    try {
+      const response = await apiClient.put("/profile/edit", profileData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updatePassword = async (passwordData) => {
+    try {
+      const response = await apiClient.post(
+        "/profile/update-password",
+        passwordData
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return {
     ...auth,
     signupUser,
@@ -32,6 +54,8 @@ export const useAuth = () => {
     loginUser,
     logoutUser,
     resetAuth,
+    updateProfile,
+    updatePassword,
   };
 };
 

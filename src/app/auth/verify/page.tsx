@@ -35,7 +35,7 @@ export default function VerifyPage() {
 
   useEffect(() => {
     // Get email from localStorage
-    const email = localStorage.getItem("emailForVerification");
+    const email = sessionStorage.getItem("emailForVerification");
     if (email) {
       setEmailAddress(email);
     } else {
@@ -103,7 +103,7 @@ export default function VerifyPage() {
       });
 
       // Clear email from storage
-      localStorage.removeItem("emailForVerification");
+      sessionStorage.removeItem("emailForVerification");
 
       // Redirect to login
       router.push("/auth/login");

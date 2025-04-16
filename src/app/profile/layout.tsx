@@ -108,15 +108,17 @@ export default function ProfileLayout({
                   alt="аватар"
                 />
                 <AvatarFallback>
-                  {user?.fullName ? user.fullName.substring(0, 2) : "ИИ"}
+                  {user?.username ? user.username.substring(0, 2) : "ИИ"}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center">
                 <h3 className="text-xl font-medium text-slate-900">
-                  {user?.fullName || "Неизвестно"}
+                  {user?.username || "Неизвестно"}
                 </h3>
                 <p className="text-sm text-[#800000] font-medium">
-                  {user?.role || "Неизвестно"}
+                  {user?.role === "ROLE_ADMIN"
+                    ? "Администратор"
+                    : "Пользователь"}
                 </p>
               </div>
             </div>

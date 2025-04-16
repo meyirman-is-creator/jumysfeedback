@@ -103,8 +103,7 @@ export default function RegisterPage() {
         description: "Проверьте вашу почту для подтверждения аккаунта",
       });
 
-      // Store email for verification
-      localStorage.setItem("emailForVerification", values.email);
+      sessionStorage.setItem("emailForVerification", values.email);
 
       router.push("/auth/verify");
     } catch (err: any) {

@@ -59,7 +59,7 @@ export default function Header() {
   const handleLogout = async () => {
     await logoutUser();
     closeDrawer();
-    
+
     router.push("/auth/login");
   };
 
@@ -122,10 +122,13 @@ export default function Header() {
                     <DropdownMenuItem className={styles.profileItem}>
                       <div className={styles.profileInfo}>
                         <span className={styles.userName}>
-                          {user?.fullName}
+                          {user?.username}
                         </span>
-                        <span className={styles.userEmail}>
-                          {user?.email}
+                        <span className={styles.userEmail}>{user?.email}</span>
+                        <span className={styles.userRole}>
+                          {user?.role === "ROLE_ADMIN"
+                            ? "Администратор"
+                            : "Пользователь"}
                         </span>
                       </div>
                     </DropdownMenuItem>
@@ -237,7 +240,7 @@ export default function Header() {
                         <User size={24} className={styles.mobileProfileIcon} />
                         <div>
                           <div className={styles.mobileUserName}>
-                            {user?.fullName}
+                            {user?.username}
                           </div>
                           <div className={styles.mobileUserEmail}>
                             {user?.email}

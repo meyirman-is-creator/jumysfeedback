@@ -25,7 +25,7 @@ export const signup = createAsyncThunk(
     try {
       await authAPI.signup(data);
       // Store email for verification page
-      localStorage.setItem("emailForVerification", data.email);
+      sessionStorage.setItem("emailForVerification", data.email);
       return true;
     } catch (error: any) {
       return rejectWithValue(
@@ -66,7 +66,7 @@ export const login = createAsyncThunk(
       });
 
       const user: User = {
-        fullName: response.data.fullName,
+        fullName: response.data.fullName, // Fixed property name
         jobTitle: response.data.jobTitle,
         company: response.data.company,
         location: response.data.location,
@@ -74,6 +74,8 @@ export const login = createAsyncThunk(
         phone: response.data.phone,
         withUsSince: response.data.withUsSince,
         role: response.data.role,
+        reviewsCount: response.data.reviewsCount || 0,
+        salaryCount: response.data.salaryCount || 0,
       };
 
       return {
@@ -93,12 +95,26 @@ export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
+      // Remove cookies
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");
-      await authAPI.logout();
+
+      // Clear any localStorage/sessionStorage items
+      sessionStorage.removeItem("emailForVerification");
+
+      try {
+        // Try to call logout API but don't let it block the logout process
+        await authAPI.logout();
+      } catch (apiError) {
+        console.warn(
+          "Logout API error, but continuing with local logout:",
+          apiError
+        );
+      }
 
       return true;
     } catch (error: any) {
+      // Still perform local logout even if there's an error
       return rejectWithValue(
         error.response?.data?.message || "Failed to logout"
       );
@@ -114,6 +130,8 @@ const authSlice = createSlice({
       state.isLoading = false;
       state.error = null;
     },
+    // Add this action to manually reset state when needed
+    clearAuth: () => initialState,
   },
   extraReducers: (builder) => {
     // Signup
@@ -159,25 +177,25 @@ const authSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // Logout
+    // Logout - completely reset state to initial values
     builder.addCase(logout.pending, (state) => {
       state.isLoading = true;
       state.error = null;
     });
-    builder.addCase(logout.fulfilled, (state) => {
-      state.isLoading = false;
-      state.isAuthenticated = false;
-      state.user = null;
-      state.accessToken = null;
-      state.refreshToken = null;
+    builder.addCase(logout.fulfilled, () => {
+      // Return initial state to completely reset everything
+      return initialState;
     });
     builder.addCase(logout.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload as string;
+      // Even on API error, we still reset the auth state
+      return {
+        ...initialState,
+        error: action.payload as string,
+      };
     });
   },
 });
 
-export const { resetAuthState } = authSlice.actions;
+export const { resetAuthState, clearAuth } = authSlice.actions;
 
 export default authSlice.reducer;
