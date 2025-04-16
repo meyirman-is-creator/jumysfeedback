@@ -7,7 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Container } from "@/components/ui/container";
-import { User, FileText, DollarSign, PlusCircle, LogOut } from "lucide-react";
+import {
+  User,
+  FileText,
+  DollarSign,
+  PlusCircle,
+  LogOut,
+  Loader2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -18,19 +25,19 @@ export default function ProfileLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, logoutUser } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated, isLoading, logoutUser } = useAuth();
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   // Redirect if not authenticated
   useEffect(() => {
     // Short timeout to allow auth state to stabilize
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      setIsPageLoading(false);
       if (!isAuthenticated) {
         router.push("/auth/login");
       }
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [isAuthenticated, router]);
 
@@ -99,7 +106,20 @@ export default function ProfileLayout({
   );
 
   // Show loading or redirect if not authenticated
-  if (isLoading || !isAuthenticated) {
+  if (isPageLoading || isLoading) {
+    return (
+      <Container className="py-6">
+        <div className="flex justify-center items-center min-h-[500px]">
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-12 w-12 animate-spin text-[#800000] mb-4" />
+            <p className="text-gray-600">Загрузка профиля...</p>
+          </div>
+        </div>
+      </Container>
+    );
+  }
+
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -116,12 +136,16 @@ export default function ProfileLayout({
                   alt="аватар"
                 />
                 <AvatarFallback>
-                  {user?.username ? user.username.substring(0, 2) : "ИИ"}
+                  {user?.username
+                    ? user.username.substring(0, 2).toUpperCase()
+                    : "ИИ"}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center">
                 <h3 className="text-xl font-medium text-slate-900">
-                  {user?.username || "Неизвестно"}
+                  {user?.username || (
+                    <span className="text-gray-400 italic">Имя не указано</span>
+                  )}
                 </h3>
                 <p className="text-sm text-[#800000] font-medium">
                   {user?.role === "ROLE_ADMIN"

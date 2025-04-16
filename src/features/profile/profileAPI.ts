@@ -11,7 +11,10 @@ const profileAPI = {
     return response.data;
   },
 
-  updatePassword: async (data: { oldPassword: string; newPassword: string }) => {
+  updatePassword: async (data: {
+    oldPassword: string;
+    newPassword: string;
+  }) => {
     const response = await apiClient.post("/profile/update-password", data);
     return response.data;
   },

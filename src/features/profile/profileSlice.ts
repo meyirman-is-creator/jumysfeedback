@@ -20,7 +20,6 @@ export const getProfile = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await profileAPI.getProfile();
-      // Make sure we're returning the data in the expected format
       return response.data || null;
     } catch (error: any) {
       console.error("Error fetching profile:", error);
@@ -36,7 +35,7 @@ export const updateProfile = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await profileAPI.updateProfile(data);
-      return response.data || data; // Fallback to the input data if no response
+      return response.data.data || data;
     } catch (error: any) {
       console.error("Error updating profile:", error);
       return rejectWithValue(
@@ -54,7 +53,7 @@ export const updatePassword = createAsyncThunk(
   ) => {
     try {
       const response = await profileAPI.updatePassword(data);
-      return response.data;
+      return response.message || "Пароль успешно изменен";
     } catch (error: any) {
       console.error("Error updating password:", error);
       return rejectWithValue(
@@ -89,7 +88,6 @@ const profileSlice = createSlice({
     builder.addCase(getProfile.rejected, (state, action) => {
       state.isLoading = false;
       state.error = action.payload as string;
-      // Even if it fails, we've attempted a fetch
       state.fetchedOnce = true;
     });
 
@@ -99,7 +97,6 @@ const profileSlice = createSlice({
     });
     builder.addCase(updateProfile.fulfilled, (state, action) => {
       state.isLoading = false;
-      // Create a merged state of existing data and new data
       state.data = { ...state.data, ...action.payload };
     });
     builder.addCase(updateProfile.rejected, (state, action) => {

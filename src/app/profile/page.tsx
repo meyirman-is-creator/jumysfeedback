@@ -37,6 +37,7 @@ import {
   Phone,
   EyeOff,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -62,28 +63,34 @@ export default function ProfilePage() {
 
   // Fetch profile data when component mounts
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchProfile().catch((error) => {
-        console.error("Error fetching profile:", error);
-        toast({
-          title: "Ошибка загрузки профиля",
-          description:
-            "Не удалось загрузить данные профиля. Пожалуйста, попробуйте позже.",
-          variant: "destructive",
-        });
-      });
-    }
+    const loadProfile = async () => {
+      if (isAuthenticated) {
+        try {
+          await fetchProfile();
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          toast({
+            title: "Ошибка загрузки профиля",
+            description:
+              "Не удалось загрузить данные профиля. Пожалуйста, попробуйте позже.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    loadProfile();
   }, [isAuthenticated]);
 
   // Use profile data if available, otherwise fall back to auth user data
   const userData = {
-    name: profileData?.username || user?.username || "Неизвестно",
-    jobTitle: profileData?.jobTitle || user?.jobTitle || "Неизвестно",
-    location: profileData?.location || user?.location || "Неизвестно",
-    email: profileData?.email || user?.email || "Неизвестно",
-    phone: profileData?.phone || user?.phone || "Неизвестно",
-    joinDate: profileData?.withUsSince || user?.withUsSince || "Апрель 2025",
-    company: profileData?.company || user?.company || "Неизвестно",
+    name: profileData?.username || user?.username || "",
+    jobTitle: profileData?.jobTitle || user?.jobTitle || "",
+    location: profileData?.location || user?.location || "",
+    email: profileData?.email || user?.email || "",
+    phone: profileData?.phone || user?.phone || "",
+    joinDate: profileData?.withUsSince || user?.withUsSince || "",
+    company: profileData?.company || user?.company || "",
     reviewCount: profileData?.reviewsCount || user?.reviewsCount || 0,
     salaryCount: profileData?.salaryCount || user?.salaryCount || 0,
     role: profileData?.role || user?.role || "ROLE_USER",
@@ -224,13 +231,15 @@ export default function ProfilePage() {
     userData.role === "ROLE_ADMIN" ? "Администратор" : "Пользователь";
 
   // Add loading indicator
-  if (profileLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#800000]"></div>
-      </div>
-    );
-  }
+  
+
+  // Helper function to display fields that might be empty
+  const displayField = (value: string) => {
+    if (!value) {
+      return <span className="text-gray-400 italic">Не указано</span>;
+    }
+    return <span className="text-slate-900">{value}</span>;
+  };
 
   return (
     <div className="space-y-6">
@@ -377,7 +386,14 @@ export default function ProfilePage() {
                   />
                   <DialogFooter>
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading ? "Сохранение..." : "Сохранить"}
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Сохранение...
+                        </>
+                      ) : (
+                        "Сохранить"
+                      )}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -523,7 +539,14 @@ export default function ProfilePage() {
                   />
                   <DialogFooter>
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading ? "Сохранение..." : "Сохранить"}
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Сохранение...
+                        </>
+                      ) : (
+                        "Сохранить"
+                      )}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -554,8 +577,8 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   Пользователь
                 </span>
-                <span className="col-span-2 text-slate-900">
-                  {userData.name}
+                <span className="col-span-2">
+                  {displayField(userData.name)}
                 </span>
               </div>
 
@@ -563,8 +586,8 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   Должность
                 </span>
-                <span className="col-span-2 text-slate-900">
-                  {userData.jobTitle}
+                <span className="col-span-2">
+                  {displayField(userData.jobTitle)}
                 </span>
               </div>
 
@@ -572,8 +595,8 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   Компания
                 </span>
-                <span className="col-span-2 text-slate-900">
-                  {userData.company}
+                <span className="col-span-2">
+                  {displayField(userData.company)}
                 </span>
               </div>
 
@@ -581,8 +604,8 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   Локация
                 </span>
-                <span className="col-span-2 text-slate-900">
-                  {userData.location}
+                <span className="col-span-2">
+                  {displayField(userData.location)}
                 </span>
               </div>
             </div>
@@ -602,8 +625,8 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   Email
                 </span>
-                <span className="col-span-2 text-slate-900">
-                  {userData.email}
+                <span className="col-span-2">
+                  {displayField(userData.email)}
                 </span>
               </div>
 
@@ -611,8 +634,8 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   Телефон
                 </span>
-                <span className="col-span-2 text-slate-900">
-                  {userData.phone}
+                <span className="col-span-2">
+                  {displayField(userData.phone)}
                 </span>
               </div>
 
@@ -620,8 +643,8 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   С нами с
                 </span>
-                <span className="col-span-2 text-slate-900">
-                  {userData.joinDate}
+                <span className="col-span-2">
+                  {displayField(userData.joinDate)}
                 </span>
               </div>
             </div>

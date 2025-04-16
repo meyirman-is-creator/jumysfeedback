@@ -115,14 +115,7 @@ export const updateUserProfile = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await apiClient.put("/profile/edit", data);
-      return {
-        username: data.username,
-        jobTitle: data.jobTitle,
-        company: data.company,
-        location: data.location,
-        email: data.email,
-        phone: data.phone,
-      };
+      return response.data.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update profile"
