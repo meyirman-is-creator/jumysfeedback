@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +39,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function ProfilePage() {
@@ -50,20 +51,34 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const { user, isAuthenticated, updateProfile, updatePassword } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const {
+    data: profileData,
+    isLoading: profileLoading,
+    fetchProfile,
+    updateUserProfile,
+    changePassword,
+  } = useProfile();
 
-  // Use user data from auth store, fallback to default values if not available
+  // Fetch profile data when component mounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isAuthenticated, fetchProfile]);
+
+  // Use profile data if available, otherwise fall back to auth user data
   const userData = {
-    name: user?.username || "Неизвестно",
-    jobTitle: user?.jobTitle || "Неизвестно",
-    location: user?.location || "Неизвестно",
-    email: user?.email || "Неизвестно",
-    phone: user?.phone || "Неизвестно",
-    joinDate: user?.withUsSince || "Неизвестно",
-    company: user?.company || "Неизвестно",
-    reviewCount: user?.reviewsCount || 0,
-    salaryCount: user?.salaryCount || 0,
-    role: user?.role || "ROLE_USER",
+    name: profileData?.username || user?.username || "Неизвестно",
+    jobTitle: profileData?.jobTitle || user?.jobTitle || "Неизвестно",
+    location: profileData?.location || user?.location || "Неизвестно",
+    email: profileData?.email || user?.email || "Неизвестно",
+    phone: profileData?.phone || user?.phone || "Неизвестно",
+    joinDate: profileData?.withUsSince || user?.withUsSince || "Неизвестно",
+    company: profileData?.company || user?.company || "Неизвестно",
+    reviewCount: profileData?.reviewsCount || user?.reviewsCount || 0,
+    salaryCount: profileData?.salaryCount || user?.salaryCount || 0,
+    role: profileData?.role || user?.role || "ROLE_USER",
   };
 
   const profileFormSchema = z.object({
@@ -98,6 +113,7 @@ export default function ProfilePage() {
       path: ["confirmPassword"],
     });
 
+  // Initialize form with userData
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -109,6 +125,20 @@ export default function ProfilePage() {
       phone: userData.phone,
     },
   });
+
+  // Update form values when profile data changes
+  useEffect(() => {
+    if (profileData) {
+      profileForm.reset({
+        name: profileData.fullName || userData.name,
+        jobTitle: profileData.jobTitle || userData.jobTitle,
+        company: profileData.company || userData.company,
+        location: profileData.location || userData.location,
+        email: profileData.email || userData.email,
+        phone: profileData.phone || userData.phone,
+      });
+    }
+  }, [profileData, profileForm, userData]);
 
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
     resolver: zodResolver(passwordFormSchema),
@@ -122,8 +152,8 @@ export default function ProfilePage() {
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
     setIsLoading(true);
     try {
-      await updateProfile({
-        fullName: values.name,
+      await updateUserProfile({
+        username: values.name,
         jobTitle: values.jobTitle,
         company: values.company,
         location: values.location,
@@ -150,7 +180,7 @@ export default function ProfilePage() {
   async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
     setIsLoading(true);
     try {
-      await updatePassword({
+      await changePassword({
         oldPassword: values.oldPassword,
         newPassword: values.newPassword,
       });
@@ -160,6 +190,7 @@ export default function ProfilePage() {
         description: "Ваш пароль успешно изменен",
       });
       setIsPasswordDialogOpen(false);
+      passwordForm.reset();
     } catch (error) {
       toast({
         title: "Ошибка",
@@ -182,7 +213,11 @@ export default function ProfilePage() {
         <div className="flex flex-wrap gap-2">
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                disabled={profileLoading}
+              >
                 <Edit className="h-4 w-4" />
                 Редактировать
               </Button>

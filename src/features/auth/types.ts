@@ -40,7 +40,7 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
   data: {
-    fullName: string;
+    username: string;
     jobTitle: string;
     company: string;
     location: string;

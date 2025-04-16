@@ -64,7 +64,7 @@ export const login = createAsyncThunk(
       });
 
       const user: User = {
-        username: response.data.fullName,
+        username: response.data.username,
         jobTitle: response.data.jobTitle,
         company: response.data.company,
         location: response.data.location,
