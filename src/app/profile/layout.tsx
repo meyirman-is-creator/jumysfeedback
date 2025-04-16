@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { clearProfileData } from "@/features/profile/profileSlice";
+import { useDispatch } from "react-redux";
+import { useToast } from "@/components/ui/use-toast";
 
 // Track initialization to prevent multiple calls
 let hasCheckedAuth = false;
@@ -28,6 +31,8 @@ export default function ProfileLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { toast } = useToast();
   const { user, isAuthenticated, isLoading, logoutUser, initAuth } = useAuth();
   const [isPageLoading, setIsPageLoading] = useState(true);
 
@@ -53,6 +58,13 @@ export default function ProfileLayout({
 
     checkAuth();
   }, [isAuthenticated, router, initAuth]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      hasCheckedAuth = false;
+    };
+  }, []);
 
   const menuItems = [
     {
@@ -81,9 +93,23 @@ export default function ProfileLayout({
     },
   ];
 
-  const handleLogout = () => {
-    logoutUser();
-    router.push("/auth/login");
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      dispatch(clearProfileData());
+      toast({
+        title: "Выход выполнен",
+        description: "Вы успешно вышли из системы",
+      });
+      router.push("/");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast({
+        title: "Ошибка",
+        description: "Произошла ошибка при выходе из системы",
+        variant: "destructive",
+      });
+    }
   };
 
   const renderMenuItems = () => (

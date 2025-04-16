@@ -127,7 +127,7 @@ export const updateUserProfile = createAsyncThunk(
 
 export const logout = createAsyncThunk(
   "auth/logout",
-  async (_, { rejectWithValue, dispatch }) => {
+  async (_, { rejectWithValue }) => {
     try {
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");

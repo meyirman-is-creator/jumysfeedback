@@ -16,6 +16,8 @@ import {
   VerifyEmailRequest,
 } from "@/features/auth/types";
 import apiClient from "@/services/apiClient";
+import { useRouter } from "next/navigation";
+import { clearProfileData } from "@/features/profile/profileSlice";
 
 // Simple tracker to prevent multiple initialization calls
 let authInitialized = false;
@@ -23,6 +25,7 @@ let authInitialized = false;
 export const useAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: RootState) => state.auth);
+  const router = useRouter();
 
   const initAuth = () => {
     if (!authInitialized) {
@@ -39,7 +42,11 @@ export const useAuth = () => {
 
   const loginUser = (data: LoginRequest) => dispatch(login(data));
 
-  const logoutUser = () => dispatch(logout());
+  const logoutUser = async () => {
+    await dispatch(logout());
+    dispatch(clearProfileData());
+    router.push("/");
+  };
 
   const resetAuth = () => dispatch(resetAuthState());
 
