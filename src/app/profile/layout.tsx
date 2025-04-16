@@ -18,6 +18,9 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
+// Track initialization to prevent multiple calls
+let hasCheckedAuth = false;
+
 export default function ProfileLayout({
   children,
 }: {
@@ -25,21 +28,31 @@ export default function ProfileLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, logoutUser } = useAuth();
+  const { user, isAuthenticated, isLoading, logoutUser, initAuth } = useAuth();
   const [isPageLoading, setIsPageLoading] = useState(true);
 
   // Redirect if not authenticated
   useEffect(() => {
-    // Short timeout to allow auth state to stabilize
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-      if (!isAuthenticated) {
-        router.push("/auth/login");
+    const checkAuth = async () => {
+      // Only run auth check once
+      if (!hasCheckedAuth) {
+        hasCheckedAuth = true;
+        await initAuth();
       }
-    }, 100);
 
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, router]);
+      // Short timeout to allow auth state to stabilize
+      const timer = setTimeout(() => {
+        setIsPageLoading(false);
+        if (!isAuthenticated) {
+          router.push("/auth/login");
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    };
+
+    checkAuth();
+  }, [isAuthenticated, router, initAuth]);
 
   const menuItems = [
     {

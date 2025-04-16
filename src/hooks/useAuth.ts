@@ -17,11 +17,20 @@ import {
 } from "@/features/auth/types";
 import apiClient from "@/services/apiClient";
 
+// Simple tracker to prevent multiple initialization calls
+let authInitialized = false;
+
 export const useAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: RootState) => state.auth);
 
-  const initAuth = () => dispatch(initializeAuth());
+  const initAuth = () => {
+    if (!authInitialized) {
+      authInitialized = true;
+      return dispatch(initializeAuth());
+    }
+    return Promise.resolve();
+  };
 
   const signupUser = (data: SignupRequest) => dispatch(signup(data));
 

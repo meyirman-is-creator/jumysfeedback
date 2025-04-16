@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,6 +56,10 @@ export default function ProfilePage() {
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
+    null
+  );
   const { toast } = useToast();
 
   const { user, isAuthenticated } = useAuth();
@@ -97,6 +101,9 @@ export default function ProfilePage() {
         if (!search) return;
 
         setIsLoadingJobs(true);
+        // Close location suggestions when jobs suggestions are opened
+        setLocationSuggestions([]);
+
         try {
           const response = await apiClient.get(`/jobs?search=${search}`);
           if (response.data && response.data.data) {
@@ -117,10 +124,11 @@ export default function ProfilePage() {
         if (!search) return;
 
         setIsLoadingLocations(true);
+        // Close job suggestions when location suggestions are opened
+        setJobSuggestions([]);
+
         try {
-          const response = await apiClient.get(
-            `/locations?search=${search}`
-          );
+          const response = await apiClient.get(`/locations?search=${search}`);
           if (response.data && response.data.data) {
             setLocationSuggestions(response.data.data);
           }
@@ -232,11 +240,32 @@ export default function ProfilePage() {
   });
 
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
+    // Validate that job and location were selected from the list
+    if (!selectedJobId) {
+      toast({
+        title: "Ошибка",
+        description: "Необходимо выбрать должность из предложенного списка",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedLocationId) {
+      toast({
+        title: "Ошибка",
+        description: "Необходимо выбрать локацию из предложенного списка",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       await updateUserProfile({
         username: values.name,
         jobTitle: values.jobTitle,
+        jobId: selectedJobId,
+        locationId: selectedLocationId,
         company: values.company,
         location: values.location,
         phone: values.phone,
@@ -283,6 +312,29 @@ export default function ProfilePage() {
     }
   }
 
+  // Handle job selection
+  const handleJobSelect = (job: any) => {
+    profileForm.setValue("jobTitle", job.title);
+    setSelectedJobId(job.id);
+    setJobSuggestions([]);
+  };
+
+  // Handle location selection
+  const handleLocationSelect = (location: any) => {
+    profileForm.setValue("location", location.locationValue);
+    setSelectedLocationId(location.id);
+    setLocationSuggestions([]);
+  };
+
+  // Handle dialog open to reset suggestions
+  const handleEditDialogOpen = (open: boolean) => {
+    setIsEditDialogOpen(open);
+    if (!open) {
+      setJobSuggestions([]);
+      setLocationSuggestions([]);
+    }
+  };
+
   // Determine user role for display
   const roleDisplayText =
     userData.role === "ROLE_ADMIN" ? "Администратор" : "Пользователь";
@@ -318,7 +370,7 @@ export default function ProfilePage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-slate-900">Мой профиль</h1>
         <div className="flex flex-wrap gap-2">
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <Dialog open={isEditDialogOpen} onOpenChange={handleEditDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="outline"
@@ -379,6 +431,7 @@ export default function ProfilePage() {
                               onChange={(e) => {
                                 field.onChange(e);
                                 fetchJobs(e.target.value);
+                                setSelectedJobId(null);
                               }}
                             />
                             {isLoadingJobs && (
@@ -390,10 +443,7 @@ export default function ProfilePage() {
                                   <div
                                     key={job.id}
                                     className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                                    onClick={() => {
-                                      field.onChange(job.title);
-                                      setJobSuggestions([]);
-                                    }}
+                                    onClick={() => handleJobSelect(job)}
                                   >
                                     {job.title}
                                   </div>
@@ -403,7 +453,7 @@ export default function ProfilePage() {
                           </div>
                         </FormControl>
                         <FormDescription>
-                          Укажите должность на английском языке
+                          Выберите должность из списка
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -446,6 +496,7 @@ export default function ProfilePage() {
                               onChange={(e) => {
                                 field.onChange(e);
                                 fetchLocations(e.target.value);
+                                setSelectedLocationId(null);
                               }}
                             />
                             {isLoadingLocations && (
@@ -457,10 +508,9 @@ export default function ProfilePage() {
                                   <div
                                     key={location.id}
                                     className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                                    onClick={() => {
-                                      field.onChange(location.locationValue);
-                                      setLocationSuggestions([]);
-                                    }}
+                                    onClick={() =>
+                                      handleLocationSelect(location)
+                                    }
                                   >
                                     {location.locationValue}
                                   </div>
@@ -470,7 +520,7 @@ export default function ProfilePage() {
                           </div>
                         </FormControl>
                         <FormDescription>
-                          Укажите локацию на русском языке
+                          Выберите локацию из списка
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

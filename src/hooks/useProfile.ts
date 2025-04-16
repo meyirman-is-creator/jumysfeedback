@@ -8,13 +8,17 @@ import {
   updatePassword,
 } from "@/features/profile/profileSlice";
 
+// Track initialization to prevent multiple calls
+let profileInitialized = false;
+
 export const useProfile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user, isAuthenticated } = useAuth();
   const profileState = useSelector((state: RootState) => state.profile);
 
   const fetchProfile = async () => {
-    if (isAuthenticated && !profileState.fetchedOnce) {
+    if (isAuthenticated && !profileInitialized && !profileState.fetchedOnce) {
+      profileInitialized = true;
       try {
         return await dispatch(getProfile()).unwrap();
       } catch (error) {
