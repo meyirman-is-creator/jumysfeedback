@@ -1,7 +1,6 @@
-// src/app/profile/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +40,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/use-toast";
-import apiClient from "@/services/apiClient";
 
 export default function ProfilePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -52,23 +50,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const { user, isAuthenticated } = useAuth();
-
-  // Fetch user profile data when page loads
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchProfileData();
-    }
-  }, [isAuthenticated]);
-
-  const fetchProfileData = async () => {
-    try {
-      const response = await apiClient.get("/profile");
-      // No need to update anything as we're using Redux state
-    } catch (error) {
-      console.error("Failed to fetch profile data:", error);
-    }
-  };
+  const { user, isAuthenticated, updateProfile, updatePassword } = useAuth();
 
   // Use user data from auth store, fallback to default values if not available
   const userData = {
@@ -140,7 +122,7 @@ export default function ProfilePage() {
   async function onProfileSubmit(values: z.infer<typeof profileFormSchema>) {
     setIsLoading(true);
     try {
-      const response = await apiClient.put("/profile/edit", {
+      await updateProfile({
         fullName: values.name,
         jobTitle: values.jobTitle,
         company: values.company,
@@ -154,8 +136,6 @@ export default function ProfilePage() {
         description: "Данные профиля успешно обновлены",
       });
       setIsEditDialogOpen(false);
-      // Refresh profile data
-      fetchProfileData();
     } catch (error) {
       toast({
         title: "Ошибка",
@@ -170,7 +150,7 @@ export default function ProfilePage() {
   async function onPasswordSubmit(values: z.infer<typeof passwordFormSchema>) {
     setIsLoading(true);
     try {
-      const response = await apiClient.post("/profile/update-password", {
+      await updatePassword({
         oldPassword: values.oldPassword,
         newPassword: values.newPassword,
       });

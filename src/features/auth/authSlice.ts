@@ -1,4 +1,3 @@
-// src/features/auth/authSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 import authAPI from "./authAPI";
@@ -9,6 +8,7 @@ import {
   LoginRequest,
   User,
 } from "./types";
+import apiClient from "@/services/apiClient";
 
 const initialState: AuthState = {
   user: null,
@@ -24,7 +24,6 @@ export const signup = createAsyncThunk(
   async (data: SignupRequest, { rejectWithValue }) => {
     try {
       await authAPI.signup(data);
-      // Store email for verification page
       sessionStorage.setItem("emailForVerification", data.email);
       return true;
     } catch (error: any) {
@@ -55,7 +54,6 @@ export const login = createAsyncThunk(
     try {
       const response = await authAPI.login(data);
 
-      // Store tokens in cookies
       Cookies.set("accessToken", response.accessToken, {
         secure: true,
         sameSite: "strict",
@@ -66,7 +64,7 @@ export const login = createAsyncThunk(
       });
 
       const user: User = {
-        fullName: response.data.fullName, // Fixed property name
+        username: response.data.fullName,
         jobTitle: response.data.jobTitle,
         company: response.data.company,
         location: response.data.location,
@@ -91,19 +89,36 @@ export const login = createAsyncThunk(
   }
 );
 
+export const updateUserProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.put("/profile/edit", data);
+      return {
+        username: data.fullName,
+        jobTitle: data.jobTitle,
+        company: data.company,
+        location: data.location,
+        email: data.email,
+        phone: data.phone,
+      };
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update profile"
+      );
+    }
+  }
+);
+
 export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      // Remove cookies
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");
-
-      // Clear any localStorage/sessionStorage items
       sessionStorage.removeItem("emailForVerification");
 
       try {
-        // Try to call logout API but don't let it block the logout process
         await authAPI.logout();
       } catch (apiError) {
         console.warn(
@@ -114,7 +129,6 @@ export const logout = createAsyncThunk(
 
       return true;
     } catch (error: any) {
-      // Still perform local logout even if there's an error
       return rejectWithValue(
         error.response?.data?.message || "Failed to logout"
       );
@@ -130,11 +144,9 @@ const authSlice = createSlice({
       state.isLoading = false;
       state.error = null;
     },
-    // Add this action to manually reset state when needed
     clearAuth: () => initialState,
   },
   extraReducers: (builder) => {
-    // Signup
     builder.addCase(signup.pending, (state) => {
       state.isLoading = true;
       state.error = null;
@@ -147,7 +159,6 @@ const authSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // Verify Email
     builder.addCase(verifyEmail.pending, (state) => {
       state.isLoading = true;
       state.error = null;
@@ -160,7 +171,6 @@ const authSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // Login
     builder.addCase(login.pending, (state) => {
       state.isLoading = true;
       state.error = null;
@@ -177,17 +187,32 @@ const authSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // Logout - completely reset state to initial values
+    builder.addCase(updateUserProfile.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(updateUserProfile.fulfilled, (state, action) => {
+      state.isLoading = false;
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          ...action.payload,
+        };
+      }
+    });
+    builder.addCase(updateUserProfile.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload as string;
+    });
+
     builder.addCase(logout.pending, (state) => {
       state.isLoading = true;
       state.error = null;
     });
     builder.addCase(logout.fulfilled, () => {
-      // Return initial state to completely reset everything
       return initialState;
     });
     builder.addCase(logout.rejected, (state, action) => {
-      // Even on API error, we still reset the auth state
       return {
         ...initialState,
         error: action.payload as string,

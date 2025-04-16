@@ -1,4 +1,3 @@
-// src/hooks/useAuth.ts
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import {
@@ -7,6 +6,7 @@ import {
   signup,
   verifyEmail,
   resetAuthState,
+  updateUserProfile,
 } from "@/features/auth/authSlice";
 import {
   LoginRequest,
@@ -26,14 +26,7 @@ export const useAuth = () => {
   const logoutUser = () => dispatch(logout());
   const resetAuth = () => dispatch(resetAuthState());
 
-  const updateProfile = async (profileData) => {
-    try {
-      const response = await apiClient.put("/profile/edit", profileData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  };
+  const updateProfile = (profileData) => dispatch(updateUserProfile(profileData));
 
   const updatePassword = async (passwordData) => {
     try {
