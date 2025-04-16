@@ -62,14 +62,12 @@ export default function ProfilePage() {
 
   // Fetch profile data when component mounts
   useEffect(() => {
-    // Only fetch if authenticated and we don't already have profile data
-    if (isAuthenticated && !profileData && !profileLoading) {
+    if (isAuthenticated) {
       fetchProfile().catch((error) => {
         console.error("Error fetching profile:", error);
-        // API client will handle auth errors
       });
     }
-  }, [isAuthenticated, fetchProfile, profileData, profileLoading]);
+  }, [isAuthenticated]);
 
   // Use profile data if available, otherwise fall back to auth user data
   const userData = {
@@ -134,7 +132,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profileData) {
       profileForm.reset({
-        name: profileData.fullName || userData.name,
+        name: profileData.username || userData.name,
         jobTitle: profileData.jobTitle || userData.jobTitle,
         company: profileData.company || userData.company,
         location: profileData.location || userData.location,
@@ -142,7 +140,7 @@ export default function ProfilePage() {
         phone: profileData.phone || userData.phone,
       });
     }
-  }, [profileData, profileForm, userData]);
+  }, [profileData]);
 
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
     resolver: zodResolver(passwordFormSchema),

@@ -1,7 +1,7 @@
 // src/components/layout/header/Header.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Container } from "@/components/ui/container";
@@ -38,8 +38,14 @@ export default function Header() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [mounted, setMounted] = useState(false);
   const { user, isAuthenticated, logoutUser } = useAuth();
   const pathname = usePathname();
+
+  // Fix hydration mismatch by setting mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -110,86 +116,93 @@ export default function Header() {
               Зарплаты
             </Link>
 
-            {isAuthenticated ? (
-              <div className={styles.profileSection}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className={styles.profileTrigger}>
-                    <User size={18} className={styles.navIcon} />
-                    <span>Профиль</span>
-                    <ChevronDown size={16} className={styles.chevron} />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className={styles.profileDropdown}>
-                    <DropdownMenuItem className={styles.profileItem}>
-                      <div className={styles.profileInfo}>
-                        <span className={styles.userName}>
-                          {user?.username}
-                        </span>
-                        <span className={styles.userEmail}>{user?.email}</span>
-                        <span className={styles.userRole}>
-                          {user?.role === "ROLE_ADMIN"
-                            ? "Администратор"
-                            : "Пользователь"}
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                    <Link href="/profile" className={styles.profileLink}>
-                      <DropdownMenuItem>
-                        <User size={16} className={styles.menuIcon} />
-                        Мой профиль
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link
-                      href="/profile/reviews"
-                      className={styles.profileLink}
-                    >
-                      <DropdownMenuItem>
-                        <FileText size={16} className={styles.menuIcon} />
-                        Мои отзывы
-                      </DropdownMenuItem>
-                    </Link>
-                    <Link
-                      href="/profile/salaries"
-                      className={styles.profileLink}
-                    >
-                      <DropdownMenuItem>
-                        <DollarSign size={16} className={styles.menuIcon} />
-                        Мои зарплаты
-                      </DropdownMenuItem>
-                    </Link>
-                    <div className={styles.dropdownDivider}></div>
-                    <Link href="/profile/add">
-                      <Button size="sm" className={styles.reviewButton}>
-                        Оставить отзыв
+            {/* Only render this part when component is mounted to prevent hydration mismatch */}
+            {mounted && (
+              <>
+                {isAuthenticated ? (
+                  <div className={styles.profileSection}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className={styles.profileTrigger}>
+                        <User size={18} className={styles.navIcon} />
+                        <span>Профиль</span>
+                        <ChevronDown size={16} className={styles.chevron} />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className={styles.profileDropdown}>
+                        <DropdownMenuItem className={styles.profileItem}>
+                          <div className={styles.profileInfo}>
+                            <span className={styles.userName}>
+                              {user?.username}
+                            </span>
+                            <span className={styles.userEmail}>
+                              {user?.email}
+                            </span>
+                            <span className={styles.userRole}>
+                              {user?.role === "ROLE_ADMIN"
+                                ? "Администратор"
+                                : "Пользователь"}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                        <Link href="/profile" className={styles.profileLink}>
+                          <DropdownMenuItem>
+                            <User size={16} className={styles.menuIcon} />
+                            Мой профиль
+                          </DropdownMenuItem>
+                        </Link>
+                        <Link
+                          href="/profile/reviews"
+                          className={styles.profileLink}
+                        >
+                          <DropdownMenuItem>
+                            <FileText size={16} className={styles.menuIcon} />
+                            Мои отзывы
+                          </DropdownMenuItem>
+                        </Link>
+                        <Link
+                          href="/profile/salaries"
+                          className={styles.profileLink}
+                        >
+                          <DropdownMenuItem>
+                            <DollarSign size={16} className={styles.menuIcon} />
+                            Мои зарплаты
+                          </DropdownMenuItem>
+                        </Link>
+                        <div className={styles.dropdownDivider}></div>
+                        <Link href="/profile/add">
+                          <Button size="sm" className={styles.reviewButton}>
+                            Оставить отзыв
+                          </Button>
+                        </Link>
+                        <div className={styles.dropdownDivider}></div>
+                        <DropdownMenuItem
+                          onClick={handleLogout}
+                          className={styles.logoutItem}
+                        >
+                          <LogOut size={16} className={styles.menuIcon} />
+                          Выйти
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ) : (
+                  <div className={styles.authButtons}>
+                    <Link href="/auth/login">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={styles.loginButton}
+                      >
+                        Войти
                       </Button>
                     </Link>
-                    <div className={styles.dropdownDivider}></div>
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className={styles.logoutItem}
-                    >
-                      <LogOut size={16} className={styles.menuIcon} />
-                      Выйти
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ) : (
-              <div className={styles.authButtons}>
-                <Link href="/auth/login">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={styles.loginButton}
-                  >
-                    Войти
-                  </Button>
-                </Link>
-                <Link href="/auth/register">
-                  <Button size="sm" className={styles.registerButton}>
-                    Регистрация
-                  </Button>
-                </Link>
-              </div>
+                    <Link href="/auth/register">
+                      <Button size="sm" className={styles.registerButton}>
+                        Регистрация
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
           </nav>
 
@@ -234,7 +247,7 @@ export default function Header() {
 
                   <div className={styles.mobileMenuDivider}></div>
 
-                  {isAuthenticated ? (
+                  {mounted && isAuthenticated ? (
                     <div className={styles.mobileMenuSecondary}>
                       <div className={styles.mobileProfileInfo}>
                         <User size={24} className={styles.mobileProfileIcon} />
@@ -301,21 +314,23 @@ export default function Header() {
                       </Button>
                     </div>
                   ) : (
-                    <div className={styles.mobileAuthButtons}>
-                      <Link href="/auth/login" onClick={closeDrawer}>
-                        <Button
-                          variant="outline"
-                          className={styles.mobileLoginButton}
-                        >
-                          Войти
-                        </Button>
-                      </Link>
-                      <Link href="/auth/register" onClick={closeDrawer}>
-                        <Button className={styles.mobileRegisterButton}>
-                          Регистрация
-                        </Button>
-                      </Link>
-                    </div>
+                    mounted && (
+                      <div className={styles.mobileAuthButtons}>
+                        <Link href="/auth/login" onClick={closeDrawer}>
+                          <Button
+                            variant="outline"
+                            className={styles.mobileLoginButton}
+                          >
+                            Войти
+                          </Button>
+                        </Link>
+                        <Link href="/auth/register" onClick={closeDrawer}>
+                          <Button className={styles.mobileRegisterButton}>
+                            Регистрация
+                          </Button>
+                        </Link>
+                      </div>
+                    )
                   )}
                 </div>
               </SheetContent>

@@ -5,12 +5,14 @@ interface ProfileState {
   data: any;
   isLoading: boolean;
   error: string | null;
+  fetchedOnce: boolean; // Add flag to track if data has been fetched at least once
 }
 
 const initialState: ProfileState = {
   data: null,
   isLoading: false,
   error: null,
+  fetchedOnce: false, // Initialize to false
 };
 
 export const getProfile = createAsyncThunk(
@@ -18,7 +20,8 @@ export const getProfile = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await profileAPI.getProfile();
-      return response;
+      // Return only the data field from the response
+      return response.data; // Correctly extract just the data field
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to get profile"
@@ -32,7 +35,7 @@ export const updateProfile = createAsyncThunk(
   async (data: any, { rejectWithValue }) => {
     try {
       const response = await profileAPI.updateProfile(data);
-      return response;
+      return response.data; // Extract data from the response
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update profile"
@@ -49,7 +52,7 @@ export const updatePassword = createAsyncThunk(
   ) => {
     try {
       const response = await profileAPI.updatePassword(data);
-      return response;
+      return response.data; // Extract data from the response
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update password"
@@ -66,6 +69,9 @@ const profileSlice = createSlice({
       state.isLoading = false;
       state.error = null;
     },
+    clearProfileData: (state) => {
+      return initialState;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(getProfile.pending, (state) => {
@@ -75,6 +81,7 @@ const profileSlice = createSlice({
     builder.addCase(getProfile.fulfilled, (state, action) => {
       state.isLoading = false;
       state.data = action.payload;
+      state.fetchedOnce = true; // Mark that data has been fetched
     });
     builder.addCase(getProfile.rejected, (state, action) => {
       state.isLoading = false;
@@ -108,6 +115,6 @@ const profileSlice = createSlice({
   },
 });
 
-export const { resetProfileState } = profileSlice.actions;
+export const { resetProfileState, clearProfileData } = profileSlice.actions;
 
 export default profileSlice.reducer;
