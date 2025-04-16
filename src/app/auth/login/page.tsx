@@ -1,6 +1,7 @@
+// src/app/auth/login/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FiUser, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import Link from "next/link";
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -27,6 +27,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   username: z.string().min(1, {
@@ -39,8 +41,10 @@ const formSchema = z.object({
 });
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const { loginUser, isLoading, error} = useAuth();
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,9 +55,19 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    router.push("/");
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await loginUser({
+        username: values.username,
+        password: values.password,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Ошибка входа",
+        description: err.message || "Проверьте логин и пароль",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -139,11 +153,14 @@ export default function LoginPage() {
                 )}
               />
 
+              {error && <div className="text-red-500 text-sm">{error}</div>}
+
               <Button
                 type="submit"
+                disabled={isLoading}
                 className="w-full bg-[#800000] hover:bg-[#660000]"
               >
-                Войти
+                {isLoading ? "Вход..." : "Войти"}
               </Button>
             </form>
           </Form>

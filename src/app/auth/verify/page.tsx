@@ -1,3 +1,4 @@
+// src/app/auth/verify/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -20,14 +21,32 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function VerifyPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [verificationCode, setVerificationCode] = useState("");
+  const [emailAddress, setEmailAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
+  const { verifyUserEmail, isLoading, error, resetAuth } = useAuth();
+
+  useEffect(() => {
+    // Get email from localStorage
+    const email = localStorage.getItem("emailForVerification");
+    if (email) {
+      setEmailAddress(email);
+    } else {
+      // If no email in storage, redirect to register
+      router.push("/auth/login");
+    }
+
+    return () => {
+      resetAuth();
+    };
+  }, [router, resetAuth]);
 
   useEffect(() => {
     if (countdown > 0 && isResendDisabled) {
@@ -39,6 +58,7 @@ export default function VerifyPage() {
   }, [countdown, isResendDisabled]);
 
   const handleResendCode = () => {
+    // In a real application, you would call an API endpoint to resend the code
     toast({
       title: "Код отправлен",
       description: "Новый код подтверждения был отправлен на ваш email",
@@ -47,7 +67,7 @@ export default function VerifyPage() {
     setIsResendDisabled(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (verificationCode.length !== 6) {
       toast({
         title: "Ошибка",
@@ -57,16 +77,45 @@ export default function VerifyPage() {
       return;
     }
 
+    if (!emailAddress) {
+      toast({
+        title: "Ошибка",
+        description:
+          "Email адрес не найден. Пожалуйста, зарегистрируйтесь снова.",
+        variant: "destructive",
+      });
+      router.push("/auth/register");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await verifyUserEmail({
+        email: emailAddress,
+        code: verificationCode,
+      });
+
       toast({
         title: "Аккаунт подтвержден",
         description: "Ваш аккаунт успешно подтвержден",
       });
-      router.push("/");
-    }, 1500);
+
+      // Clear email from storage
+      localStorage.removeItem("emailForVerification");
+
+      // Redirect to login
+      router.push("/auth/login");
+    } catch (err: any) {
+      toast({
+        title: "Ошибка",
+        description:
+          err.message || "Не удалось подтвердить аккаунт. Попробуйте снова.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -103,12 +152,18 @@ export default function VerifyPage() {
             />
           </div>
 
+          {error && (
+            <div className="text-red-500 text-sm text-center mb-4">{error}</div>
+          )}
+
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || verificationCode.length !== 6}
+            disabled={
+              isLoading || isSubmitting || verificationCode.length !== 6
+            }
             className="w-full bg-[#800000] hover:bg-[#660000]"
           >
-            {isSubmitting ? "Проверка..." : "Подтвердить аккаунт"}
+            {isSubmitting || isLoading ? "Проверка..." : "Подтвердить аккаунт"}
           </Button>
 
           <div className="mt-4 text-center">

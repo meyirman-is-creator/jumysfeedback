@@ -1,6 +1,7 @@
+// src/app/auth/register/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import Link from "next/link";
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -26,6 +26,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
 
 const formSchema = z
   .object({
@@ -58,8 +60,16 @@ const formSchema = z
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { signupUser, isLoading, error, resetAuth } = useAuth();
+
+  useEffect(() => {
+    return () => {
+      resetAuth();
+    };
+  }, [resetAuth]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,9 +81,31 @@ export default function RegisterPage() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    router.push("/auth/verify");
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await signupUser({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+      });
+
+      toast({
+        title: "Регистрация успешна",
+        description: "Проверьте вашу почту для подтверждения аккаунта",
+      });
+
+      // Store email for verification
+      localStorage.setItem("emailForVerification", values.email);
+
+      router.push("/auth/verify");
+    } catch (err: any) {
+      toast({
+        title: "Ошибка регистрации",
+        description:
+          err.message || "Не удалось зарегистрироваться. Попробуйте снова.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -193,11 +225,14 @@ export default function RegisterPage() {
                 )}
               />
 
+              {error && <div className="text-red-500 text-sm">{error}</div>}
+
               <Button
                 type="submit"
+                disabled={isLoading}
                 className="w-full bg-[#800000] hover:bg-[#660000]"
               >
-                Зарегистрироваться
+                {isLoading ? "Регистрация..." : "Зарегистрироваться"}
               </Button>
             </form>
           </Form>

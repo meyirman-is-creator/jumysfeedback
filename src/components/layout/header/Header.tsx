@@ -32,10 +32,11 @@ import {
   BarChart2,
 } from "lucide-react";
 import styles from "./Header.module.scss";
-
+import { useAuth } from "@/hooks/useAuth";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const { isAuthenticated, logoutUser } = useAuth();
   // Mock authentication state - in real app this would come from auth context
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const pathname = usePathname();
@@ -60,7 +61,10 @@ export default function Header() {
   const closeDrawer = () => {
     setIsMenuOpen(false);
   };
-
+  const handleLogout = () => {
+    logoutUser();
+    setIsMenuOpen(false); // Close the drawer after logout
+  };
   return (
     <header className={styles.header}>
       <Container>
@@ -157,7 +161,7 @@ export default function Header() {
                     </Link>
                     <div className={styles.dropdownDivider}></div>
                     <DropdownMenuItem
-                      onClick={toggleLogin}
+                      onClick={handleLogout}
                       className={styles.logoutItem}
                     >
                       <LogOut size={16} className={styles.menuIcon} />
