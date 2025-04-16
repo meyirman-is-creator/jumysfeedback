@@ -31,9 +31,18 @@ import { useToast } from "@/components/ui/use-toast";
 
 const formSchema = z
   .object({
-    username: z.string().min(2, {
-      message: "Имя пользователя должно содержать минимум 2 символа",
-    }),
+    username: z
+      .string()
+      .min(3, {
+        message: "Имя пользователя должно содержать минимум 3 символа",
+      })
+      .max(20, {
+        message: "Имя пользователя должно содержать максимум 20 символов",
+      })
+      .regex(/^[a-zA-Z][a-zA-Z0-9._]*(?<![.*])[a-zA-Z0-9]$/, {
+        message:
+          "Имя пользователя должно начинаться с буквы, содержать только буквы, цифры, точки и подчеркивания",
+      }),
     email: z.string().email({
       message: "Введите корректный email адрес",
     }),

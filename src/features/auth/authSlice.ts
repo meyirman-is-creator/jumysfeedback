@@ -66,14 +66,14 @@ export const login = createAsyncThunk(
       });
 
       const user: User = {
-        fullName: response.fullName,
-        jobTitle: response.jobTitle,
-        company: response.company,
-        location: response.location,
-        email: response.email,
-        phone: response.phone,
-        withUsSince: response.withUsSince,
-        role: response.role,
+        fullName: response.data.fullName,
+        jobTitle: response.data.jobTitle,
+        company: response.data.company,
+        location: response.data.location,
+        email: response.data.email,
+        phone: response.data.phone,
+        withUsSince: response.data.withUsSince,
+        role: response.data.role,
       };
 
       return {
@@ -93,11 +93,9 @@ export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await authAPI.logout();
-
-      // Remove tokens from cookies
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");
+      await authAPI.logout();
 
       return true;
     } catch (error: any) {

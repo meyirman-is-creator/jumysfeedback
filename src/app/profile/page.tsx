@@ -38,6 +38,7 @@ import {
   EyeOff,
   Eye,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfilePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -46,14 +47,17 @@ export default function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const user = {
-    name: "Иван Иванов",
-    jobTitle: "Разработчик ПО",
-    location: "Алматы, Казахстан",
-    email: "ivan@example.com",
-    phone: "+7 (777) 123-4567",
-    joinDate: "Май 2022",
-    company: "Kaspi.kz",
+  const { user } = useAuth();
+
+  // Use user data from auth store, fallback to default values if not available
+  const userData = {
+    name: user?.fullName || "Неизвестно",
+    jobTitle: user?.jobTitle || "Неизвестно",
+    location: user?.location || "Неизвестно",
+    email: user?.email || "Неизвестно",
+    phone: user?.phone || "Неизвестно",
+    joinDate: user?.withUsSince || "Неизвестно",
+    company: user?.company || "Неизвестно",
     reviewCount: 12,
     salaryCount: 5,
   };
@@ -93,12 +97,12 @@ export default function ProfilePage() {
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user.name,
-      jobTitle: user.jobTitle,
-      company: user.company,
-      location: user.location,
-      email: user.email,
-      phone: user.phone,
+      name: userData.name,
+      jobTitle: userData.jobTitle,
+      company: userData.company,
+      location: userData.location,
+      email: userData.email,
+      phone: userData.phone,
     },
   });
 
@@ -425,8 +429,10 @@ export default function ProfilePage() {
           <CardContent>
             <div className="grid grid-cols-1 gap-4">
               <div className="grid grid-cols-3 items-center">
-                <span className="text-sm font-medium text-slate-500">ФИО</span>
-                <span className="col-span-2 text-slate-900">{user.name}</span>
+                <span className="text-sm font-medium text-slate-500">Пользователь</span>
+                <span className="col-span-2 text-slate-900">
+                  {userData.name}
+                </span>
               </div>
 
               <div className="grid grid-cols-3 items-center">
@@ -434,7 +440,7 @@ export default function ProfilePage() {
                   Должность
                 </span>
                 <span className="col-span-2 text-slate-900">
-                  {user.jobTitle}
+                  {userData.jobTitle}
                 </span>
               </div>
 
@@ -443,7 +449,7 @@ export default function ProfilePage() {
                   Компания
                 </span>
                 <span className="col-span-2 text-slate-900">
-                  {user.company}
+                  {userData.company}
                 </span>
               </div>
 
@@ -452,7 +458,7 @@ export default function ProfilePage() {
                   Локация
                 </span>
                 <span className="col-span-2 text-slate-900">
-                  {user.location}
+                  {userData.location}
                 </span>
               </div>
             </div>
@@ -472,14 +478,18 @@ export default function ProfilePage() {
                 <span className="text-sm font-medium text-slate-500">
                   Email
                 </span>
-                <span className="col-span-2 text-slate-900">{user.email}</span>
+                <span className="col-span-2 text-slate-900">
+                  {userData.email}
+                </span>
               </div>
 
               <div className="grid grid-cols-3 items-center">
                 <span className="text-sm font-medium text-slate-500">
                   Телефон
                 </span>
-                <span className="col-span-2 text-slate-900">{user.phone}</span>
+                <span className="col-span-2 text-slate-900">
+                  {userData.phone}
+                </span>
               </div>
 
               <div className="grid grid-cols-3 items-center">
@@ -487,7 +497,7 @@ export default function ProfilePage() {
                   С нами с
                 </span>
                 <span className="col-span-2 text-slate-900">
-                  {user.joinDate}
+                  {userData.joinDate}
                 </span>
               </div>
             </div>
@@ -506,7 +516,7 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-6 justify-center">
             <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md w-full">
               <span className="text-3xl font-bold text-[#800000]">
-                {user.reviewCount}
+                {userData.reviewCount}
               </span>
               <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
                 Отзывов о компаниях
@@ -526,7 +536,7 @@ export default function ProfilePage() {
 
             <div className="flex flex-col items-center justify-center p-4 bg-[#800000]/5 rounded-lg max-w-md w-full">
               <span className="text-3xl font-bold text-[#800000]">
-                {user.salaryCount}
+                {userData.salaryCount}
               </span>
               <span className="text-sm text-slate-600 mt-1 mb-4 text-center">
                 Записей о зарплатах

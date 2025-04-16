@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Container } from "@/components/ui/container";
 import { User, FileText, DollarSign, PlusCircle, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfileLayout({
   children,
@@ -16,10 +17,15 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isAdmin = true;
+  const router = useRouter();
+  const { user, isAuthenticated, logoutUser } = useAuth();
 
-  // Simulating authenticated state - in a real app, this would come from a global state or context
-  const isAuthenticated = true;
+  // Redirect if not authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isAuthenticated, router]);
 
   const menuItems = [
     {
@@ -44,9 +50,14 @@ export default function ProfileLayout({
       label: "Добавить контент",
       href: "/profile/add",
       icon: <PlusCircle size={20} />,
-      active: pathname.includes("/profile/add"),
+      active: pathname?.includes("/profile/add"),
     },
   ];
+
+  const handleLogout = () => {
+    logoutUser();
+    router.push("/auth/login");
+  };
 
   const renderMenuItems = () => (
     <nav className="space-y-1 mt-4">
@@ -69,54 +80,53 @@ export default function ProfileLayout({
 
       <Separator className="my-4 bg-[#800000]/10" />
 
-      <Link href="/auth/logout" className="block">
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-left font-normal text-slate-600 hover:bg-[#800000]/5 hover:text-[#800000]"
-        >
-          <LogOut size={20} className="mr-2 text-[#800000]" />
-          Выйти
-        </Button>
-      </Link>
+      <Button
+        variant="ghost"
+        className="w-full justify-start text-left font-normal text-slate-600 hover:bg-[#800000]/5 hover:text-[#800000]"
+        onClick={handleLogout}
+      >
+        <LogOut size={20} className="mr-2 text-[#800000]" />
+        Выйти
+      </Button>
     </nav>
   );
+
+  if (!isAuthenticated) {
+    return null; // Don't render until authenticated
+  }
 
   return (
     <Container className="py-6">
       <div className="lg:grid lg:grid-cols-[280px_1fr] gap-8">
         {/* Desktop sidebar - Only shown when authenticated */}
-        {isAuthenticated && (
-          <aside className="hidden lg:block">
-            <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-              <div className="flex flex-col items-center p-6">
-                <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage
-                    src="/images/avatar-placeholder.jpg"
-                    alt="аватар"
-                  />
-                  <AvatarFallback>ИИ</AvatarFallback>
-                </Avatar>
-                <div className="text-center">
-                  <h3 className="text-xl font-medium text-slate-900">
-                    Иван Иванов
-                  </h3>
-                  <p className="text-sm text-[#800000] font-medium">
-                    {isAdmin ? "Администратор" : "Пользователь"}
-                  </p>
-                </div>
+        <aside className="hidden lg:block">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
+            <div className="flex flex-col items-center p-6">
+              <Avatar className="h-24 w-24 mb-4">
+                <AvatarImage
+                  src="/images/avatar-placeholder.jpg"
+                  alt="аватар"
+                />
+                <AvatarFallback>
+                  {user?.fullName ? user.fullName.substring(0, 2) : "ИИ"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center">
+                <h3 className="text-xl font-medium text-slate-900">
+                  {user?.fullName || "Неизвестно"}
+                </h3>
+                <p className="text-sm text-[#800000] font-medium">
+                  {user?.role || "Неизвестно"}
+                </p>
               </div>
-              <Separator className="bg-[#800000]/10" />
-              <div className="p-4">{renderMenuItems()}</div>
             </div>
-          </aside>
-        )}
+            <Separator className="bg-[#800000]/10" />
+            <div className="p-4">{renderMenuItems()}</div>
+          </div>
+        </aside>
 
-        {/* Main content - Full width if not authenticated */}
-        <main
-          className={`overflow-auto bg-white rounded-lg border border-slate-200 shadow-sm p-6 ${
-            !isAuthenticated ? "lg:col-span-2" : ""
-          }`}
-        >
+        {/* Main content */}
+        <main className="overflow-auto bg-white rounded-lg border border-slate-200 shadow-sm p-6">
           {children}
         </main>
       </div>

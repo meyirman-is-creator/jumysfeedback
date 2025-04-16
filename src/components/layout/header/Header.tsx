@@ -1,8 +1,9 @@
+// src/components/layout/header/Header.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,6 @@ import {
   Search,
   User,
   Menu,
-  X,
   ChevronDown,
   FileText,
   DollarSign,
@@ -33,24 +33,18 @@ import {
 } from "lucide-react";
 import styles from "./Header.module.scss";
 import { useAuth } from "@/hooks/useAuth";
+
 export default function Header() {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const { isAuthenticated, logoutUser } = useAuth();
-  // Mock authentication state - in real app this would come from auth context
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const { user, isAuthenticated, logoutUser } = useAuth();
   const pathname = usePathname();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  // Toggle login status for demo purposes
-  const toggleLogin = () => {
-    setIsLoggedIn(!isLoggedIn);
-    setIsMenuOpen(false); // Close the drawer after logout
-  };
-
   // Check if the given path is active
-  const isActive = (path:string) => {
+  const isActive = (path: string) => {
     if (path === "/companies") {
       return pathname === "/companies" || pathname?.startsWith("/companies/");
     }
@@ -61,10 +55,14 @@ export default function Header() {
   const closeDrawer = () => {
     setIsMenuOpen(false);
   };
-  const handleLogout = () => {
-    logoutUser();
-    setIsMenuOpen(false); // Close the drawer after logout
+
+  const handleLogout = async () => {
+    await logoutUser();
+    closeDrawer();
+    
+    router.push("/auth/login");
   };
+
   return (
     <header className={styles.header}>
       <Container>
@@ -112,7 +110,7 @@ export default function Header() {
               Зарплаты
             </Link>
 
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <div className={styles.profileSection}>
                 <DropdownMenu>
                   <DropdownMenuTrigger className={styles.profileTrigger}>
@@ -123,9 +121,11 @@ export default function Header() {
                   <DropdownMenuContent className={styles.profileDropdown}>
                     <DropdownMenuItem className={styles.profileItem}>
                       <div className={styles.profileInfo}>
-                        <span className={styles.userName}>Иван Иванов</span>
+                        <span className={styles.userName}>
+                          {user?.fullName}
+                        </span>
                         <span className={styles.userEmail}>
-                          ivan@example.com
+                          {user?.email}
                         </span>
                       </div>
                     </DropdownMenuItem>
@@ -186,14 +186,6 @@ export default function Header() {
                     Регистрация
                   </Button>
                 </Link>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleLogin}
-                  className={styles.demoButton}
-                >
-                  (Demo: Log in)
-                </Button>
               </div>
             )}
           </nav>
@@ -239,16 +231,16 @@ export default function Header() {
 
                   <div className={styles.mobileMenuDivider}></div>
 
-                  {isLoggedIn ? (
+                  {isAuthenticated ? (
                     <div className={styles.mobileMenuSecondary}>
                       <div className={styles.mobileProfileInfo}>
                         <User size={24} className={styles.mobileProfileIcon} />
                         <div>
                           <div className={styles.mobileUserName}>
-                            Иван Иванов
+                            {user?.fullName}
                           </div>
                           <div className={styles.mobileUserEmail}>
-                            ivan@example.com
+                            {user?.email}
                           </div>
                         </div>
                       </div>
@@ -299,7 +291,7 @@ export default function Header() {
                       <Button
                         variant="outline"
                         className={styles.mobileLogoutButton}
-                        onClick={toggleLogin}
+                        onClick={handleLogout}
                       >
                         <LogOut size={18} />
                         <span>Выйти</span>

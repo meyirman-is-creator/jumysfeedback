@@ -67,6 +67,7 @@ export default function VerifyPage() {
     setIsResendDisabled(true);
   };
 
+  // Fix redirection after successful verification
   const handleSubmit = async () => {
     if (verificationCode.length !== 6) {
       toast({

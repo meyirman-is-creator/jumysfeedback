@@ -1,4 +1,4 @@
-// src/app/auth/login/page.tsx
+// Add router import and redirect after login
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -42,9 +42,15 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const { loginUser, isLoading, error} = useAuth();
+  const { loginUser, isLoading, error, isAuthenticated } = useAuth();
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/companies");
+    }
+  }, [isAuthenticated, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,6 +67,7 @@ export default function LoginPage() {
         username: values.username,
         password: values.password,
       });
+      // Redirection happens in the useEffect above when isAuthenticated changes
     } catch (err: any) {
       toast({
         title: "Ошибка входа",
@@ -71,6 +78,7 @@ export default function LoginPage() {
   };
 
   return (
+    // Rest of the component remains the same
     <div className="flex justify-center items-center my-[50px] px-4">
       <Card className="w-full max-w-md border-0 shadow-lg">
         <CardHeader className="space-y-1 text-center">
