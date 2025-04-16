@@ -317,7 +317,12 @@ export default function Home() {
   );
 }
 
-function SalaryLink({ title }) {
+// Добавляем интерфейсы для типизации пропсов компонентов
+interface SalaryLinkProps {
+  title: string;
+}
+
+function SalaryLink({ title }: SalaryLinkProps) {
   return (
     <Link href="/salaries" style={{ textDecoration: "none" }}>
       <Typography
@@ -335,7 +340,13 @@ function SalaryLink({ title }) {
   );
 }
 
-function FeatureItem({ icon, title, description }) {
+interface FeatureItemProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function FeatureItem({ icon, title, description }: FeatureItemProps) {
   return (
     <Grid item xs={12} sm={6} md={3}>
       <Box
@@ -358,7 +369,14 @@ function FeatureItem({ icon, title, description }) {
   );
 }
 
-function CompanyCard({ name, rating, reviews, logo }) {
+interface CompanyCardProps {
+  name: string;
+  rating: number;
+  reviews: number;
+  logo: string;
+}
+
+function CompanyCard({ name, rating, reviews, logo }: CompanyCardProps) {
   return (
     <Grid item xs={12} sm={6} md={3}>
       <Card

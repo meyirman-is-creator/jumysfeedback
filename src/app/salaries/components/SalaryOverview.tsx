@@ -1,4 +1,3 @@
-// src/app/salaries/components/SalaryOverview.tsx
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
@@ -79,7 +78,7 @@ export default function SalaryOverview({
             медиану, которая является серединой диапазонов из нашей модели
             оценки общей оплаты и основана на данных о зарплатах, собранных от
             наших пользователей. Предполагаемая дополнительная оплата составляет{" "}
-            {formatCurrency(data.additionalPay)} в год. Дополнительная оплата
+            {formatCurrency(data.additionalEstimate)} в год. Дополнительная оплата
             может включать денежные бонусы, комиссии, чаевые и участие в
             прибыли.
           </Typography>

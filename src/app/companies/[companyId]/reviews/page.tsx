@@ -21,6 +21,18 @@ import {
 import { mockCompanies } from "@/features/company/mockData";
 import styles from "./CompanyReviewsPage.module.scss";
 
+// Расширяем стандартный интерфейс Review из ICompany
+interface CompanyReview {
+  title: string;
+  body: string;
+  rating: number;
+  author: string;
+  date?: string;
+  helpfulCount?: number;
+  notHelpfulCount?: number;
+  comments?: number;
+}
+
 const CompanyReviewsPage = () => {
   const { companyId } = useParams() as { companyId: string };
   const company = mockCompanies.find((c) => c.id === companyId);
@@ -31,7 +43,7 @@ const CompanyReviewsPage = () => {
   const reviewsPerPage = 5;
 
   const allReviews = company
-    ? [...company.reviews, ...generateExtraReviews(company.name)]
+    ? [...company.reviews, ...generateExtraReviews()]
     : [];
 
   const filteredReviews = allReviews.filter((review) => {
@@ -52,8 +64,8 @@ const CompanyReviewsPage = () => {
     page * reviewsPerPage
   );
 
-  function generateExtraReviews(companyName) {
-    const extraReviews = [
+  function generateExtraReviews(): CompanyReview[] {
+    const extraReviews: CompanyReview[] = [
       {
         title: "Отличное место для профессионального роста",
         body: "Работаю уже более 2 лет и очень доволен. Коллектив дружный, руководство адекватное. Много возможностей для обучения и карьерного роста. Рекомендую всем, кто ищет стабильную работу с хорошими перспективами.",
@@ -99,7 +111,7 @@ const CompanyReviewsPage = () => {
     return extraReviews;
   }
 
-  const handleChangePage = (pageNumber) => {
+  const handleChangePage = (pageNumber: number): void => {
     setPage(pageNumber);
   };
 

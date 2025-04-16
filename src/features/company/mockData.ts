@@ -1,3 +1,15 @@
+// Расширяем стандартный интерфейс Review для передачи в компонент
+export interface IReview {
+  title: string;
+  body: string;
+  rating: number;
+  author: string;
+  date?: string;
+  helpfulCount?: number;
+  notHelpfulCount?: number;
+  comments?: number;
+}
+
 export interface IInterview {
   id: string;
   position: string;
@@ -45,12 +57,7 @@ export interface ICompany {
   benefits: { title: string; description: string }[];
   interviews: IInterview[];
   salaries: ISalary[];
-  reviews: {
-    title: string;
-    body: string;
-    rating: number;
-    author: string;
-  }[];
+  reviews: IReview[];
   recommended: { id: string; name: string; logoUrl: string; rating: number }[];
   topCompanies: { id: string; name: string; rating: number }[];
 }
@@ -85,12 +92,9 @@ export const mockCompanies: ICompany[] = [
         description: "Стандартный отпуск 28 дней + больничные.",
       },
     ],
-    /** ----------------
-     *  10 интервью
-     * ---------------*/
     interviews: [
       {
-        id: "i1.3",
+        id: "ibm-i1",
         position: "Software Engineer",
         difficulty: 3.2,
         experience: "Положительный",
@@ -109,7 +113,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i2",
+        id: "ibm-i2",
         position: "Data Scientist",
         difficulty: 3.5,
         experience: "Положительный",
@@ -132,7 +136,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i3",
+        id: "ibm-i3",
         position: "DevOps Engineer",
         difficulty: 3.8,
         experience: "Нейтральный",
@@ -150,7 +154,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i4",
+        id: "ibm-i4",
         position: "Project Manager",
         difficulty: 3.0,
         experience: "Положительный",
@@ -169,7 +173,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i5",
+        id: "ibm-i5",
         position: "Business Analyst",
         difficulty: 2.8,
         experience: "Негативный",
@@ -188,7 +192,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i6",
+        id: "ibm-i6",
         position: "SAP Consultant",
         difficulty: 3.2,
         experience: "Положительный",
@@ -206,7 +210,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i7",
+        id: "ibm-i7",
         position: "UX Designer",
         difficulty: 3.5,
         experience: "Положительный",
@@ -225,7 +229,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i8",
+        id: "ibm-i8",
         position: "HR Specialist",
         difficulty: 2.5,
         experience: "Нейтральный",
@@ -243,7 +247,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i9",
+        id: "ibm-i9",
         position: "QA Engineer",
         difficulty: 3.7,
         experience: "Положительный",
@@ -261,7 +265,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i10",
+        id: "ibm-i10",
         position: "Intern",
         difficulty: 2.0,
         experience: "Положительный",
@@ -279,23 +283,20 @@ export const mockCompanies: ICompany[] = [
         ],
       },
     ],
-    /** ----------------
-     *  15 зарплат
-     * ---------------*/
     salaries: [
       {
-        id: "s1",
+        id: "ibm-s1",
         position: "Software Engineer",
         amount: "4000 USD/мес",
         min: 3500,
         max: 5000,
         median: 4300,
-        additionalPay: 3000, // годовой бонус, к примеру
+        additionalPay: 3000,
         currency: "USD",
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s2",
+        id: "ibm-s2",
         position: "Data Scientist",
         amount: "4500 USD/мес",
         min: 4000,
@@ -306,7 +307,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s3",
+        id: "ibm-s3",
         position: "Senior Consultant",
         amount: "5000 USD/мес",
         min: 4500,
@@ -317,7 +318,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s4",
+        id: "ibm-s4",
         position: "DevOps Engineer",
         amount: "4700 USD/мес",
         min: 4000,
@@ -328,7 +329,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s5",
+        id: "ibm-s5",
         position: "Project Manager",
         amount: "5300 USD/мес",
         min: 4800,
@@ -339,7 +340,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s6",
+        id: "ibm-s6",
         position: "Business Analyst",
         amount: "3800 USD/мес",
         min: 3500,
@@ -350,7 +351,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s7",
+        id: "ibm-s7",
         position: "SAP Consultant",
         amount: "5000 USD/мес",
         min: 4200,
@@ -361,7 +362,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s8",
+        id: "ibm-s8",
         position: "UX Designer",
         amount: "4500 USD/мес",
         min: 4000,
@@ -372,7 +373,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s9",
+        id: "ibm-s9",
         position: "HR Specialist",
         amount: "3500 USD/мес",
         min: 3000,
@@ -383,7 +384,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry",
       },
       {
-        id: "s10",
+        id: "ibm-s10",
         position: "QA Engineer",
         amount: "4100 USD/мес",
         min: 3500,
@@ -394,7 +395,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s11",
+        id: "ibm-s11",
         position: "Intern",
         amount: "2000 USD/мес",
         min: 1800,
@@ -405,7 +406,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Intern",
       },
       {
-        id: "s12",
+        id: "ibm-s12",
         position: "Technical Sales",
         amount: "4200 USD/мес",
         min: 3500,
@@ -416,7 +417,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s13",
+        id: "ibm-s13",
         position: "Security Engineer",
         amount: "4800 USD/мес",
         min: 4200,
@@ -427,7 +428,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s14",
+        id: "ibm-s14",
         position: "Systems Architect",
         amount: "6000 USD/мес",
         min: 5500,
@@ -438,7 +439,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s15",
+        id: "ibm-s15",
         position: "Database Administrator",
         amount: "4200 USD/мес",
         min: 3700,
@@ -464,7 +465,7 @@ export const mockCompanies: ICompany[] = [
       },
       {
         title: "Высокая конкуренция",
-        body: "Система оценок сотрудников строгая, многие попадают в “средние”.",
+        body: "Система оценок сотрудников строгая, многие попадают в средние.",
         rating: 3,
         author: "DevOps",
       },
@@ -514,10 +515,9 @@ export const mockCompanies: ICompany[] = [
         description: "Программы для студентов и выпускников.",
       },
     ],
-    // 10 интервью для Google
     interviews: [
       {
-        id: "i1.1",
+        id: "google-i1",
         position: "Software Engineer",
         difficulty: 3.9,
         experience: "Положительный",
@@ -536,7 +536,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i2",
+        id: "google-i2",
         position: "Data Scientist",
         difficulty: 3.7,
         experience: "Положительный",
@@ -555,7 +555,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i3",
+        id: "google-i3",
         position: "Product Manager",
         difficulty: 3.5,
         experience: "Нейтральный",
@@ -574,7 +574,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i4",
+        id: "google-i4",
         position: "UX Designer",
         difficulty: 3.4,
         experience: "Положительный",
@@ -593,7 +593,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i5",
+        id: "google-i5",
         position: "DevOps Engineer",
         difficulty: 4.1,
         experience: "Положительный",
@@ -612,7 +612,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i6",
+        id: "google-i6",
         position: "Security Engineer",
         difficulty: 4.3,
         experience: "Нейтральный",
@@ -631,7 +631,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i7",
+        id: "google-i7",
         position: "Technical Program Manager",
         difficulty: 3.6,
         experience: "Положительный",
@@ -650,7 +650,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i8",
+        id: "google-i8",
         position: "Business Analyst",
         difficulty: 3.2,
         experience: "Положительный",
@@ -669,7 +669,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i9",
+        id: "google-i9",
         position: "Site Reliability Engineer",
         difficulty: 4.0,
         experience: "Нейтральный",
@@ -688,7 +688,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i10",
+        id: "google-i10",
         position: "Intern",
         difficulty: 2.0,
         experience: "Положительный",
@@ -707,10 +707,9 @@ export const mockCompanies: ICompany[] = [
         ],
       },
     ],
-    // 15 зарплат для Google
     salaries: [
       {
-        id: "s1",
+        id: "google-s1",
         position: "Software Engineer",
         amount: "6000 USD/мес",
         min: 5500,
@@ -721,7 +720,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s2",
+        id: "google-s2",
         position: "Data Scientist",
         amount: "5800 USD/мес",
         min: 5300,
@@ -732,7 +731,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s3",
+        id: "google-s3",
         position: "Product Manager",
         amount: "6500 USD/мес",
         min: 6000,
@@ -743,7 +742,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s4",
+        id: "google-s4",
         position: "UX Designer",
         amount: "5500 USD/мес",
         min: 5000,
@@ -754,7 +753,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s5",
+        id: "google-s5",
         position: "DevOps Engineer",
         amount: "6200 USD/мес",
         min: 5800,
@@ -765,7 +764,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s6",
+        id: "google-s6",
         position: "Security Engineer",
         amount: "6400 USD/мес",
         min: 6000,
@@ -776,7 +775,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s7",
+        id: "google-s7",
         position: "Technical Program Manager",
         amount: "7000 USD/мес",
         min: 6500,
@@ -787,7 +786,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s8",
+        id: "google-s8",
         position: "Business Analyst",
         amount: "5800 USD/мес",
         min: 5400,
@@ -798,7 +797,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s9",
+        id: "google-s9",
         position: "Site Reliability Engineer",
         amount: "6600 USD/мес",
         min: 6200,
@@ -809,7 +808,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s10",
+        id: "google-s10",
         position: "Intern",
         amount: "3000 USD/мес",
         min: 2800,
@@ -820,7 +819,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Intern",
       },
       {
-        id: "s11",
+        id: "google-s11",
         position: "Sales Engineer",
         amount: "6300 USD/мес",
         min: 6000,
@@ -831,7 +830,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s12",
+        id: "google-s12",
         position: "Customer Success Manager",
         amount: "6000 USD/мес",
         min: 5500,
@@ -842,7 +841,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s13",
+        id: "google-s13",
         position: "Marketing Specialist",
         amount: "5700 USD/мес",
         min: 5300,
@@ -853,7 +852,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s14",
+        id: "google-s14",
         position: "Operations Manager",
         amount: "6800 USD/мес",
         min: 6300,
@@ -864,7 +863,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s15",
+        id: "google-s15",
         position: "Security Consultant",
         amount: "6500 USD/мес",
         min: 6000,
@@ -937,10 +936,9 @@ export const mockCompanies: ICompany[] = [
         description: "ESPP и RSU программы для сотрудников.",
       },
     ],
-    // 10 интервью для Microsoft
     interviews: [
       {
-        id: "i1.4",
+        id: "ms-i1",
         position: "Software Engineer",
         difficulty: 4.0,
         experience: "Положительный",
@@ -959,7 +957,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i2",
+        id: "ms-i2",
         position: "Cloud Solutions Architect",
         difficulty: 4.2,
         experience: "Положительный",
@@ -978,7 +976,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i3",
+        id: "ms-i3",
         position: "Data Analyst",
         difficulty: 3.7,
         experience: "Нейтральный",
@@ -997,7 +995,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i4",
+        id: "ms-i4",
         position: "Product Manager",
         difficulty: 3.5,
         experience: "Положительный",
@@ -1016,7 +1014,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i5",
+        id: "ms-i5",
         position: "DevOps Engineer",
         difficulty: 3.9,
         experience: "Положительный",
@@ -1035,7 +1033,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i6",
+        id: "ms-i6",
         position: "QA Engineer",
         difficulty: 3.3,
         experience: "Нейтральный",
@@ -1055,7 +1053,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i7",
+        id: "ms-i7",
         position: "Technical Support Engineer",
         difficulty: 3.5,
         experience: "Положительный",
@@ -1074,7 +1072,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i8",
+        id: "ms-i8",
         position: "Security Engineer",
         difficulty: 4.1,
         experience: "Положительный",
@@ -1093,7 +1091,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i9",
+        id: "ms-i9",
         position: "Intern",
         difficulty: 2.0,
         experience: "Положительный",
@@ -1112,7 +1110,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i10",
+        id: "ms-i10",
         position: "Solutions Consultant",
         difficulty: 3.8,
         experience: "Нейтральный",
@@ -1131,10 +1129,9 @@ export const mockCompanies: ICompany[] = [
         ],
       },
     ],
-    // 15 зарплат для Microsoft
     salaries: [
       {
-        id: "s1",
+        id: "ms-s1",
         position: "Software Engineer",
         amount: "6200 USD/мес",
         min: 5800,
@@ -1145,7 +1142,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s2",
+        id: "ms-s2",
         position: "Cloud Solutions Architect",
         amount: "7500 USD/мес",
         min: 7000,
@@ -1156,7 +1153,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s3",
+        id: "ms-s3",
         position: "Data Analyst",
         amount: "6000 USD/мес",
         min: 5500,
@@ -1167,7 +1164,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s4",
+        id: "ms-s4",
         position: "Product Manager",
         amount: "6800 USD/мес",
         min: 6300,
@@ -1178,7 +1175,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s5",
+        id: "ms-s5",
         position: "DevOps Engineer",
         amount: "6400 USD/мес",
         min: 6000,
@@ -1189,7 +1186,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s6",
+        id: "ms-s6",
         position: "QA Engineer",
         amount: "5800 USD/мес",
         min: 5400,
@@ -1200,7 +1197,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s7",
+        id: "ms-s7",
         position: "Technical Support Engineer",
         amount: "6000 USD/мес",
         min: 5600,
@@ -1211,7 +1208,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s8",
+        id: "ms-s8",
         position: "Security Engineer",
         amount: "6800 USD/мес",
         min: 6300,
@@ -1222,7 +1219,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s9",
+        id: "ms-s9",
         position: "Intern",
         amount: "3200 USD/мес",
         min: 3000,
@@ -1233,7 +1230,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Intern",
       },
       {
-        id: "s10",
+        id: "ms-s10",
         position: "Solutions Consultant",
         amount: "7000 USD/мес",
         min: 6500,
@@ -1244,7 +1241,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s11",
+        id: "ms-s11",
         position: "Cloud Engineer",
         amount: "6600 USD/мес",
         min: 6200,
@@ -1255,7 +1252,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s12",
+        id: "ms-s12",
         position: "Business Analyst",
         amount: "6000 USD/мес",
         min: 5500,
@@ -1266,7 +1263,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s13",
+        id: "ms-s13",
         position: "Marketing Specialist",
         amount: "5900 USD/мес",
         min: 5500,
@@ -1277,7 +1274,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s14",
+        id: "ms-s14",
         position: "Operations Manager",
         amount: "6800 USD/мес",
         min: 6300,
@@ -1288,7 +1285,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s15",
+        id: "ms-s15",
         position: "Security Consultant",
         amount: "6500 USD/мес",
         min: 6000,
@@ -1350,7 +1347,7 @@ export const mockCompanies: ICompany[] = [
     ],
     interviews: [
       {
-        id: "i1.5",
+        id: "apple-i1",
         position: "UI/UX Designer",
         difficulty: 3.7,
         experience: "Положительный",
@@ -1368,7 +1365,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i2",
+        id: "apple-i2",
         position: "Hardware Engineer",
         difficulty: 4.0,
         experience: "Положительный",
@@ -1386,7 +1383,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i3",
+        id: "apple-i3",
         position: "Software Engineer",
         difficulty: 4.2,
         experience: "Положительный",
@@ -1405,7 +1402,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i4",
+        id: "apple-i4",
         position: "Project Manager",
         difficulty: 3.5,
         experience: "Нейтральный",
@@ -1423,7 +1420,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i5",
+        id: "apple-i5",
         position: "Data Scientist",
         difficulty: 3.8,
         experience: "Положительный",
@@ -1440,7 +1437,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i6",
+        id: "apple-i6",
         position: "DevOps Engineer",
         difficulty: 3.9,
         experience: "Положительный",
@@ -1458,7 +1455,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i7",
+        id: "apple-i7",
         position: "Security Engineer",
         difficulty: 4.1,
         experience: "Нейтральный",
@@ -1477,7 +1474,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i8",
+        id: "apple-i8",
         position: "Intern",
         difficulty: 2.5,
         experience: "Положительный",
@@ -1495,7 +1492,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i9",
+        id: "apple-i9",
         position: "Technical Writer",
         difficulty: 3.0,
         experience: "Нейтральный",
@@ -1514,7 +1511,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i10",
+        id: "apple-i10",
         position: "Customer Support Specialist",
         difficulty: 2.8,
         experience: "Положительный",
@@ -1550,7 +1547,7 @@ export const mockCompanies: ICompany[] = [
     ],
     salaries: [
       {
-        id: "s1",
+        id: "apple-s1",
         position: "UI/UX Designer",
         amount: "4500 USD/мес",
         min: 4000,
@@ -1561,7 +1558,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s2",
+        id: "apple-s2",
         position: "Hardware Engineer",
         amount: "5500 USD/мес",
         min: 5000,
@@ -1572,7 +1569,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s3",
+        id: "apple-s3",
         position: "Software Engineer",
         amount: "6000 USD/мес",
         min: 5500,
@@ -1583,7 +1580,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s4",
+        id: "apple-s4",
         position: "Project Manager",
         amount: "6500 USD/мес",
         min: 6000,
@@ -1594,7 +1591,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s5",
+        id: "apple-s5",
         position: "Data Scientist",
         amount: "6200 USD/мес",
         min: 5800,
@@ -1605,7 +1602,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s6",
+        id: "apple-s6",
         position: "DevOps Engineer",
         amount: "6300 USD/мес",
         min: 5900,
@@ -1616,7 +1613,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s7",
+        id: "apple-s7",
         position: "Security Engineer",
         amount: "6400 USD/мес",
         min: 6000,
@@ -1627,7 +1624,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s8",
+        id: "apple-s8",
         position: "Intern",
         amount: "3000 USD/мес",
         min: 2800,
@@ -1638,7 +1635,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Intern",
       },
       {
-        id: "s9",
+        id: "apple-s9",
         position: "Technical Writer",
         amount: "4200 USD/мес",
         min: 4000,
@@ -1649,7 +1646,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s10",
+        id: "apple-s10",
         position: "Customer Support Specialist",
         amount: "4000 USD/мес",
         min: 3800,
@@ -1660,7 +1657,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry",
       },
       {
-        id: "s11",
+        id: "apple-s11",
         position: "Marketing Specialist",
         amount: "5500 USD/мес",
         min: 5200,
@@ -1671,7 +1668,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s12",
+        id: "apple-s12",
         position: "Operations Manager",
         amount: "7000 USD/мес",
         min: 6500,
@@ -1682,7 +1679,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s13",
+        id: "apple-s13",
         position: "Product Manager",
         amount: "6800 USD/мес",
         min: 6400,
@@ -1693,7 +1690,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s14",
+        id: "apple-s14",
         position: "Cloud Engineer",
         amount: "6600 USD/мес",
         min: 6200,
@@ -1704,7 +1701,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s15",
+        id: "apple-s15",
         position: "Business Analyst",
         amount: "6000 USD/мес",
         min: 5600,
@@ -1737,10 +1734,9 @@ export const mockCompanies: ICompany[] = [
   {
     id: "28",
     name: "EY",
-    logoUrl:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/180311311_4444913438875449_117212782360460240_n.png?_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ow5W0w-iXCcQ7kNvgHGSRbY&_nc_oc=Adib5MOwu_Rm8TXdDPpG1jHme0enNFLlTH1hykhf9iDF9SIGOyUyM2HkFZ5hyF92UCU&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAz7z7iFgNpUyOpfj1CDoHU8_fDwL03QeDuU03u-hAeYg&oe=67BFA4B6",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/c/c2/EY_logo.svg",
     bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/472711780_1027399376096208_7513469530974593198_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=DD9hlMYk75EQ7kNvgExSKYk&_nc_oc=Adim4uUFX9fvJ0-rQx4tj2d76GTyEzK-jcCZzDIg1MXPtL9o4Ap8yQ47d8Z_Tp52C6s&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAyqA7OKZSIF_rpjNO2hwt6jLa0dt5gzHU5Fr1fo1HgxQ&oe=67BFA6C0",
+      "https://www.ey.com/content/dam/ey-sites/ey-com/en_us/topics/diversity/ey-diversity-inclusion-belonging-hero-image.jpg",
     rating: 3.8,
     location: "Лондон, Великобритания",
     industries: ["Аудит", "Консалтинг"],
@@ -1765,7 +1761,7 @@ export const mockCompanies: ICompany[] = [
     ],
     interviews: [
       {
-        id: "i1.6",
+        id: "ey-i1",
         position: "Tax Consultant",
         difficulty: 3.3,
         experience: "Положительный",
@@ -1784,7 +1780,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i2",
+        id: "ey-i2",
         position: "Audit Associate",
         difficulty: 3.4,
         experience: "Положительный",
@@ -1803,7 +1799,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i3",
+        id: "ey-i3",
         position: "Consultant",
         difficulty: 3.6,
         experience: "Положительный",
@@ -1822,7 +1818,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i4",
+        id: "ey-i4",
         position: "Risk Manager",
         difficulty: 3.8,
         experience: "Нейтральный",
@@ -1841,7 +1837,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i5",
+        id: "ey-i5",
         position: "Internal Auditor",
         difficulty: 3.5,
         experience: "Положительный",
@@ -1861,7 +1857,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i6",
+        id: "ey-i6",
         position: "Forensic Accountant",
         difficulty: 4.0,
         experience: "Нейтральный",
@@ -1880,7 +1876,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i7",
+        id: "ey-i7",
         position: "Business Analyst",
         difficulty: 3.6,
         experience: "Положительный",
@@ -1899,7 +1895,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i8",
+        id: "ey-i8",
         position: "Senior Auditor",
         difficulty: 3.9,
         experience: "Положительный",
@@ -1918,7 +1914,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i9",
+        id: "ey-i9",
         position: "Financial Analyst",
         difficulty: 3.7,
         experience: "Нейтральный",
@@ -1937,7 +1933,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i10",
+        id: "ey-i10",
         position: "Management Consultant",
         difficulty: 3.8,
         experience: "Положительный",
@@ -1959,7 +1955,7 @@ export const mockCompanies: ICompany[] = [
     ],
     salaries: [
       {
-        id: "s1",
+        id: "ey-s1",
         position: "Tax Consultant",
         amount: "3400 USD/мес",
         min: 3100,
@@ -1970,7 +1966,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s2",
+        id: "ey-s2",
         position: "Audit Associate",
         amount: "3600 USD/мес",
         min: 3300,
@@ -1981,7 +1977,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s3",
+        id: "ey-s3",
         position: "Consultant",
         amount: "4000 USD/мес",
         min: 3700,
@@ -1992,7 +1988,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s4",
+        id: "ey-s4",
         position: "Risk Manager",
         amount: "4200 USD/мес",
         min: 3900,
@@ -2003,7 +1999,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s5",
+        id: "ey-s5",
         position: "Forensic Accountant",
         amount: "4400 USD/мес",
         min: 4100,
@@ -2014,7 +2010,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s6",
+        id: "ey-s6",
         position: "Business Analyst",
         amount: "4000 USD/мес",
         min: 3700,
@@ -2025,7 +2021,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s7",
+        id: "ey-s7",
         position: "Senior Auditor",
         amount: "4600 USD/мес",
         min: 4300,
@@ -2036,7 +2032,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s8",
+        id: "ey-s8",
         position: "Internal Auditor",
         amount: "4200 USD/мес",
         min: 3900,
@@ -2047,7 +2043,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s9",
+        id: "ey-s9",
         position: "Financial Analyst",
         amount: "4400 USD/мес",
         min: 4100,
@@ -2058,7 +2054,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s10",
+        id: "ey-s10",
         position: "Audit Manager",
         amount: "4800 USD/мес",
         min: 4500,
@@ -2069,7 +2065,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s11",
+        id: "ey-s11",
         position: "Tax Manager",
         amount: "5000 USD/мес",
         min: 4700,
@@ -2080,7 +2076,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s12",
+        id: "ey-s12",
         position: "Consulting Manager",
         amount: "5200 USD/мес",
         min: 4900,
@@ -2091,7 +2087,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s13",
+        id: "ey-s13",
         position: "Risk Director",
         amount: "5500 USD/мес",
         min: 5200,
@@ -2102,7 +2098,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s14",
+        id: "ey-s14",
         position: "Financial Director",
         amount: "5700 USD/мес",
         min: 5400,
@@ -2113,7 +2109,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s15",
+        id: "ey-s15",
         position: "Management Consultant",
         amount: "6000 USD/мес",
         min: 5700,
@@ -2145,10 +2141,9 @@ export const mockCompanies: ICompany[] = [
   {
     id: "29",
     name: "PwC",
-    logoUrl:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/180311311_4444913438875449_117212782360460240_n.png?_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ow5W0w-iXCcQ7kNvgHGSRbY&_nc_oc=Adib5MOwu_Rm8TXdDPpG1jHme0enNFLlTH1hykhf9iDF9SIGOyUyM2HkFZ5hyF92UCU&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAz7z7iFgNpUyOpfj1CDoHU8_fDwL03QeDuU03u-hAeYg&oe=67BFA4B6",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/0/05/PricewaterhouseCoopers_Logo.svg",
     bannerImg:
-      "https://scontent.fala4-2.fna.fbcdn.net/v/t39.30808-6/472711780_1027399376096208_7513469530974593198_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=DD9hlMYk75EQ7kNvgExSKYk&_nc_oc=Adim4uUFX9fvJ0-rQx4tj2d76GTyEzK-jcCZzDIg1MXPtL9o4Ap8yQ47d8Z_Tp52C6s&_nc_zt=23&_nc_ht=scontent.fala4-2.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAyqA7OKZSIF_rpjNO2hwt6jLa0dt5gzHU5Fr1fo1HgxQ&oe=67BFA6C0",
+      "https://www.pwc.com/content/dam/pwc/us/en/library/crisis-management/crisis-center-hero.jpg",
     rating: 3.9,
     location: "Лондон, Великобритания",
     industries: ["Аудит", "Консалтинг"],
@@ -2171,10 +2166,9 @@ export const mockCompanies: ICompany[] = [
         description: "Возможность командировок за рубеж.",
       },
     ],
-    // 10 интервью для PwC
     interviews: [
       {
-        id: "i1.7",
+        id: "pwc-i1",
         position: "Advisory Associate",
         difficulty: 3.5,
         experience: "Положительный",
@@ -2193,7 +2187,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i2",
+        id: "pwc-i2",
         position: "Audit Associate",
         difficulty: 3.2,
         experience: "Положительный",
@@ -2212,7 +2206,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i3",
+        id: "pwc-i3",
         position: "Tax Consultant",
         difficulty: 3.8,
         experience: "Положительный",
@@ -2232,7 +2226,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i4",
+        id: "pwc-i4",
         position: "Consultant",
         difficulty: 3.6,
         experience: "Нейтральный",
@@ -2251,7 +2245,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i5",
+        id: "pwc-i5",
         position: "Risk Manager",
         difficulty: 4.0,
         experience: "Положительный",
@@ -2270,7 +2264,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i6",
+        id: "pwc-i6",
         position: "Forensic Accountant",
         difficulty: 4.2,
         experience: "Нейтральный",
@@ -2289,7 +2283,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i7",
+        id: "pwc-i7",
         position: "Business Analyst",
         difficulty: 3.4,
         experience: "Положительный",
@@ -2308,7 +2302,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i8",
+        id: "pwc-i8",
         position: "Senior Auditor",
         difficulty: 3.9,
         experience: "Положительный",
@@ -2327,7 +2321,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i9",
+        id: "pwc-i9",
         position: "Internal Auditor",
         difficulty: 3.3,
         experience: "Нейтральный",
@@ -2347,7 +2341,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i10",
+        id: "pwc-i10",
         position: "Financial Analyst",
         difficulty: 3.7,
         experience: "Положительный",
@@ -2366,10 +2360,9 @@ export const mockCompanies: ICompany[] = [
         ],
       },
     ],
-    // 15 зарплат для PwC
     salaries: [
       {
-        id: "s1",
+        id: "pwc-s1",
         position: "Advisory Associate",
         amount: "3500 USD/мес",
         min: 3200,
@@ -2380,7 +2373,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s2",
+        id: "pwc-s2",
         position: "Audit Associate",
         amount: "3800 USD/мес",
         min: 3500,
@@ -2391,7 +2384,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s3",
+        id: "pwc-s3",
         position: "Tax Consultant",
         amount: "4200 USD/мес",
         min: 3900,
@@ -2402,7 +2395,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s4",
+        id: "pwc-s4",
         position: "Consultant",
         amount: "4500 USD/мес",
         min: 4200,
@@ -2413,7 +2406,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s5",
+        id: "pwc-s5",
         position: "Risk Manager",
         amount: "5000 USD/мес",
         min: 4600,
@@ -2424,7 +2417,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s6",
+        id: "pwc-s6",
         position: "Forensic Accountant",
         amount: "5200 USD/мес",
         min: 4800,
@@ -2435,7 +2428,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s7",
+        id: "pwc-s7",
         position: "Business Analyst",
         amount: "4800 USD/мес",
         min: 4400,
@@ -2446,7 +2439,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s8",
+        id: "pwc-s8",
         position: "Senior Auditor",
         amount: "5500 USD/мес",
         min: 5100,
@@ -2457,7 +2450,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s9",
+        id: "pwc-s9",
         position: "Internal Auditor",
         amount: "5000 USD/мес",
         min: 4600,
@@ -2468,7 +2461,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s10",
+        id: "pwc-s10",
         position: "Financial Analyst",
         amount: "5300 USD/мес",
         min: 4900,
@@ -2479,7 +2472,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s11",
+        id: "pwc-s11",
         position: "Audit Manager",
         amount: "6000 USD/мес",
         min: 5600,
@@ -2490,7 +2483,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s12",
+        id: "pwc-s12",
         position: "Tax Manager",
         amount: "6200 USD/мес",
         min: 5800,
@@ -2501,7 +2494,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s13",
+        id: "pwc-s13",
         position: "Consulting Manager",
         amount: "6500 USD/мес",
         min: 6100,
@@ -2512,7 +2505,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s14",
+        id: "pwc-s14",
         position: "Risk Director",
         amount: "7000 USD/мес",
         min: 6600,
@@ -2523,7 +2516,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s15",
+        id: "pwc-s15",
         position: "Financial Director",
         amount: "7200 USD/мес",
         min: 6800,
@@ -2559,10 +2552,9 @@ export const mockCompanies: ICompany[] = [
   {
     id: "30",
     name: "Epic Games",
-    logoUrl:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-1/180311311_4444913438875449_117212782360460240_n.png?_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_ohc=ow5W0w-iXCcQ7kNvgHGSRbY&_nc_oc=Adib5MOwu_Rm8TXdDPpG1jHme0enNFLlTH1hykhf9iDF9SIGOyUyM2HkFZ5hyF92UCU&_nc_zt=24&_nc_ht=scontent.fala4-3.fna&_nc_gid=ApJ2ZcEpUqbNsPDWVo9aExU&oh=00_AYAz7z7iFgNpUyOpfj1CDoHU8_fDwL03QeDuU03u-hAeYg&oe=67BFA4B6",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/3/31/Epic_Games_logo.svg",
     bannerImg:
-      "https://scontent.fala4-3.fna.fbcdn.net/v/t39.30808-6/476872199_1050836347083373_139352602116227694_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=GI036YgfS7IQ7kNvgGZXtLW&_nc_oc=AdinSnkPs65CTQRwnMtj2bK7XKnHAlHcGTka7zs_TMrutlL_xKxzCt4DNQt0NnRTUfM&_nc_zt=23&_nc_ht=scontent.fala4-3.fna&_nc_gid=Ab1zd6M9xXtntmN1ehyqzYS&oh=00_AYCrfmdsm4u-CCicwbyX7DT3QPbYoGd_0HckmFCi7Fk2Cg&oe=67BFA226",
+      "https://cdn2.unrealengine.com/unreal-engine-5-1-features-for-fortnite-chapter-4-header-1920x1080-2e96ba9a1999.jpg",
     rating: 4.0,
     location: "Кэри, США",
     industries: ["Геймдев", "Движки"],
@@ -2587,7 +2579,7 @@ export const mockCompanies: ICompany[] = [
     ],
     interviews: [
       {
-        id: "i1.2",
+        id: "epic-i1",
         position: "Gameplay Programmer",
         difficulty: 4.0,
         experience: "Положительный",
@@ -2606,7 +2598,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i2",
+        id: "epic-i2",
         position: "Engine Developer",
         difficulty: 4.2,
         experience: "Положительный",
@@ -2625,7 +2617,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i3",
+        id: "epic-i3",
         position: "Graphics Programmer",
         difficulty: 4.1,
         experience: "Нейтральный",
@@ -2644,7 +2636,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i4",
+        id: "epic-i4",
         position: "AI Programmer",
         difficulty: 3.9,
         experience: "Положительный",
@@ -2663,7 +2655,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i5",
+        id: "epic-i5",
         position: "Technical Artist",
         difficulty: 3.8,
         experience: "Положительный",
@@ -2683,7 +2675,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i6",
+        id: "epic-i6",
         position: "Level Designer",
         difficulty: 3.5,
         experience: "Нейтральный",
@@ -2702,7 +2694,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i7",
+        id: "epic-i7",
         position: "QA Tester",
         difficulty: 3.0,
         experience: "Положительный",
@@ -2721,7 +2713,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i8",
+        id: "epic-i8",
         position: "Network Engineer",
         difficulty: 4.0,
         experience: "Положительный",
@@ -2741,7 +2733,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i9",
+        id: "epic-i9",
         position: "VR Developer",
         difficulty: 4.2,
         experience: "Положительный",
@@ -2760,7 +2752,7 @@ export const mockCompanies: ICompany[] = [
         ],
       },
       {
-        id: "i10",
+        id: "epic-i10",
         position: "Game Designer",
         difficulty: 3.6,
         experience: "Положительный",
@@ -2781,7 +2773,7 @@ export const mockCompanies: ICompany[] = [
     ],
     salaries: [
       {
-        id: "s1",
+        id: "epic-s1",
         position: "Gameplay Programmer",
         amount: "4800 USD/мес",
         min: 4400,
@@ -2792,7 +2784,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s2",
+        id: "epic-s2",
         position: "Engine Developer",
         amount: "5200 USD/мес",
         min: 4800,
@@ -2803,7 +2795,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s3",
+        id: "epic-s3",
         position: "Graphics Programmer",
         amount: "5400 USD/мес",
         min: 5000,
@@ -2814,7 +2806,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s4",
+        id: "epic-s4",
         position: "AI Programmer",
         amount: "5000 USD/мес",
         min: 4600,
@@ -2825,7 +2817,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s5",
+        id: "epic-s5",
         position: "Technical Artist",
         amount: "5100 USD/мес",
         min: 4700,
@@ -2836,7 +2828,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s6",
+        id: "epic-s6",
         position: "Level Designer",
         amount: "4800 USD/мес",
         min: 4500,
@@ -2847,7 +2839,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry-Mid",
       },
       {
-        id: "s7",
+        id: "epic-s7",
         position: "QA Tester",
         amount: "4300 USD/мес",
         min: 4000,
@@ -2858,7 +2850,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Entry",
       },
       {
-        id: "s8",
+        id: "epic-s8",
         position: "Network Engineer",
         amount: "5500 USD/мес",
         min: 5100,
@@ -2869,7 +2861,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s9",
+        id: "epic-s9",
         position: "VR Developer",
         amount: "6000 USD/мес",
         min: 5600,
@@ -2880,7 +2872,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Senior",
       },
       {
-        id: "s10",
+        id: "epic-s10",
         position: "Game Designer",
         amount: "5000 USD/мес",
         min: 4600,
@@ -2891,7 +2883,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s11",
+        id: "epic-s11",
         position: "Technical Scripter",
         amount: "4800 USD/мес",
         min: 4400,
@@ -2902,7 +2894,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s12",
+        id: "epic-s12",
         position: "Audio Programmer",
         amount: "4700 USD/мес",
         min: 4300,
@@ -2913,7 +2905,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s13",
+        id: "epic-s13",
         position: "UI/UX Developer",
         amount: "4900 USD/мес",
         min: 4500,
@@ -2924,7 +2916,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid",
       },
       {
-        id: "s14",
+        id: "epic-s14",
         position: "Motion Capture Specialist",
         amount: "5200 USD/мес",
         min: 4800,
@@ -2935,7 +2927,7 @@ export const mockCompanies: ICompany[] = [
         experienceLevel: "Mid-Senior",
       },
       {
-        id: "s15",
+        id: "epic-s15",
         position: "Technical Director",
         amount: "7000 USD/мес",
         min: 6500,

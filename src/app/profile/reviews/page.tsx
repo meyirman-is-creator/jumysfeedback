@@ -139,7 +139,7 @@ export default function ReviewsPage() {
   const [adminComment, setAdminComment] = useState("");
 
   // Role check (replace with actual auth logic)
-  const isAdmin = true;
+  const isAdmin = false;
 
   const statusTabs = ["Все", "Новые", "Одобренные", "Отклоненные"];
 
