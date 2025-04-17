@@ -84,18 +84,27 @@ export default function ReviewsPage() {
   const [adminComment, setAdminComment] = useState("");
 
   // Get reviews from the store
-  const { userReviews, allReviews, isLoading, error } = useSelector(
-    (state: RootState) => state.review
-  );
+  const {
+    userReviews,
+    allReviews,
+    isLoading,
+    error,
+    userReviewsLoaded,
+    allReviewsLoaded,
+  } = useSelector((state: RootState) => state.review);
 
   // Fetch reviews on component mount
   useEffect(() => {
     if (isAdmin) {
-      dispatch(fetchAllReviews(undefined));
+      if (!allReviewsLoaded) {
+        dispatch(fetchAllReviews(undefined));
+      }
     } else {
-      dispatch(fetchUserReviews());
+      if (!userReviewsLoaded) {
+        dispatch(fetchUserReviews());
+      }
     }
-  }, [dispatch, isAdmin]);
+  }, [dispatch, isAdmin, allReviewsLoaded, userReviewsLoaded]);
 
   const statusTabs = ["Все", "Новые", "Одобренные", "Отклоненные"];
 
@@ -215,7 +224,6 @@ export default function ReviewsPage() {
     setSelectedReviewId(null);
     setAdminComment("");
   };
-
   const handleModerate = (reviewId: string, action: "approve" | "reject") => {
     if (action === "approve") {
       handleApproveClick(reviewId);
@@ -225,6 +233,7 @@ export default function ReviewsPage() {
       );
       if (review) {
         setSelectedReview(review);
+        setSelectedReviewId(reviewId); // Add this line
         setRejectDialogOpen(true);
       }
     }
@@ -661,7 +670,7 @@ export default function ReviewsPage() {
       {/* Review details dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         {selectedReview && (
-          <DialogContent className="sm:max-w-md md:max-w-xl bg-white">
+          <DialogContent className="sm:max-w-md md:max-w-xl bg-white max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">
                 {selectedReview.title}

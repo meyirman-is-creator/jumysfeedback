@@ -1,7 +1,9 @@
+// src/app/profile/add/review/page.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import { Container } from "@/components/ui/container";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,12 +29,26 @@ import {
 import searchAPI from "@/services/searchAPI";
 import reviewAPI from "@/features/review/reviewAPI";
 import debounce from "lodash/debounce";
+import { RootState, AppDispatch } from "@/store";
+import {
+  fetchUserReviews,
+  fetchReviewById,
+} from "@/features/review/reviewSlice";
 
 export default function AddReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const isEditing = searchParams.has("id");
+  const dispatch = useDispatch<AppDispatch>();
+  const reviewId = searchParams.get("id");
+  const isEditing = !!reviewId;
+
+  // Get the reviews from the Redux store
+  const {
+    userReviews,
+    currentReview,
+    isLoading: storeLoading,
+  } = useSelector((state: RootState) => state.review);
 
   // State for stepper
   const [activeStep, setActiveStep] = useState(0);
@@ -53,6 +69,7 @@ export default function AddReviewPage() {
   );
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewLoaded, setReviewLoaded] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -79,6 +96,105 @@ export default function AddReviewPage() {
 
   // Form errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load review data for editing
+  useEffect(() => {
+    if (isEditing && !reviewLoaded) {
+      // Try to find the review in the userReviews array
+      const existingReview = userReviews.find(
+        (review) => review.id.toString() === reviewId
+      );
+
+      if (existingReview) {
+        // Review found in the store, use it to prefill the form
+        prefillFormData(existingReview);
+        setReviewLoaded(true);
+      } else {
+        // Review not found in the store, fetch it from the API
+        dispatch(fetchReviewById(reviewId!))
+          .unwrap()
+          .then((data) => {
+            if (data) {
+              prefillFormData(data);
+            }
+            setReviewLoaded(true);
+          })
+          .catch((error) => {
+            console.error("Failed to fetch review:", error);
+            toast({
+              title: "Ошибка",
+              description: "Не удалось загрузить данные отзыва",
+              variant: "destructive",
+            });
+            setReviewLoaded(true);
+          });
+      }
+    }
+  }, [isEditing, reviewId, userReviews, dispatch, reviewLoaded]);
+
+  // When currentReview changes (after API fetch), prefill the form
+  useEffect(() => {
+    if (isEditing && currentReview && !reviewLoaded) {
+      prefillFormData(currentReview);
+      setReviewLoaded(true);
+    }
+  }, [currentReview, isEditing, reviewLoaded]);
+
+  // Helper function to prefill form data from a review
+  const prefillFormData = (review: any) => {
+    // Map employmentStatus from API to form format
+    const statusMapping = {
+      CURRENT_EMPLOYEE: "current",
+      FORMER_EMPLOYEE: "former",
+      current: "current",
+      former: "former",
+    };
+
+    // Map employmentType from API to form format
+    const typeMapping = {
+      FULL_TIME: "full-time",
+      PART_TIME: "part-time",
+      CONTRACT: "contract",
+      INTERNSHIP: "internship",
+      FREELANCE: "freelance",
+      "full-time": "full-time",
+      "part-time": "part-time",
+      contract: "contract",
+      internship: "internship",
+      freelance: "freelance",
+    };
+
+    setFormData({
+      companyName: review.companyName || "",
+      position: review.position || "",
+      employmentStatus: statusMapping[review.employmentStatus] || "current",
+      employmentType: typeMapping[review.employmentType] || "full-time",
+      employmentContract: null, // Can't prefill file input
+      overallRating: review.rating || 3,
+      careerOpportunities: review.careerOpportunities || 3,
+      workLifeBalance: review.workLifeBalance || 3,
+      compensation: review.compensation || 3,
+      jobSecurity: review.jobSecurity || 3,
+      management: review.management || 3,
+      title: review.title || "",
+      body: review.body || "",
+      pros: review.pros || "",
+      cons: review.cons || "",
+      advice: review.advice || "",
+      recommendToFriend: review.recommendToFriend ? "yes" : "no",
+      anonymous: review.anonymous || false,
+      confirmTruthful: true, // Always true when editing
+    });
+
+    // Set IDs for company and job
+    if (review.companyId) {
+      setSelectedCompanyId(review.companyId);
+    }
+
+    if (review.jobId) {
+      setSelectedJobId(review.jobId);
+    }
+  };
 
   // Debounced search functions
   const searchCompanies = useRef(
@@ -267,13 +383,27 @@ export default function AddReviewPage() {
         submitData.append("contractFile", formData.employmentContract);
       }
 
-      await reviewAPI.submitReview(submitData);
+      let response;
+      if (isEditing && reviewId) {
+        // Update existing review
+        response = await reviewAPI.updateReview(reviewId, submitData);
+        toast({
+          title: "Успешно!",
+          description: "Ваш отзыв успешно обновлен",
+          variant: "success",
+        });
+      } else {
+        // Create new review
+        response = await reviewAPI.submitReview(submitData);
+        toast({
+          title: "Успешно!",
+          description: "Ваш отзыв успешно отправлен",
+          variant: "success",
+        });
+      }
 
-      toast({
-        title: "Успешно!",
-        description: "Ваш отзыв успешно отправлен",
-        variant: "success",
-      });
+      // Refresh user reviews after submission
+      dispatch(fetchUserReviews());
 
       router.push("/profile/reviews");
     } catch (error: any) {
@@ -293,6 +423,20 @@ export default function AddReviewPage() {
   const handleCancel = () => {
     router.back();
   };
+
+  // If we're in edit mode but still loading the review, show a loading state
+  if (isEditing && !reviewLoaded && storeLoading) {
+    return (
+      <Container className="py-6">
+        <div className="max-w-3xl mx-auto flex items-center justify-center min-h-[300px]">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-12 w-12 animate-spin text-[#800000]" />
+            <p className="text-gray-600">Загрузка данных отзыва...</p>
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container className="py-6">
@@ -512,7 +656,9 @@ export default function AddReviewPage() {
                     >
                       Трудовой договор{" "}
                       <span className="text-gray-400 text-sm ml-2">
-                        (необязательно)
+                        {isEditing
+                          ? "(при необходимости обновить)"
+                          : "(необязательно)"}
                       </span>
                     </Label>
                     <div className="relative">
@@ -524,6 +670,8 @@ export default function AddReviewPage() {
                         <span>
                           {formData.employmentContract
                             ? formData.employmentContract.name
+                            : isEditing
+                            ? "Обновить трудовой договор (необязательно)"
                             : "Загрузить трудовой договор"}
                         </span>
                       </Label>
@@ -803,7 +951,7 @@ export default function AddReviewPage() {
                               }[formData.employmentType]
                             }
                           </p>
-                          {formData.employmentContract && (
+                          {(formData.employmentContract || isEditing) && (
                             <p className="text-green-600 text-sm flex items-center gap-1 mt-1">
                               <span className="w-2 h-2 inline-block bg-green-600 rounded-full"></span>
                               Верифицирован трудовым договором

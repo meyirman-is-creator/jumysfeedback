@@ -13,7 +13,7 @@ const reviewAPI = {
 
   updateReview: async (reviewId: string, formData: FormData) => {
     const response = await apiClient.put(
-      `/reviews/edit/${reviewId}`,
+      `/reviews/${reviewId}/edit`,
       formData,
       {
         headers: {

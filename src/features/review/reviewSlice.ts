@@ -42,6 +42,8 @@ interface ReviewState {
   currentReview: Review | null;
   isLoading: boolean;
   error: string | null;
+  userReviewsLoaded: boolean; // New flag
+  allReviewsLoaded: boolean; // New flag
 }
 
 const initialState: ReviewState = {
@@ -50,6 +52,8 @@ const initialState: ReviewState = {
   currentReview: null,
   isLoading: false,
   error: null,
+  userReviewsLoaded: false,
+  allReviewsLoaded: false,
 };
 
 export const fetchUserReviews = createAsyncThunk(
@@ -111,7 +115,10 @@ export const deleteReview = createAsyncThunk(
 export const updateReviewStatus = createAsyncThunk(
   "review/updateReviewStatus",
   async (
-    { reviewId, data }: { reviewId: string; data: { status: string; adminComment?: string } },
+    {
+      reviewId,
+      data,
+    }: { reviewId: string; data: { status: string; adminComment?: string } },
     { rejectWithValue }
   ) => {
     try {
@@ -142,12 +149,13 @@ const reviewSlice = createSlice({
       .addCase(fetchUserReviews.fulfilled, (state, action) => {
         state.isLoading = false;
         state.userReviews = action.payload;
+        state.userReviewsLoaded = true;
       })
       .addCase(fetchUserReviews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       .addCase(fetchAllReviews.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -155,12 +163,13 @@ const reviewSlice = createSlice({
       .addCase(fetchAllReviews.fulfilled, (state, action) => {
         state.isLoading = false;
         state.allReviews = action.payload;
+        state.allReviewsLoaded = true;
       })
       .addCase(fetchAllReviews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       .addCase(fetchReviewById.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -173,7 +182,7 @@ const reviewSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       .addCase(deleteReview.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -191,32 +200,35 @@ const reviewSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      
+
       .addCase(updateReviewStatus.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(updateReviewStatus.fulfilled, (state, action) => {
         state.isLoading = false;
-        
+
         if (action.payload) {
           const updatedReview = action.payload;
-          
+
           const index = state.allReviews.findIndex(
             (review) => review.id === updatedReview.id
           );
           if (index !== -1) {
             state.allReviews[index] = updatedReview;
           }
-          
+
           const userIndex = state.userReviews.findIndex(
             (review) => review.id === updatedReview.id
           );
           if (userIndex !== -1) {
             state.userReviews[userIndex] = updatedReview;
           }
-          
-          if (state.currentReview && state.currentReview.id === updatedReview.id) {
+
+          if (
+            state.currentReview &&
+            state.currentReview.id === updatedReview.id
+          ) {
             state.currentReview = updatedReview;
           }
         }
