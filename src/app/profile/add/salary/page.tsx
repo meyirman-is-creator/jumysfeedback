@@ -1,7 +1,20 @@
+// src/app/profile/add/salary/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  X,
+  Building,
+  Briefcase,
+  Users,
+  MapPin,
+  FileUp,
+  Loader2,
+} from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,22 +23,15 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Save,
-  X,
-  Building,
-  Briefcase,
-  DollarSign,
-  Users,
-  MapPin,
-  FileUp,
-} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import salaryAPI from "@/features/salary/salaryAPI";
+import searchAPI from "@/services/searchAPI";
+import debounce from "lodash/debounce";
 
 export default function AddSalaryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const isEditing = searchParams.has("id");
 
   // State for stepper
@@ -37,38 +43,114 @@ export default function AddSalaryPage() {
     "Подтверждение",
   ];
 
+  // State for API data
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
+    null
+  );
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
+    null
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     companyName: "",
     position: "",
     department: "",
-    employmentStatus: "current", // 'current' or 'former'
-    employmentType: "full-time", // 'full-time', 'part-time', 'contract', etc.
-    employmentContract: null as File | null, // To store the uploaded file
+    employmentStatus: "current",
+    employmentType: "full-time",
+    employmentContract: null as File | null,
     salary: "",
     currency: "USD",
-    payPeriod: "monthly", // 'monthly', 'yearly'
+    payPeriod: "monthly",
     bonuses: "",
     stockOptions: "",
-    experience: "1-3", // '0-1', '1-3', '3-5', '5-10', '10+'
+    experience: "1-3",
     location: "",
-    anonymous: true,
     confirmTruthful: false,
   });
 
   // Form validation
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Debounced search functions
+  const searchCompanies = useRef(
+    debounce(async (query: string) => {
+      if (!query || query.length < 2) return;
+      setIsLoadingCompanies(true);
+      try {
+        const response = await searchAPI.searchCompanies(query);
+        if (response?.data?.content) {
+          setCompanies(response.data.content);
+        }
+      } catch (error) {
+        console.error("Error searching companies:", error);
+      } finally {
+        setIsLoadingCompanies(false);
+      }
+    }, 300)
+  ).current;
+
+  const searchJobs = useRef(
+    debounce(async (query: string) => {
+      if (!query || query.length < 2) return;
+      setIsLoadingJobs(true);
+      try {
+        const response = await searchAPI.searchJobs(query);
+        if (response?.data) {
+          setJobs(response.data);
+        }
+      } catch (error) {
+        console.error("Error searching jobs:", error);
+      } finally {
+        setIsLoadingJobs(false);
+      }
+    }, 300)
+  ).current;
+
+  const searchLocations = useRef(
+    debounce(async (query: string) => {
+      if (!query || query.length < 2) return;
+      setIsLoadingLocations(true);
+      try {
+        const response = await searchAPI.searchLocations(query);
+        if (response?.data) {
+          setLocations(response.data);
+        }
+      } catch (error) {
+        console.error("Error searching locations:", error);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    }, 300)
+  ).current;
+
+  // Cleanup debounced functions on unmount
+  useEffect(() => {
+    return () => {
+      searchCompanies.cancel();
+      searchJobs.cancel();
+      searchLocations.cancel();
+    };
+  }, [searchCompanies, searchJobs, searchLocations]);
+
   const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {};
 
     switch (step) {
       case 0:
-        if (!formData.companyName.trim()) {
-          newErrors.companyName = "Укажите название компании";
+        if (!selectedCompanyId) {
+          newErrors.companyName = "Выберите компанию из списка";
         }
-        if (!formData.position.trim()) {
-          newErrors.position = "Укажите должность";
+        if (!selectedJobId) {
+          newErrors.position = "Выберите должность из списка";
         }
         break;
       case 1:
@@ -79,6 +161,11 @@ export default function AddSalaryPage() {
         }
         if (!formData.currency.trim()) {
           newErrors.currency = "Укажите валюту";
+        }
+        break;
+      case 2:
+        if (!selectedLocationId) {
+          newErrors.location = "Выберите местоположение из списка";
         }
         break;
       case 3:
@@ -105,10 +192,12 @@ export default function AddSalaryPage() {
 
   const handleChange = (
     e:
-      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+      | React.ChangeEvent<
+          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >
       | { target: { name?: string; value: unknown } }
   ) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target as { name?: string; value: unknown };
     if (name) {
       setFormData((prev) => ({ ...prev, [name]: value }));
 
@@ -143,11 +232,96 @@ export default function AddSalaryPage() {
     }
   };
 
-  const handleSubmit = () => {
-    if (validateStep(activeStep)) {
-      // Handle submission logic here
-      console.log("Form submitted:", formData);
+  const handleCompanySelect = (company: any) => {
+    setFormData((prev) => ({ ...prev, companyName: company.name }));
+    setSelectedCompanyId(company.id);
+    setCompanies([]);
+  };
+
+  const handleJobSelect = (job: any) => {
+    setFormData((prev) => ({ ...prev, position: job.title }));
+    setSelectedJobId(job.id);
+    setJobs([]);
+  };
+
+  const handleLocationSelect = (location: any) => {
+    setFormData((prev) => ({ ...prev, location: location.locationValue }));
+    setSelectedLocationId(location.id);
+    setLocations([]);
+  };
+
+  const getCurrencySymbol = (currencyCode: string) => {
+    switch (currencyCode) {
+      case "USD":
+        return "$";
+      case "EUR":
+        return "€";
+      case "KZT":
+        return "₸";
+      case "RUB":
+        return "₽";
+      default:
+        return currencyCode;
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep(activeStep)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const submitData = new FormData();
+
+      const salaryData = {
+        companyId: selectedCompanyId,
+        companyName: formData.companyName,
+        jobId: selectedJobId,
+        position: formData.position,
+        department: formData.department,
+        employmentStatus: formData.employmentStatus,
+        employmentType: formData.employmentType,
+        salary: parseFloat(formData.salary),
+        currency: formData.currency,
+        payPeriod: formData.payPeriod,
+        bonuses: formData.bonuses,
+        stockOptions: formData.stockOptions,
+        experience: formData.experience,
+        locationId: selectedLocationId,
+        location: formData.location,
+      };
+
+      submitData.append(
+        "salary",
+        new Blob([JSON.stringify(salaryData)], { type: "application/json" })
+      );
+
+      if (formData.employmentContract) {
+        submitData.append("contractFile", formData.employmentContract);
+      }
+
+      await salaryAPI.submitSalary(submitData);
+
+      toast({
+        title: "Успешно!",
+        description: "Информация о зарплате успешно добавлена",
+        variant: "success",
+      });
+
       router.push("/profile/salaries");
+    } catch (error: any) {
+      console.error("Error submitting salary:", error);
+      toast({
+        title: "Ошибка",
+        description:
+          error.response?.data?.message ||
+          "Произошла ошибка при отправке данных",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -165,7 +339,6 @@ export default function AddSalaryPage() {
               : "Добавление данных о зарплате"}
           </h1>
 
-          {/* Mobile Cancel Button */}
           <Button
             variant="outline"
             onClick={handleCancel}
@@ -178,7 +351,6 @@ export default function AddSalaryPage() {
 
         <Card className="mb-6">
           <CardContent className="p-6">
-            {/* Stepper */}
             <div className="mb-6">
               <div className="flex justify-between w-full mb-2">
                 {steps.map((label, index) => (
@@ -203,11 +375,9 @@ export default function AddSalaryPage() {
                     `}
                     ></div>
                     <div className="mt-2 text-center flex flex-col items-center">
-                      {/* Mobile - show numbers */}
                       <span className="md:hidden text-lg font-semibold flex items-center justify-center w-7 h-7 rounded-full border border-current">
                         {index + 1}
                       </span>
-                      {/* Desktop - show text */}
                       <span className="hidden md:block">{label}</span>
                     </div>
                   </div>
@@ -215,7 +385,6 @@ export default function AddSalaryPage() {
               </div>
             </div>
 
-            {/* Step content */}
             <div className="min-h-[350px] mb-6">
               {activeStep === 0 && (
                 <div className="space-y-4">
@@ -225,6 +394,9 @@ export default function AddSalaryPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Компания *</Label>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Введите название компании на русском языке
+                    </p>
                     <div className="relative">
                       <Building
                         className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
@@ -234,13 +406,40 @@ export default function AddSalaryPage() {
                         id="companyName"
                         name="companyName"
                         value={formData.companyName}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          handleChange(e);
+                          searchCompanies(e.target.value);
+                          setSelectedCompanyId(null);
+                        }}
                         className={`pl-10 ${
                           errors.companyName ? "border-red-500" : ""
                         }`}
                         placeholder="Название компании"
                       />
+                      {isLoadingCompanies && (
+                        <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2" />
+                      )}
                     </div>
+                    {companies.length > 0 && (
+                      <div className="absolute z-10 mt-1 max-w-[calc(100%-2rem)] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {companies.map((company) => (
+                          <div
+                            key={company.id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2"
+                            onClick={() => handleCompanySelect(company)}
+                          >
+                            {company.logoUrl && (
+                              <img
+                                src={company.logoUrl}
+                                alt={company.name}
+                                className="w-6 h-6 object-contain"
+                              />
+                            )}
+                            <span>{company.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {errors.companyName && (
                       <p className="text-red-500 text-sm">
                         {errors.companyName}
@@ -250,6 +449,9 @@ export default function AddSalaryPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="position">Должность *</Label>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Введите должность на английском языке
+                    </p>
                     <div className="relative">
                       <Briefcase
                         className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
@@ -259,13 +461,36 @@ export default function AddSalaryPage() {
                         id="position"
                         name="position"
                         value={formData.position}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          handleChange(e);
+                          searchJobs(e.target.value);
+                          setSelectedJobId(null);
+                        }}
                         className={`pl-10 ${
                           errors.position ? "border-red-500" : ""
                         }`}
                         placeholder="Ваша должность в компании"
                       />
+                      {isLoadingJobs && (
+                        <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2" />
+                      )}
                     </div>
+                    {jobs.length > 0 && (
+                      <div className="absolute z-10 mt-1 max-w-[calc(100%-2rem)] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {jobs.map((job) => (
+                          <div
+                            key={job.id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleJobSelect(job)}
+                          >
+                            <div className="font-medium">{job.title}</div>
+                            <div className="text-xs text-gray-500">
+                              {job.description}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {errors.position && (
                       <p className="text-red-500 text-sm">{errors.position}</p>
                     )}
@@ -321,7 +546,7 @@ export default function AddSalaryPage() {
                       name="employmentType"
                       value={formData.employmentType}
                       onChange={(e) => handleChange(e)}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <option value="full-time">Полная занятость</option>
                       <option value="part-time">Частичная занятость</option>
@@ -380,16 +605,15 @@ export default function AddSalaryPage() {
                     <Label>Базовая зарплата *</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="sm:col-span-1 relative">
-                        <DollarSign
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                          size={16}
-                        />
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                          {getCurrencySymbol(formData.currency)}
+                        </div>
                         <Input
                           name="salary"
                           type="number"
                           value={formData.salary}
                           onChange={handleChange}
-                          className={`pl-10 ${
+                          className={`h-10 pl-10 ${
                             errors.salary ? "border-red-500" : ""
                           }`}
                           placeholder="Сумма"
@@ -401,7 +625,7 @@ export default function AddSalaryPage() {
                           name="currency"
                           value={formData.currency}
                           onChange={handleChange}
-                          className={`w-full rounded-md border ${
+                          className={`w-full h-10 rounded-md border ${
                             errors.currency ? "border-red-500" : "border-input"
                           } bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
                         >
@@ -417,7 +641,7 @@ export default function AddSalaryPage() {
                           name="payPeriod"
                           value={formData.payPeriod}
                           onChange={handleChange}
-                          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                           <option value="monthly">в месяц</option>
                           <option value="yearly">в год</option>
@@ -445,7 +669,7 @@ export default function AddSalaryPage() {
                       name="bonuses"
                       value={formData.bonuses}
                       onChange={handleChange}
-                      placeholder="Например: годовой бонус 15% от зарплаты"
+                      placeholder="Например: Квартальная премия до 20% от оклада"
                     />
                     <p className="text-gray-500 text-sm">Необязательно</p>
                   </div>
@@ -457,7 +681,7 @@ export default function AddSalaryPage() {
                       name="stockOptions"
                       value={formData.stockOptions}
                       onChange={handleChange}
-                      placeholder="Например: 100 RSU в год"
+                      placeholder="Например: Опционы на акции после года работы"
                     />
                     <p className="text-gray-500 text-sm">Необязательно</p>
                   </div>
@@ -477,7 +701,7 @@ export default function AddSalaryPage() {
                       name="experience"
                       value={formData.experience}
                       onChange={handleChange}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <option value="0-1">Менее 1 года</option>
                       <option value="1-3">1-3 года</option>
@@ -488,7 +712,10 @@ export default function AddSalaryPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="location">Местоположение</Label>
+                    <Label htmlFor="location">Местоположение *</Label>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Введите название города на русском языке
+                    </p>
                     <div className="relative">
                       <MapPin
                         className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
@@ -498,11 +725,36 @@ export default function AddSalaryPage() {
                         id="location"
                         name="location"
                         value={formData.location}
-                        onChange={handleChange}
-                        className="pl-10"
+                        onChange={(e) => {
+                          handleChange(e);
+                          searchLocations(e.target.value);
+                          setSelectedLocationId(null);
+                        }}
+                        className={`pl-10 ${
+                          errors.location ? "border-red-500" : ""
+                        }`}
                         placeholder="Например: Алматы, Казахстан"
                       />
+                      {isLoadingLocations && (
+                        <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2" />
+                      )}
                     </div>
+                    {locations.length > 0 && (
+                      <div className="absolute z-10 mt-1 max-w-[calc(100%-2rem)] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {locations.map((location) => (
+                          <div
+                            key={location.id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleLocationSelect(location)}
+                          >
+                            {location.locationValue}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {errors.location && (
+                      <p className="text-red-500 text-sm">{errors.location}</p>
+                    )}
                     <p className="text-gray-500 text-sm">
                       Город и страна, где вы работаете
                     </p>
@@ -540,13 +792,7 @@ export default function AddSalaryPage() {
 
                         <div>
                           <p className="text-xl font-bold text-[#800000]">
-                            {formData.currency === "USD"
-                              ? "$"
-                              : formData.currency === "EUR"
-                              ? "€"
-                              : formData.currency === "KZT"
-                              ? "₸"
-                              : ""}
+                            {getCurrencySymbol(formData.currency)}
                             {formData.salary}{" "}
                             {formData.payPeriod === "monthly"
                               ? "в месяц"
@@ -621,19 +867,6 @@ export default function AddSalaryPage() {
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="anonymous"
-                        checked={formData.anonymous}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange("anonymous", checked as boolean)
-                        }
-                      />
-                      <Label htmlFor="anonymous">
-                        Оставить информацию анонимно
-                      </Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
                         id="confirmTruthful"
                         checked={formData.confirmTruthful}
                         onCheckedChange={(checked) =>
@@ -665,7 +898,6 @@ export default function AddSalaryPage() {
               )}
             </div>
 
-            {/* Actions */}
             <div className="flex justify-between pt-4 border-t border-[#800000]/10">
               <Button
                 variant="outline"
@@ -690,10 +922,20 @@ export default function AddSalaryPage() {
                 {activeStep === steps.length - 1 ? (
                   <Button
                     onClick={handleSubmit}
+                    disabled={isSubmitting}
                     className="bg-[#2e7d32] hover:bg-[#1b5e20]"
                   >
-                    <Save size={18} className="mr-2" />
-                    {isEditing ? "Сохранить изменения" : "Отправить данные"}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={18} className="mr-2 animate-spin" />
+                        Отправка...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} className="mr-2" />
+                        {isEditing ? "Сохранить изменения" : "Отправить данные"}
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button
