@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/use-toast";
 import {
   ChevronLeft,
   ChevronRight,
@@ -21,11 +22,16 @@ import {
   Briefcase,
   Star,
   FileUp,
+  Loader2,
 } from "lucide-react";
+import searchAPI from "@/services/searchAPI";
+import reviewAPI from "@/features/review/reviewAPI";
+import debounce from "lodash/debounce";
 
 export default function AddReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const isEditing = searchParams.has("id");
 
   // State for stepper
@@ -36,6 +42,17 @@ export default function AddReviewPage() {
     "Детали отзыва",
     "Подтверждение",
   ];
+
+  // State for API data
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
+    null
+  );
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -51,38 +68,79 @@ export default function AddReviewPage() {
     jobSecurity: 3,
     management: 3,
     title: "",
+    body: "", // Main review content
     pros: "",
     cons: "",
     advice: "",
     recommendToFriend: "yes",
-    anonymous: true,
+    anonymous: false,
     confirmTruthful: false,
   });
 
   // Form errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Debounced search functions
+  const searchCompanies = useRef(
+    debounce(async (query: string) => {
+      if (!query || query.length < 2) return;
+      setIsLoadingCompanies(true);
+      try {
+        const response = await searchAPI.searchCompanies(query);
+        if (response?.data?.content) {
+          setCompanies(response.data.content);
+        }
+      } catch (error) {
+        console.error("Error searching companies:", error);
+      } finally {
+        setIsLoadingCompanies(false);
+      }
+    }, 300)
+  ).current;
+
+  const searchJobs = useRef(
+    debounce(async (query: string) => {
+      if (!query || query.length < 2) return;
+      setIsLoadingJobs(true);
+      try {
+        const response = await searchAPI.searchJobs(query);
+        if (response?.data) {
+          setJobs(response.data);
+        }
+      } catch (error) {
+        console.error("Error searching jobs:", error);
+      } finally {
+        setIsLoadingJobs(false);
+      }
+    }, 300)
+  ).current;
+
+  // Cleanup debounced functions on unmount
+  useEffect(() => {
+    return () => {
+      searchCompanies.cancel();
+      searchJobs.cancel();
+    };
+  }, [searchCompanies, searchJobs]);
+
   const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {};
 
     switch (step) {
       case 0:
-        if (!formData.companyName.trim()) {
-          newErrors.companyName = "Укажите название компании";
+        if (!selectedCompanyId) {
+          newErrors.companyName = "Выберите компанию из списка";
         }
-        if (!formData.position.trim()) {
-          newErrors.position = "Укажите должность";
+        if (!selectedJobId) {
+          newErrors.position = "Выберите должность из списка";
         }
         break;
       case 2:
         if (!formData.title.trim()) {
           newErrors.title = "Добавьте заголовок отзыва";
         }
-        if (!formData.pros.trim()) {
-          newErrors.pros = "Укажите хотя бы один плюс работы";
-        }
-        if (!formData.cons.trim()) {
-          newErrors.cons = "Укажите хотя бы один минус работы";
+        if (!formData.body.trim()) {
+          newErrors.body = "Добавьте основной текст отзыва";
         }
         break;
       case 3:
@@ -109,10 +167,12 @@ export default function AddReviewPage() {
 
   const handleChange = (
     e:
-      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+      | React.ChangeEvent<
+          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >
       | { target: { name?: string; value: unknown } }
   ) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target as { name?: string; value: unknown };
     if (name) {
       setFormData((prev) => ({ ...prev, [name]: value }));
 
@@ -152,11 +212,81 @@ export default function AddReviewPage() {
       }));
     }
   };
-  const handleSubmit = () => {
-    if (validateStep(activeStep)) {
-      // Handle submission logic here
-      console.log("Form submitted:", formData);
+
+  const handleCompanySelect = (company: any) => {
+    setFormData((prev) => ({ ...prev, companyName: company.name }));
+    setSelectedCompanyId(company.id);
+    setCompanies([]);
+  };
+
+  const handleJobSelect = (job: any) => {
+    setFormData((prev) => ({ ...prev, position: job.title }));
+    setSelectedJobId(job.id);
+    setJobs([]);
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep(activeStep)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const submitData = new FormData();
+
+      const reviewData = {
+        companyId: selectedCompanyId,
+        companyName: formData.companyName,
+        jobId: selectedJobId,
+        position: formData.position,
+        employmentStatus: formData.employmentStatus,
+        employmentType: formData.employmentType,
+        rating: formData.overallRating,
+        careerOpportunities: formData.careerOpportunities,
+        workLifeBalance: formData.workLifeBalance,
+        compensation: formData.compensation,
+        jobSecurity: formData.jobSecurity,
+        management: formData.management,
+        title: formData.title,
+        body: formData.body,
+        pros: formData.pros,
+        cons: formData.cons,
+        advice: formData.advice,
+        recommendToFriend: formData.recommendToFriend === "yes",
+        anonymous: formData.anonymous,
+        confirmTruthful: formData.confirmTruthful,
+      };
+
+      submitData.append(
+        "review",
+        new Blob([JSON.stringify(reviewData)], { type: "application/json" })
+      );
+
+      if (formData.employmentContract) {
+        submitData.append("contractFile", formData.employmentContract);
+      }
+
+      await reviewAPI.submitReview(submitData);
+
+      toast({
+        title: "Успешно!",
+        description: "Ваш отзыв успешно отправлен",
+        variant: "success",
+      });
+
       router.push("/profile/reviews");
+    } catch (error: any) {
+      console.error("Error submitting review:", error);
+      toast({
+        title: "Ошибка",
+        description:
+          error.response?.data?.message ||
+          "Произошла ошибка при отправке отзыва",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -232,6 +362,9 @@ export default function AddReviewPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Компания *</Label>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Введите название компании
+                    </p>
                     <div className="relative">
                       <Building
                         className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
@@ -241,13 +374,40 @@ export default function AddReviewPage() {
                         id="companyName"
                         name="companyName"
                         value={formData.companyName}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          handleChange(e);
+                          searchCompanies(e.target.value);
+                          setSelectedCompanyId(null);
+                        }}
                         className={`pl-10 ${
                           errors.companyName ? "border-red-500" : ""
                         }`}
                         placeholder="Название компании"
                       />
+                      {isLoadingCompanies && (
+                        <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2" />
+                      )}
                     </div>
+                    {companies.length > 0 && (
+                      <div className="absolute z-10 mt-1 max-w-[calc(100%-2rem)] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {companies.map((company) => (
+                          <div
+                            key={company.id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2"
+                            onClick={() => handleCompanySelect(company)}
+                          >
+                            {company.logoUrl && (
+                              <img
+                                src={company.logoUrl}
+                                alt={company.name}
+                                className="w-6 h-6 object-contain"
+                              />
+                            )}
+                            <span>{company.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {errors.companyName && (
                       <p className="text-red-500 text-sm">
                         {errors.companyName}
@@ -257,6 +417,9 @@ export default function AddReviewPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="position">Должность *</Label>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Введите должность
+                    </p>
                     <div className="relative">
                       <Briefcase
                         className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
@@ -266,13 +429,36 @@ export default function AddReviewPage() {
                         id="position"
                         name="position"
                         value={formData.position}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          handleChange(e);
+                          searchJobs(e.target.value);
+                          setSelectedJobId(null);
+                        }}
                         className={`pl-10 ${
                           errors.position ? "border-red-500" : ""
                         }`}
                         placeholder="Ваша должность в компании"
                       />
+                      {isLoadingJobs && (
+                        <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2" />
+                      )}
                     </div>
+                    {jobs.length > 0 && (
+                      <div className="absolute z-10 mt-1 max-w-[calc(100%-2rem)] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {jobs.map((job) => (
+                          <div
+                            key={job.id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleJobSelect(job)}
+                          >
+                            <div className="font-medium">{job.title}</div>
+                            <div className="text-xs text-gray-500">
+                              {job.description}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {errors.position && (
                       <p className="text-red-500 text-sm">{errors.position}</p>
                     )}
@@ -483,41 +669,57 @@ export default function AddReviewPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="pros">Плюсы *</Label>
+                    <Label htmlFor="body">Основной отзыв *</Label>
+                    <Textarea
+                      id="body"
+                      name="body"
+                      value={formData.body}
+                      onChange={handleChange}
+                      className={`min-h-[100px] ${
+                        errors.body ? "border-red-500" : ""
+                      }`}
+                      placeholder="Опишите ваш общий опыт работы в компании"
+                    />
+                    {errors.body && (
+                      <p className="text-red-500 text-sm">{errors.body}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pros">
+                      Плюсы{" "}
+                      <span className="text-gray-400">(необязательно)</span>
+                    </Label>
                     <Textarea
                       id="pros"
                       name="pros"
                       value={formData.pros}
                       onChange={handleChange}
-                      className={`min-h-[100px] ${
-                        errors.pros ? "border-red-500" : ""
-                      }`}
+                      className="min-h-[100px]"
                       placeholder="Что вам нравилось в компании?"
                     />
-                    {errors.pros && (
-                      <p className="text-red-500 text-sm">{errors.pros}</p>
-                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cons">Минусы *</Label>
+                    <Label htmlFor="cons">
+                      Минусы{" "}
+                      <span className="text-gray-400">(необязательно)</span>
+                    </Label>
                     <Textarea
                       id="cons"
                       name="cons"
                       value={formData.cons}
                       onChange={handleChange}
-                      className={`min-h-[100px] ${
-                        errors.cons ? "border-red-500" : ""
-                      }`}
+                      className="min-h-[100px]"
                       placeholder="Что можно было бы улучшить?"
                     />
-                    {errors.cons && (
-                      <p className="text-red-500 text-sm">{errors.cons}</p>
-                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="advice">Советы руководству</Label>
+                    <Label htmlFor="advice">
+                      Советы руководству{" "}
+                      <span className="text-gray-400">(необязательно)</span>
+                    </Label>
                     <Textarea
                       id="advice"
                       name="advice"
@@ -526,7 +728,6 @@ export default function AddReviewPage() {
                       className="min-h-[80px]"
                       placeholder="Что бы вы посоветовали руководству компании?"
                     />
-                    <p className="text-gray-500 text-sm">Необязательно</p>
                   </div>
 
                   <div className="space-y-2">
@@ -611,14 +812,23 @@ export default function AddReviewPage() {
                         </div>
 
                         <div>
-                          <h5 className="font-medium">Плюсы</h5>
-                          <p className="text-gray-700">{formData.pros}</p>
+                          <h5 className="font-medium">Основной отзыв</h5>
+                          <p className="text-gray-700">{formData.body}</p>
                         </div>
 
-                        <div>
-                          <h5 className="font-medium">Минусы</h5>
-                          <p className="text-gray-700">{formData.cons}</p>
-                        </div>
+                        {formData.pros && (
+                          <div>
+                            <h5 className="font-medium">Плюсы</h5>
+                            <p className="text-gray-700">{formData.pros}</p>
+                          </div>
+                        )}
+
+                        {formData.cons && (
+                          <div>
+                            <h5 className="font-medium">Минусы</h5>
+                            <p className="text-gray-700">{formData.cons}</p>
+                          </div>
+                        )}
 
                         {formData.advice && (
                           <div>
@@ -693,10 +903,20 @@ export default function AddReviewPage() {
                 {activeStep === steps.length - 1 ? (
                   <Button
                     onClick={handleSubmit}
+                    disabled={isSubmitting}
                     className="bg-[#2e7d32] hover:bg-[#1b5e20]"
                   >
-                    <Save size={18} className="mr-2" />
-                    {isEditing ? "Сохранить изменения" : "Отправить отзыв"}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={18} className="mr-2 animate-spin" />
+                        Отправка...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} className="mr-2" />
+                        {isEditing ? "Сохранить изменения" : "Отправить отзыв"}
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button
