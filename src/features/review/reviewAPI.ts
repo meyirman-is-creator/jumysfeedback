@@ -1,3 +1,4 @@
+// src/features/review/reviewAPI.ts
 import apiClient from "@/services/apiClient";
 
 const reviewAPI = {
@@ -29,7 +30,30 @@ const reviewAPI = {
   },
 
   deleteReview: async (reviewId: string) => {
-    const response = await apiClient.delete(`/reviews/delete/${reviewId}`);
+    const response = await apiClient.delete(`/reviews/${reviewId}`);
+    return response.data;
+  },
+
+  // New methods
+  getUserReviews: async () => {
+    const response = await apiClient.get("/reviews/my");
+    return response.data;
+  },
+
+  getAllReviews: async (status?: string) => {
+    const url = status ? `/admin/reviews?status=${status}` : `/admin/reviews`;
+    const response = await apiClient.get(url);
+    return response.data;
+  },
+
+  updateReviewStatus: async (
+    reviewId: string,
+    data: { status: string; adminComment?: string }
+  ) => {
+    const response = await apiClient.put(
+      `/admin/reviews/${reviewId}/status`,
+      data
+    );
     return response.data;
   },
 };

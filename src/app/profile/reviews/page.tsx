@@ -1,7 +1,9 @@
+// src/app/profile/reviews/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Plus,
   Edit2,
@@ -53,81 +55,24 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
-
-// Mock data
-const mockReviews = [
-  {
-    id: "1",
-    companyName: "Kaspi.kz",
-    position: "Full Stack",
-    rating: 4.0,
-    title: "Lorem ipsum Lorem ipsum",
-    content: "Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum",
-    date: "02/02/25",
-    status: "Одобрено",
-    hasComment: false,
-    verified: true,
-  },
-  {
-    id: "2",
-    companyName: "Kaspi.kz",
-    position: "Full Stack",
-    rating: 3.0,
-    title: "Lorem ipsum Lorem ipsum",
-    content: "Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum",
-    date: "02/02/25",
-    status: "Новый",
-    hasComment: false,
-    verified: false,
-  },
-  {
-    id: "3",
-    companyName: "Kaspi.kz",
-    position: "Full Stack",
-    rating: 3.0,
-    title: "Lorem ipsum Lorem ipsum",
-    content: "Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum",
-    date: "02/02/25",
-    status: "Отказано",
-    hasComment: true,
-    verified: true,
-  },
-];
-
-// For admin view
-const allUserReviews = [
-  ...mockReviews,
-  {
-    id: "4",
-    companyName: "Google",
-    position: "Software Engineer",
-    rating: 4.5,
-    title: "Great work environment",
-    content: "Excellent benefits and culture",
-    date: "02/02/25",
-    status: "Новый",
-    hasComment: false,
-    verified: true,
-    userName: "Jane Smith",
-  },
-  {
-    id: "5",
-    companyName: "Microsoft",
-    position: "DevOps Engineer",
-    rating: 3.5,
-    title: "Good but challenging",
-    content: "High expectations but good compensation",
-    date: "01/02/25",
-    status: "Новый",
-    hasComment: false,
-    verified: false,
-    userName: "Alex Johnson",
-  },
-];
+import {
+  fetchUserReviews,
+  fetchAllReviews,
+  deleteReview,
+  updateReviewStatus,
+} from "@/features/review/reviewSlice";
+import { RootState, AppDispatch } from "@/store";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ReviewsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useAuth();
+
+  // Determine if user is admin
+  const isAdmin = user?.role === "ROLE_ADMIN";
+
   const [currentTab, setCurrentTab] = useState("Все");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
@@ -138,8 +83,19 @@ export default function ReviewsPage() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [adminComment, setAdminComment] = useState("");
 
-  // Role check (replace with actual auth logic)
-  const isAdmin = false;
+  // Get reviews from the store
+  const { userReviews, allReviews, isLoading, error } = useSelector(
+    (state: RootState) => state.review
+  );
+
+  // Fetch reviews on component mount
+  useEffect(() => {
+    if (isAdmin) {
+      dispatch(fetchAllReviews(undefined));
+    } else {
+      dispatch(fetchUserReviews());
+    }
+  }, [dispatch, isAdmin]);
 
   const statusTabs = ["Все", "Новые", "Одобренные", "Отклоненные"];
 
@@ -156,12 +112,22 @@ export default function ReviewsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    // Actual delete logic would go here
-    toast({
-      title: "Отзыв удален",
-      description: "Отзыв был успешно удален",
-    });
+  const confirmDelete = async () => {
+    if (selectedReviewId) {
+      try {
+        await dispatch(deleteReview(selectedReviewId)).unwrap();
+        toast({
+          title: "Отзыв удален",
+          description: "Отзыв был успешно удален",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить отзыв",
+          variant: "destructive",
+        });
+      }
+    }
     setDeleteDialogOpen(false);
     setSelectedReviewId(null);
   };
@@ -182,41 +148,91 @@ export default function ReviewsPage() {
     setRejectDialogOpen(true);
   };
 
-  const confirmApprove = () => {
-    // Actual approve logic would go here
-    toast({
-      title: "Отзыв одобрен",
-      description: "Отзыв был успешно одобрен",
-    });
+  const confirmApprove = async () => {
+    if (selectedReviewId) {
+      try {
+        const data = {
+          status: "APPROVED",
+          adminComment:
+            adminComment.trim() || "Отзыв соответствует правилам сервиса",
+        };
+
+        await dispatch(
+          updateReviewStatus({ reviewId: selectedReviewId, data })
+        ).unwrap();
+
+        toast({
+          title: "Отзыв одобрен",
+          description: "Отзыв был успешно одобрен",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось одобрить отзыв",
+          variant: "destructive",
+        });
+      }
+    }
     setApproveDialogOpen(false);
     setSelectedReviewId(null);
+    setAdminComment("");
   };
 
-  const confirmReject = () => {
-    // Actual reject logic would go here
-    toast({
-      title: "Отзыв отклонен",
-      description: "Отзыв был отклонен",
-    });
+  const confirmReject = async () => {
+    if (!adminComment.trim() && isAdmin) {
+      toast({
+        title: "Требуется комментарий",
+        description: "Пожалуйста, укажите причину отклонения отзыва",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedReviewId) {
+      try {
+        const data = {
+          status: "REJECTED",
+          adminComment: adminComment,
+        };
+
+        await dispatch(
+          updateReviewStatus({ reviewId: selectedReviewId, data })
+        ).unwrap();
+
+        toast({
+          title: "Отзыв отклонен",
+          description: "Отзыв был отклонен",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось отклонить отзыв",
+          variant: "destructive",
+        });
+      }
+    }
     setRejectDialogOpen(false);
     setSelectedReviewId(null);
+    setAdminComment("");
   };
 
   const handleModerate = (reviewId: string, action: "approve" | "reject") => {
     if (action === "approve") {
       handleApproveClick(reviewId);
     } else if (action === "reject") {
-      const review = allUserReviews.find((r) => r.id === reviewId);
+      const review = (isAdmin ? allReviews : userReviews).find(
+        (r) => r.id.toString() === reviewId
+      );
       if (review) {
         setSelectedReview(review);
-        setAiDialogOpen(true);
+        setRejectDialogOpen(true);
       }
     }
   };
 
   // Filter reviews based on selected status tab and user role
   const getFilteredReviews = () => {
-    const reviews = isAdmin ? allUserReviews : mockReviews;
+    const reviews = isAdmin ? allReviews : userReviews;
 
     if (currentTab === "Все") return reviews;
 
@@ -243,6 +259,11 @@ export default function ReviewsPage() {
         ))}
       </div>
     );
+  };
+
+  // Check if a review can be edited (only PENDING or REJECTED reviews)
+  const canEdit = (review: any) => {
+    return review.status === "Новый" || review.status === "Отказано";
   };
 
   return (
@@ -280,131 +301,150 @@ export default function ReviewsPage() {
           <TabsContent key={tab} value={tab} className="mt-0">
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-[#800000] font-semibold">
-                          Компания
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold hidden md:table-cell">
-                          Должность
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold">
-                          Рейтинг
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold hidden sm:table-cell">
-                          Заголовок
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold hidden lg:table-cell">
-                          Дата
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold">
-                          Статус
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold text-right">
-                          Действия
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {getFilteredReviews().map((review) => (
-                        <TableRow key={review.id} className="hover:bg-gray-50">
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span>{review.companyName}</span>
-                              {review.verified && (
+                {isLoading ? (
+                  <div className="flex justify-center items-center p-8">
+                    <p>Загрузка отзывов...</p>
+                  </div>
+                ) : error ? (
+                  <div className="flex justify-center items-center p-8 text-red-500">
+                    <p>Ошибка загрузки: {error}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-[#800000] font-semibold">
+                            Компания
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold hidden md:table-cell">
+                            Должность
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold">
+                            Рейтинг
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold hidden sm:table-cell">
+                            Заголовок
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold hidden lg:table-cell">
+                            Дата
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold">
+                            Статус
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold text-right">
+                            Действия
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {getFilteredReviews().map((review) => (
+                          <TableRow
+                            key={review.id}
+                            className="hover:bg-gray-50"
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <span>{review.companyName}</span>
+                                {review.hasVerification && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                                  >
+                                    Verified
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {review.position}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">
+                                  {review.rating}
+                                </span>
+                                <span className="hidden sm:flex">
+                                  {renderStarRating(review.rating)}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              <p className="truncate max-w-[150px]">
+                                {review.title}
+                              </p>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {review.date}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
                                 <Badge
-                                  variant="outline"
-                                  className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                                  variant={getStatusBadgeVariant(review.status)}
                                 >
-                                  Verified
+                                  {review.status}
                                 </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {review.position}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">
-                                {review.rating}
-                              </span>
-                              <span className="hidden sm:flex">
-                                {renderStarRating(review.rating)}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <p className="truncate max-w-[150px]">
-                              {review.title}
-                            </p>
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            {review.date}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Badge
-                                variant={getStatusBadgeVariant(review.status)}
-                              >
-                                {review.status}
-                              </Badge>
-                              {review.hasComment && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <MessageCircle className="w-4 h-4 text-[#800000]" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Есть комментарий от модератора</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleViewDetails(review)}
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Просмотреть</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-
-                              {!isAdmin && (
-                                <>
+                                {review.hasAdminComment && (
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            handleEditReview(review.id)
-                                          }
-                                        >
-                                          <Edit2 className="w-4 h-4" />
-                                        </Button>
+                                        <MessageCircle className="w-4 h-4 text-[#800000]" />
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Редактировать</p>
+                                        <p>Есть комментарий от модератора</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleViewDetails(review)
+                                        }
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Просмотреть</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
 
+                                {!isAdmin && canEdit(review) && (
+                                  <>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              handleEditReview(
+                                                review.id.toString()
+                                              )
+                                            }
+                                          >
+                                            <Edit2 className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Редактировать</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </>
+                                )}
+
+                                {!isAdmin && (
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -412,7 +452,9 @@ export default function ReviewsPage() {
                                           variant="ghost"
                                           size="icon"
                                           onClick={() =>
-                                            handleDeleteReview(review.id)
+                                            handleDeleteReview(
+                                              review.id.toString()
+                                            )
                                           }
                                         >
                                           <Trash2 className="w-4 h-4" />
@@ -423,59 +465,65 @@ export default function ReviewsPage() {
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
-                                </>
-                              )}
+                                )}
 
-                              {isAdmin && review.status === "Новый" && (
-                                <>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            handleModerate(review.id, "approve")
-                                          }
-                                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                        >
-                                          <CheckCircle className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Одобрить</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                {isAdmin && review.status === "Новый" && (
+                                  <>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              handleModerate(
+                                                review.id.toString(),
+                                                "approve"
+                                              )
+                                            }
+                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                          >
+                                            <CheckCircle className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Одобрить</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
 
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            handleModerate(review.id, "reject")
-                                          }
-                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                          <XCircle className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Отклонить</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() =>
+                                              handleModerate(
+                                                review.id.toString(),
+                                                "reject"
+                                              )
+                                            }
+                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                          >
+                                            <XCircle className="w-4 h-4" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Отклонить</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -504,99 +552,107 @@ export default function ReviewsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Approve confirmation dialog */}
-      <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Подтверждение одобрения</AlertDialogTitle>
-            <AlertDialogDescription>
+      {/* Approve dialog */}
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>Подтверждение одобрения</DialogTitle>
+            <DialogDescription>
               Вы уверены, что хотите одобрить этот отзыв?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4">
+            <label
+              htmlFor="admin-comment"
+              className="block text-gray-600 font-medium mb-2"
+            >
+              Комментарий администратора (необязательно):
+            </label>
+            <Textarea
+              id="admin-comment"
+              placeholder="Введите комментарий..."
+              value={adminComment}
+              onChange={(e) => setAdminComment(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setApproveDialogOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button
               onClick={confirmApprove}
               className="bg-green-600 hover:bg-green-700"
             >
               Одобрить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Reject confirmation dialog */}
-      <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Подтверждение отклонения</AlertDialogTitle>
-            <AlertDialogDescription>
+      {/* Reject dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>Подтверждение отклонения</DialogTitle>
+            <DialogDescription>
               Вы уверены, что хотите отклонить этот отзыв?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmReject}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Отклонить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* AI moderation suggestion dialog */}
-      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
-        <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-2xl bg-white">
-          <DialogHeader className="bg-red-600 -mx-6 -mt-6 px-6 py-4 rounded-t-lg">
-            <DialogTitle className="flex items-center gap-2 text-white">
-              <AlertCircle className="w-5 h-5" />
-              Обнаружена нежелательная лексика!
-            </DialogTitle>
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div className="bg-red-50 border border-red-100 rounded-lg p-4">
-              <h4 className="font-medium text-gray-800 mb-2">
-                Оригинальный текст:
-              </h4>
-              <p>
-                «Это место работы — полный бардак! Руководству наплевать на
-                сотрудников, а нагрузка безумная».
+          {selectedReview && selectedReview.aiAnalysis && (
+            <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Bot className="w-5 h-5 text-blue-600" />
+                <h4 className="font-medium text-gray-800">Анализ ИИ:</h4>
+              </div>
+              <p className="text-gray-700 text-sm">
+                {selectedReview.aiAnalysis}
               </p>
             </div>
+          )}
 
-            <div className="bg-green-50 border border-green-100 rounded-lg p-4">
-              <h4 className="font-medium text-gray-800 mb-2">
-                Рекомендуемая правка:
-              </h4>
-              <p>
-                «Это рабочее место крайне{" "}
-                <span className="text-green-700 font-medium">
-                  неорганизованно
-                </span>
-                . Руководство не заботится о благополучии сотрудников, а рабочая
-                нагрузка безумная».
+          <div className="mt-4">
+            <label
+              htmlFor="admin-comment"
+              className="block text-gray-600 font-medium mb-2"
+            >
+              Комментарий администратора:{" "}
+              <span className="text-red-500">*</span>
+            </label>
+            <Textarea
+              id="admin-comment"
+              placeholder="Введите причину отклонения отзыва..."
+              value={adminComment}
+              onChange={(e) => setAdminComment(e.target.value)}
+              rows={3}
+              className={!adminComment.trim() ? "border-red-300" : ""}
+            />
+            {!adminComment.trim() && (
+              <p className="text-red-500 text-sm mt-1">
+                Пожалуйста, укажите причину отклонения отзыва
               </p>
-            </div>
+            )}
           </div>
 
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setAiDialogOpen(false)}>
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setRejectDialogOpen(false)}
+            >
               Отмена
             </Button>
             <Button
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => {
-                toast({
-                  title: "Правка применена",
-                  description: "Рекомендуемая правка была применена",
-                });
-                setAiDialogOpen(false);
-              }}
+              onClick={confirmReject}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={!adminComment.trim()}
             >
-              Одобрить правку
+              Отклонить
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -626,66 +682,139 @@ export default function ReviewsPage() {
               </div>
 
               <div className="space-y-4">
-                <p className="text-gray-800 leading-relaxed">
-                  {selectedReview.content}
-                </p>
+                <div>
+                  <h5 className="font-medium mb-1">Основной отзыв</h5>
+                  <p className="text-gray-800 leading-relaxed">
+                    {selectedReview.body}
+                  </p>
+                </div>
 
-                {selectedReview.hasComment && (
-                  <div className="bg-red-50 border-l-4 border-red-500 pl-4 py-3 pr-3 mt-4">
-                    <h4 className="text-red-600 font-medium mb-1">
-                      Комментарий модератора:
-                    </h4>
-                    <p className="text-gray-800">
-                      Пожалуйста, воздержитесь от использования резких
-                      выражений. Отредактируйте отзыв для публикации.
-                    </p>
+                {selectedReview.pros && (
+                  <div>
+                    <h5 className="font-medium mb-1">Плюсы</h5>
+                    <p className="text-gray-800">{selectedReview.pros}</p>
                   </div>
                 )}
 
-                {isAdmin && (
-                  <>
-                    <Separator className="my-4" />
+                {selectedReview.cons && (
+                  <div>
+                    <h5 className="font-medium mb-1">Минусы</h5>
+                    <p className="text-gray-800">{selectedReview.cons}</p>
+                  </div>
+                )}
 
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Bot className="w-5 h-5 text-blue-600" />
-                        <h4 className="font-medium text-gray-800">
-                          Обратная связь от ИИ:
-                        </h4>
-                      </div>
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                        <p className="text-gray-700 text-sm">
-                          Отзыв содержит негативные высказывания, которые могут
-                          быть восприняты как оскорбительные. Рекомендуется
-                          смягчить формулировки.
-                        </p>
-                      </div>
-                    </div>
+                {selectedReview.advice && (
+                  <div>
+                    <h5 className="font-medium mb-1">Советы руководству</h5>
+                    <p className="text-gray-800">{selectedReview.advice}</p>
+                  </div>
+                )}
 
-                    <div className="mt-4">
-                      <label
-                        htmlFor="admin-comment"
-                        className="block text-gray-600 font-medium mb-2"
-                      >
-                        Комментарий администратора:
-                      </label>
-                      <Textarea
-                        id="admin-comment"
-                        placeholder="Введите комментарий..."
-                        value={adminComment}
-                        onChange={(e) => setAdminComment(e.target.value)}
-                        rows={3}
-                      />
+                <Separator className="my-4" />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <h5 className="font-medium mb-1">Карьерный рост</h5>
+                    <div className="flex items-center">
+                      <span className="mr-2">
+                        {selectedReview.careerOpportunities}
+                      </span>
+                      {renderStarRating(selectedReview.careerOpportunities)}
                     </div>
-                  </>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium mb-1">Баланс работы/жизни</h5>
+                    <div className="flex items-center">
+                      <span className="mr-2">
+                        {selectedReview.workLifeBalance}
+                      </span>
+                      {renderStarRating(selectedReview.workLifeBalance)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium mb-1">Компенсация</h5>
+                    <div className="flex items-center">
+                      <span className="mr-2">
+                        {selectedReview.compensation}
+                      </span>
+                      {renderStarRating(selectedReview.compensation)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium mb-1">Безопасность работы</h5>
+                    <div className="flex items-center">
+                      <span className="mr-2">{selectedReview.jobSecurity}</span>
+                      {renderStarRating(selectedReview.jobSecurity)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium mb-1">Управление</h5>
+                    <div className="flex items-center">
+                      <span className="mr-2">{selectedReview.management}</span>
+                      {renderStarRating(selectedReview.management)}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedReview.hasAdminComment &&
+                  selectedReview.adminComment && (
+                    <div className="bg-red-50 border-l-4 border-red-500 pl-4 py-3 pr-3 mt-4">
+                      <h4 className="text-red-600 font-medium mb-1">
+                        Комментарий модератора:
+                      </h4>
+                      <p className="text-gray-800">
+                        {selectedReview.adminComment}
+                      </p>
+                    </div>
+                  )}
+
+                {isAdmin && selectedReview.aiAnalysis && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Bot className="w-5 h-5 text-blue-600" />
+                      <h4 className="font-medium text-gray-800">
+                        Обратная связь от ИИ:
+                      </h4>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                      <p className="text-gray-700 text-sm">
+                        {selectedReview.aiAnalysis}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {isAdmin && selectedReview.status === "Новый" && (
+                  <div className="mt-4">
+                    <label
+                      htmlFor="admin-comment-details"
+                      className="block text-gray-600 font-medium mb-2"
+                    >
+                      Комментарий администратора:
+                    </label>
+                    <Textarea
+                      id="admin-comment-details"
+                      placeholder="Введите комментарий..."
+                      value={adminComment}
+                      onChange={(e) => setAdminComment(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
                 )}
               </div>
             </div>
 
             <DialogFooter className="mt-6">
-              {!isAdmin && selectedReview.status !== "Одобрено" && (
+              {!isAdmin && canEdit(selectedReview) && (
                 <Button
-                  onClick={() => handleEditReview(selectedReview.id)}
+                  onClick={() => {
+                    setDetailsDialogOpen(false);
+                    handleEditReview(selectedReview.id.toString());
+                  }}
                   className="mr-auto"
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
@@ -698,7 +827,7 @@ export default function ReviewsPage() {
                   <Button
                     onClick={() => {
                       setDetailsDialogOpen(false);
-                      handleApproveClick(selectedReview.id);
+                      handleApproveClick(selectedReview.id.toString());
                     }}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -708,7 +837,7 @@ export default function ReviewsPage() {
                   <Button
                     onClick={() => {
                       setDetailsDialogOpen(false);
-                      handleRejectClick(selectedReview.id);
+                      handleRejectClick(selectedReview.id.toString());
                     }}
                     variant="outline"
                     className="text-red-600 border-red-200 hover:bg-red-50"
