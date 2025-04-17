@@ -1,8 +1,8 @@
-// src/app/profile/add/salary/page.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,12 +27,26 @@ import { useToast } from "@/components/ui/use-toast";
 import salaryAPI from "@/features/salary/salaryAPI";
 import searchAPI from "@/services/searchAPI";
 import debounce from "lodash/debounce";
+import { RootState, AppDispatch } from "@/store";
+import {
+  fetchUserSalaries,
+  fetchSalaryById,
+} from "@/features/salary/salarySlice";
 
 export default function AddSalaryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const isEditing = searchParams.has("id");
+  const dispatch = useDispatch<AppDispatch>();
+  const salaryId = searchParams.get("id");
+  const isEditing = !!salaryId;
+
+  // Get salaries from the Redux store
+  const {
+    userSalaries,
+    currentSalary,
+    isLoading: storeLoading,
+  } = useSelector((state: RootState) => state.salary);
 
   // State for stepper
   const [activeStep, setActiveStep] = useState(0);
@@ -58,6 +72,7 @@ export default function AddSalaryPage() {
     null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [salaryLoaded, setSalaryLoaded] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -74,11 +89,111 @@ export default function AddSalaryPage() {
     stockOptions: "",
     experience: "1-3",
     location: "",
+    anonymous: true,
     confirmTruthful: false,
   });
 
-  // Form validation
+  // Form errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load salary data for editing
+  useEffect(() => {
+    if (isEditing && !salaryLoaded) {
+      // Try to find the salary in the userSalaries array
+      const existingSalary = userSalaries.find(
+        (salary) => salary.id.toString() === salaryId
+      );
+
+      if (existingSalary) {
+        // Salary found in the store, use it to prefill the form
+        prefillFormData(existingSalary);
+        setSalaryLoaded(true);
+      } else {
+        // Salary not found in the store, fetch it from the API
+        dispatch(fetchSalaryById(salaryId!))
+          .unwrap()
+          .then((data) => {
+            if (data) {
+              prefillFormData(data);
+            }
+            setSalaryLoaded(true);
+          })
+          .catch((error) => {
+            console.error("Failed to fetch salary:", error);
+            toast({
+              title: "Ошибка",
+              description: "Не удалось загрузить данные о зарплате",
+              variant: "destructive",
+            });
+            setSalaryLoaded(true);
+          });
+      }
+    }
+  }, [isEditing, salaryId, userSalaries, dispatch, salaryLoaded]);
+
+  // When currentSalary changes (after API fetch), prefill the form
+  useEffect(() => {
+    if (isEditing && currentSalary && !salaryLoaded) {
+      prefillFormData(currentSalary);
+      setSalaryLoaded(true);
+    }
+  }, [currentSalary, isEditing, salaryLoaded]);
+
+  // Helper function to prefill form data from a salary record
+  const prefillFormData = (salary: any) => {
+    // Map employmentStatus from API to form format
+    const statusMapping = {
+      CURRENT_EMPLOYEE: "current",
+      FORMER_EMPLOYEE: "former",
+      current: "current",
+      former: "former",
+    };
+
+    // Map employmentType from API to form format
+    const typeMapping = {
+      FULL_TIME: "full-time",
+      PART_TIME: "part-time",
+      CONTRACT: "contract",
+      INTERNSHIP: "internship",
+      FREELANCE: "freelance",
+      "full-time": "full-time",
+      "part-time": "part-time",
+      contract: "contract",
+      internship: "internship",
+      freelance: "freelance",
+    };
+
+    setFormData({
+      companyName: salary.companyName || "",
+      position: salary.position || "",
+      department: salary.department || "",
+      employmentStatus: statusMapping[salary.employmentStatus] || "current",
+      employmentType: typeMapping[salary.employmentType] || "full-time",
+      employmentContract: null, // Can't prefill file input
+      salary: salary.salary ? salary.salary.toString() : "",
+      currency: salary.currency || "USD",
+      payPeriod: salary.payPeriod || "monthly",
+      bonuses: salary.bonuses || "",
+      stockOptions: salary.stockOptions || "",
+      experience: salary.experience || "1-3",
+      location: salary.location || "",
+      anonymous: salary.anonymous !== undefined ? salary.anonymous : true,
+      confirmTruthful: true, // Always true when editing
+    });
+
+    // Set IDs for company, job, and location
+    if (salary.companyId) {
+      setSelectedCompanyId(salary.companyId);
+    }
+
+    if (salary.jobId) {
+      setSelectedJobId(salary.jobId);
+    }
+
+    if (salary.locationId) {
+      setSelectedLocationId(salary.locationId);
+    }
+  };
 
   // Debounced search functions
   const searchCompanies = useRef(
@@ -164,8 +279,8 @@ export default function AddSalaryPage() {
         }
         break;
       case 2:
-        if (!selectedLocationId) {
-          newErrors.location = "Выберите местоположение из списка";
+        if (!formData.location.trim()) {
+          newErrors.location = "Укажите местоположение";
         }
         break;
       case 3:
@@ -214,6 +329,7 @@ export default function AddSalaryPage() {
   const handleCheckboxChange = (name: string, checked: boolean) => {
     setFormData((prev) => ({ ...prev, [name]: checked }));
 
+    // Clear error when field is changed
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -224,10 +340,11 @@ export default function AddSalaryPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        employmentContract: e.target.files ? e.target.files[0] : null,
+        employmentContract: files[0],
       }));
     }
   };
@@ -291,6 +408,7 @@ export default function AddSalaryPage() {
         experience: formData.experience,
         locationId: selectedLocationId,
         location: formData.location,
+        anonymous: formData.anonymous,
       };
 
       submitData.append(
@@ -302,13 +420,27 @@ export default function AddSalaryPage() {
         submitData.append("contractFile", formData.employmentContract);
       }
 
-      await salaryAPI.submitSalary(submitData);
+      let response;
+      if (isEditing && salaryId) {
+        // Update existing salary
+        response = await salaryAPI.updateSalary(salaryId, submitData);
+        toast({
+          title: "Успешно!",
+          description: "Информация о зарплате успешно обновлена",
+          variant: "success",
+        });
+      } else {
+        // Create new salary
+        response = await salaryAPI.submitSalary(submitData);
+        toast({
+          title: "Успешно!",
+          description: "Информация о зарплате успешно добавлена",
+          variant: "success",
+        });
+      }
 
-      toast({
-        title: "Успешно!",
-        description: "Информация о зарплате успешно добавлена",
-        variant: "success",
-      });
+      // Refresh user salaries after submission
+      dispatch(fetchUserSalaries());
 
       router.push("/profile/salaries");
     } catch (error: any) {
@@ -328,6 +460,20 @@ export default function AddSalaryPage() {
   const handleCancel = () => {
     router.back();
   };
+
+  // If we're in edit mode but still loading the salary, show a loading state
+  if (isEditing && !salaryLoaded && storeLoading) {
+    return (
+      <Container className="py-6">
+        <div className="max-w-3xl mx-auto flex items-center justify-center min-h-[300px]">
+          <div className="flex flex-col items-center space-y-4">
+            <Loader2 className="h-12 w-12 animate-spin text-[#800000]" />
+            <p className="text-gray-600">Загрузка данных о зарплате...</p>
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container className="py-6">
@@ -395,7 +541,7 @@ export default function AddSalaryPage() {
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Компания *</Label>
                     <p className="text-sm text-gray-500 mb-1">
-                      Введите название компании на русском языке
+                      Введите название компании
                     </p>
                     <div className="relative">
                       <Building
@@ -450,7 +596,7 @@ export default function AddSalaryPage() {
                   <div className="space-y-2">
                     <Label htmlFor="position">Должность *</Label>
                     <p className="text-sm text-gray-500 mb-1">
-                      Введите должность на английском языке
+                      Введите должность
                     </p>
                     <div className="relative">
                       <Briefcase
@@ -563,7 +709,9 @@ export default function AddSalaryPage() {
                     >
                       Трудовой договор{" "}
                       <span className="text-gray-400 text-sm ml-2">
-                        (необязательно)
+                        {isEditing
+                          ? "(при необходимости обновить)"
+                          : "(необязательно)"}
                       </span>
                     </Label>
                     <div className="relative">
@@ -575,6 +723,8 @@ export default function AddSalaryPage() {
                         <span>
                           {formData.employmentContract
                             ? formData.employmentContract.name
+                            : isEditing
+                            ? "Обновить трудовой договор (необязательно)"
                             : "Загрузить трудовой договор"}
                         </span>
                       </Label>
@@ -714,7 +864,7 @@ export default function AddSalaryPage() {
                   <div className="space-y-2">
                     <Label htmlFor="location">Местоположение *</Label>
                     <p className="text-sm text-gray-500 mb-1">
-                      Введите название города на русском языке
+                      Введите название города
                     </p>
                     <div className="relative">
                       <MapPin
@@ -759,6 +909,24 @@ export default function AddSalaryPage() {
                       Город и страна, где вы работаете
                     </p>
                   </div>
+
+                  <div className="space-y-2 mt-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="anonymous"
+                        checked={formData.anonymous}
+                        onCheckedChange={(checked) =>
+                          handleCheckboxChange("anonymous", checked as boolean)
+                        }
+                      />
+                      <Label htmlFor="anonymous">
+                        Оставить данные о зарплате анонимно
+                      </Label>
+                    </div>
+                    <p className="text-gray-500 text-sm ml-6">
+                      Ваше имя не будет отображаться рядом с данными о зарплате
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -782,10 +950,15 @@ export default function AddSalaryPage() {
                           <p className="text-[#800000] font-medium">
                             {formData.companyName}
                           </p>
+                          {formData.department && (
+                            <p className="text-gray-600 text-sm">
+                              {formData.department}
+                            </p>
+                          )}
                           {formData.employmentContract && (
                             <p className="text-green-600 text-sm flex items-center gap-1 mt-1">
                               <span className="w-2 h-2 inline-block bg-green-600 rounded-full"></span>
-                              Верифицировано трудовым договором
+                              С верификацией трудовым договором
                             </p>
                           )}
                         </div>
@@ -858,6 +1031,15 @@ export default function AddSalaryPage() {
                                 freelance: "Фриланс",
                               }[formData.employmentType]
                             }
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-gray-600 font-medium">
+                            Анонимность:
+                          </p>
+                          <p>
+                            {formData.anonymous ? "Анонимно" : "Не анонимно"}
                           </p>
                         </div>
                       </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Plus,
   Edit2,
@@ -10,6 +11,7 @@ import {
   CheckCircle,
   XCircle,
   FileText,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,81 +52,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-// Mock data
-const mockSalaries = [
-  {
-    id: "1",
-    companyName: "Kaspi.kz",
-    position: "Full Stack",
-    amount: "5000 USD/мес",
-    currency: "USD",
-    experience: "Mid-Senior",
-    date: "02/02/25",
-    status: "Одобрено",
-    verified: true,
-    hasContract: true,
-  },
-  {
-    id: "2",
-    companyName: "Kaspi.kz",
-    position: "Data Scientist",
-    amount: "4500 USD/мес",
-    currency: "USD",
-    experience: "Mid",
-    date: "02/02/25",
-    status: "Новый",
-    verified: false,
-    hasContract: true,
-  },
-  {
-    id: "3",
-    companyName: "Kaspi.kz",
-    position: "QA Engineer",
-    amount: "3800 USD/мес",
-    currency: "USD",
-    experience: "Entry-Mid",
-    date: "02/02/25",
-    status: "Отказано",
-    verified: true,
-    hasContract: false,
-  },
-];
-
-// For admin view
-const allUserSalaries = [
-  ...mockSalaries,
-  {
-    id: "4",
-    companyName: "Google",
-    position: "Software Engineer",
-    amount: "6000 USD/мес",
-    currency: "USD",
-    experience: "Mid-Senior",
-    date: "02/02/25",
-    status: "Новый",
-    verified: true,
-    userName: "Jane Smith",
-    hasContract: true,
-  },
-  {
-    id: "5",
-    companyName: "Microsoft",
-    position: "DevOps Engineer",
-    amount: "5500 USD/мес",
-    currency: "USD",
-    experience: "Mid",
-    date: "01/02/25",
-    status: "Новый",
-    verified: false,
-    userName: "Alex Johnson",
-    hasContract: false,
-  },
-];
+import { Separator } from "@/components/ui/separator";
+import {
+  fetchUserSalaries,
+  fetchAllSalaries,
+  deleteSalary,
+  updateSalaryStatus,
+} from "@/features/salary/salarySlice";
+import { RootState, AppDispatch } from "@/store";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function SalariesPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useAuth();
+
+  // Determine if user is admin
+  const isAdmin = user?.role === "ROLE_ADMIN";
+
   const [currentTab, setCurrentTab] = useState("Все");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSalaryId, setSelectedSalaryId] = useState<string | null>(null);
@@ -134,8 +80,28 @@ export default function SalariesPage() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [adminComment, setAdminComment] = useState("");
 
-  // Role check (replace with actual auth logic)
-  const isAdmin = false;
+  // Get salaries from the store
+  const {
+    userSalaries,
+    allSalaries,
+    isLoading,
+    error,
+    userSalariesLoaded,
+    allSalariesLoaded,
+  } = useSelector((state: RootState) => state.salary);
+
+  // Fetch salaries on component mount
+  useEffect(() => {
+    if (isAdmin) {
+      if (!allSalariesLoaded) {
+        dispatch(fetchAllSalaries(undefined));
+      }
+    } else {
+      if (!userSalariesLoaded) {
+        dispatch(fetchUserSalaries());
+      }
+    }
+  }, [dispatch, isAdmin, allSalariesLoaded, userSalariesLoaded]);
 
   const statusTabs = ["Все", "Новые", "Одобренные", "Отклоненные"];
 
@@ -152,12 +118,22 @@ export default function SalariesPage() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    // Actual delete logic would go here
-    toast({
-      title: "Запись удалена",
-      description: "Запись о зарплате была успешно удалена",
-    });
+  const confirmDelete = async () => {
+    if (selectedSalaryId) {
+      try {
+        await dispatch(deleteSalary(selectedSalaryId)).unwrap();
+        toast({
+          title: "Запись удалена",
+          description: "Запись о зарплате была успешно удалена",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить запись о зарплате",
+          variant: "destructive",
+        });
+      }
+    }
     setDeleteDialogOpen(false);
     setSelectedSalaryId(null);
   };
@@ -178,45 +154,128 @@ export default function SalariesPage() {
     setRejectDialogOpen(true);
   };
 
-  const confirmApprove = () => {
-    // Actual approve logic would go here
-    toast({
-      title: "Запись одобрена",
-      description: "Запись о зарплате была успешно одобрена",
-    });
+  const confirmApprove = async () => {
+    if (selectedSalaryId) {
+      try {
+        const data = {
+          status: "APPROVED",
+          adminComment:
+            adminComment.trim() ||
+            "Информация о зарплате соответствует рыночным показателям",
+        };
+
+        await dispatch(
+          updateSalaryStatus({ salaryId: selectedSalaryId, data })
+        ).unwrap();
+
+        toast({
+          title: "Запись одобрена",
+          description: "Запись о зарплате была успешно одобрена",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось одобрить запись о зарплате",
+          variant: "destructive",
+        });
+      }
+    }
     setApproveDialogOpen(false);
     setSelectedSalaryId(null);
+    setAdminComment("");
   };
 
-  const confirmReject = () => {
-    // Actual reject logic would go here
-    toast({
-      title: "Запись отклонена",
-      description: "Запись о зарплате была отклонена",
-    });
+  const confirmReject = async () => {
+    if (!adminComment.trim() && isAdmin) {
+      toast({
+        title: "Требуется комментарий",
+        description: "Пожалуйста, укажите причину отклонения записи о зарплате",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedSalaryId) {
+      try {
+        const data = {
+          status: "REJECTED",
+          adminComment: adminComment,
+        };
+
+        await dispatch(
+          updateSalaryStatus({ salaryId: selectedSalaryId, data })
+        ).unwrap();
+
+        toast({
+          title: "Запись отклонена",
+          description: "Запись о зарплате была отклонена",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось отклонить запись о зарплате",
+          variant: "destructive",
+        });
+      }
+    }
     setRejectDialogOpen(false);
     setSelectedSalaryId(null);
+    setAdminComment("");
   };
 
   // Filter salaries based on selected status tab and user role
   const getFilteredSalaries = () => {
-    const salaries = isAdmin ? allUserSalaries : mockSalaries;
+    const salaries = isAdmin ? allSalaries : userSalaries;
 
     if (currentTab === "Все") return salaries;
 
     const statusMap: Record<string, string> = {
-      Новые: "Новый",
-      Одобренные: "Одобрено",
-      Отклоненные: "Отказано",
+      Новые: "PENDING",
+      Одобренные: "APPROVED",
+      Отклоненные: "REJECTED",
     };
 
-    return salaries.filter((salary) => salary.status === statusMap[currentTab]);
+    return salaries.filter(
+      (salary) => salary.approvalStatus === statusMap[currentTab]
+    );
   };
 
   const getStatusBadgeVariant = (status: string) => {
-    if (status === "Одобрено") return "primary";
-    if (status === "Отказано") return "destructive";
+    if (status === "APPROVED") return "success";
+    if (status === "REJECTED") return "destructive";
     return "secondary";
+  };
+
+  const getStatusDisplay = (status: string) => {
+    const statusMap: Record<string, string> = {
+      PENDING: "Новый",
+      APPROVED: "Одобрено",
+      REJECTED: "Отказано",
+    };
+    return statusMap[status] || status;
+  };
+
+  const getFormattedAmount = (salary: any) => {
+    if (salary.formattedAmount) return salary.formattedAmount;
+
+    const currencySymbols: Record<string, string> = {
+      USD: "$",
+      EUR: "€",
+      RUB: "₽",
+      KZT: "₸",
+    };
+
+    const symbol = currencySymbols[salary.currency] || salary.currency;
+    const period = salary.payPeriod === "monthly" ? "в месяц" : "в год";
+
+    return `${symbol}${salary.salary} ${period}`;
+  };
+
+  const canEdit = (salary: any) => {
+    return (
+      salary.approvalStatus === "PENDING" ||
+      salary.approvalStatus === "REJECTED"
+    );
   };
 
   return (
@@ -243,7 +302,7 @@ export default function SalariesPage() {
             <TabsTrigger
               key={tab}
               value={tab}
-              className="data-[state=active]:bg-white data-[state=active]:text-[#800000] data-[state=active]:shadow-sm py-2 font-medium rounder-[5px]"
+              className="data-[state=active]:bg-white data-[state=active]:text-[#800000] data-[state=active]:shadow-sm py-2 font-medium"
             >
               {tab}
             </TabsTrigger>
@@ -254,87 +313,109 @@ export default function SalariesPage() {
           <TabsContent key={tab} value={tab} className="mt-0">
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-[#800000] font-semibold">
-                          Компания
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold">
-                          Должность
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold">
-                          Зарплата
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold hidden sm:table-cell">
-                          Опыт
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold hidden md:table-cell">
-                          Дата
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold">
-                          Статус
-                        </TableHead>
-                        <TableHead className="text-[#800000] font-semibold text-right">
-                          Действия
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {getFilteredSalaries().map((salary) => (
-                        <TableRow key={salary.id} className="hover:bg-gray-50">
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span>{salary.companyName}</span>
-                              {salary.verified && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs bg-blue-50 text-blue-600 border-blue-200"
-                                >
-                                  Verified
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{salary.position}</TableCell>
-                          <TableCell className="font-semibold text-[#800000]">
-                            {salary.amount}
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            {salary.experience}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {salary.date}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={getStatusBadgeVariant(salary.status)}
-                            >
-                              {salary.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleViewDetails(salary)}
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Просмотреть</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                {isLoading ? (
+                  <div className="flex justify-center items-center p-8">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-[#800000]" />
+                      <p>Загрузка данных...</p>
+                    </div>
+                  </div>
+                ) : error ? (
+                  <div className="flex justify-center items-center p-8 text-red-500">
+                    <p>Ошибка загрузки: {error}</p>
+                  </div>
+                ) : getFilteredSalaries().length === 0 ? (
+                  <div className="flex justify-center items-center p-8 text-gray-500">
+                    <p>Записи о зарплатах не найдены</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-[#800000] font-semibold">
+                            Компания
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold">
+                            Должность
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold">
+                            Зарплата
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold hidden sm:table-cell">
+                            Опыт
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold hidden md:table-cell">
+                            Дата
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold">
+                            Статус
+                          </TableHead>
+                          <TableHead className="text-[#800000] font-semibold text-right">
+                            Действия
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {getFilteredSalaries().map((salary) => (
+                          <TableRow
+                            key={salary.id}
+                            className="hover:bg-gray-50"
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <span>{salary.companyName}</span>
+                                {salary.hasVerification && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                                  >
+                                    Verified
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{salary.position}</TableCell>
+                            <TableCell className="font-semibold text-[#800000]">
+                              {getFormattedAmount(salary)}
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              {salary.experience}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {salary.date}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={getStatusBadgeVariant(
+                                  salary.approvalStatus
+                                )}
+                              >
+                                {getStatusDisplay(salary.approvalStatus)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleViewDetails(salary)
+                                        }
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Просмотреть</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
 
-                              {!isAdmin && (
-                                <>
+                                {!isAdmin && canEdit(salary) && (
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -342,7 +423,9 @@ export default function SalariesPage() {
                                           variant="ghost"
                                           size="icon"
                                           onClick={() =>
-                                            handleEditSalary(salary.id)
+                                            handleEditSalary(
+                                              salary.id.toString()
+                                            )
                                           }
                                         >
                                           <Edit2 className="w-4 h-4" />
@@ -353,7 +436,9 @@ export default function SalariesPage() {
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
+                                )}
 
+                                {!isAdmin && (
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -361,7 +446,9 @@ export default function SalariesPage() {
                                           variant="ghost"
                                           size="icon"
                                           onClick={() =>
-                                            handleDeleteSalary(salary.id)
+                                            handleDeleteSalary(
+                                              salary.id.toString()
+                                            )
                                           }
                                         >
                                           <Trash2 className="w-4 h-4" />
@@ -372,59 +459,64 @@ export default function SalariesPage() {
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
-                                </>
-                              )}
+                                )}
 
-                              {isAdmin && salary.status === "Новый" && (
-                                <>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            handleApproveClick(salary.id)
-                                          }
-                                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                        >
-                                          <CheckCircle className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Одобрить</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                {isAdmin &&
+                                  salary.approvalStatus === "PENDING" && (
+                                    <>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                handleApproveClick(
+                                                  salary.id.toString()
+                                                )
+                                              }
+                                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                            >
+                                              <CheckCircle className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Одобрить</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
 
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={() =>
-                                            handleRejectClick(salary.id)
-                                          }
-                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        >
-                                          <XCircle className="w-4 h-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Отклонить</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                handleRejectClick(
+                                                  salary.id.toString()
+                                                )
+                                              }
+                                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            >
+                                              <XCircle className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Отклонить</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </>
+                                  )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -454,51 +546,103 @@ export default function SalariesPage() {
       </AlertDialog>
 
       {/* Approve confirmation dialog */}
-      <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Подтверждение одобрения</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>Подтверждение одобрения</DialogTitle>
+            <DialogDescription>
               Вы уверены, что хотите одобрить эту запись о зарплате?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4">
+            <label
+              htmlFor="admin-comment"
+              className="block text-gray-600 font-medium mb-2"
+            >
+              Комментарий администратора (необязательно):
+            </label>
+            <Textarea
+              id="admin-comment"
+              placeholder="Введите комментарий..."
+              value={adminComment}
+              onChange={(e) => setAdminComment(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setApproveDialogOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button
               onClick={confirmApprove}
               className="bg-green-600 hover:bg-green-700"
             >
               Одобрить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Reject confirmation dialog */}
-      <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Подтверждение отклонения</AlertDialogTitle>
-            <AlertDialogDescription>
+      {/* Reject dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle>Подтверждение отклонения</DialogTitle>
+            <DialogDescription>
               Вы уверены, что хотите отклонить эту запись о зарплате?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4">
+            <label
+              htmlFor="admin-comment"
+              className="block text-gray-600 font-medium mb-2"
+            >
+              Комментарий администратора:{" "}
+              <span className="text-red-500">*</span>
+            </label>
+            <Textarea
+              id="admin-comment"
+              placeholder="Введите причину отклонения записи о зарплате..."
+              value={adminComment}
+              onChange={(e) => setAdminComment(e.target.value)}
+              rows={3}
+              className={!adminComment.trim() ? "border-red-300" : ""}
+            />
+            {!adminComment.trim() && (
+              <p className="text-red-500 text-sm mt-1">
+                Пожалуйста, укажите причину отклонения
+              </p>
+            )}
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setRejectDialogOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button
               onClick={confirmReject}
               className="bg-red-600 hover:bg-red-700"
+              disabled={!adminComment.trim()}
             >
               Отклонить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Salary details dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         {selectedSalary && (
-          <DialogContent className="sm:max-w-md bg-white">
+          <DialogContent className="sm:max-w-md md:max-w-xl bg-white">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">
                 Детали зарплаты
@@ -510,66 +654,154 @@ export default function SalariesPage() {
                   {selectedSalary.companyName}
                 </h3>
                 <p className="text-gray-600">{selectedSalary.position}</p>
+                {selectedSalary.department && (
+                  <p className="text-gray-500 text-sm">
+                    {selectedSalary.department}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3">
                 <div className="flex">
-                  <span className="w-32 text-gray-600 font-medium">
+                  <span className="w-48 text-gray-600 font-medium">
                     Зарплата:
                   </span>
-                  <span className="font-medium">{selectedSalary.amount}</span>
+                  <span className="font-medium text-[#800000]">
+                    {getFormattedAmount(selectedSalary)}
+                  </span>
                 </div>
 
                 <div className="flex">
-                  <span className="w-32 text-gray-600 font-medium">Опыт:</span>
+                  <span className="w-48 text-gray-600 font-medium">
+                    Опыт работы:
+                  </span>
                   <span className="font-medium">
                     {selectedSalary.experience}
                   </span>
                 </div>
 
                 <div className="flex">
-                  <span className="w-32 text-gray-600 font-medium">
-                    Валюта:
+                  <span className="w-48 text-gray-600 font-medium">
+                    Местоположение:
                   </span>
-                  <span className="font-medium">{selectedSalary.currency}</span>
+                  <span className="font-medium">{selectedSalary.location}</span>
                 </div>
 
+                <div className="flex">
+                  <span className="w-48 text-gray-600 font-medium">
+                    Тип занятости:
+                  </span>
+                  <span className="font-medium">
+                    {{
+                      "full-time": "Полная занятость",
+                      "part-time": "Частичная занятость",
+                      contract: "Контракт",
+                      internship: "Стажировка",
+                      freelance: "Фриланс",
+                    }[selectedSalary.employmentType] ||
+                      selectedSalary.employmentType}
+                  </span>
+                </div>
+
+                <div className="flex">
+                  <span className="w-48 text-gray-600 font-medium">
+                    Статус работы:
+                  </span>
+                  <span className="font-medium">
+                    {selectedSalary.employmentStatus === "current"
+                      ? "Текущий сотрудник"
+                      : "Бывший сотрудник"}
+                  </span>
+                </div>
+
+                {selectedSalary.bonuses && (
+                  <div className="flex">
+                    <span className="w-48 text-gray-600 font-medium">
+                      Бонусы:
+                    </span>
+                    <span className="font-medium">
+                      {selectedSalary.bonuses}
+                    </span>
+                  </div>
+                )}
+
+                {selectedSalary.stockOptions && (
+                  <div className="flex">
+                    <span className="w-48 text-gray-600 font-medium">
+                      Опционы:
+                    </span>
+                    <span className="font-medium">
+                      {selectedSalary.stockOptions}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center">
-                  <span className="w-32 text-gray-600 font-medium">
+                  <span className="w-48 text-gray-600 font-medium">
                     Статус:
                   </span>
-                  <Badge variant={getStatusBadgeVariant(selectedSalary.status)}>
-                    {selectedSalary.status}
+                  <Badge
+                    variant={getStatusBadgeVariant(
+                      selectedSalary.approvalStatus
+                    )}
+                  >
+                    {getStatusDisplay(selectedSalary.approvalStatus)}
                   </Badge>
                 </div>
 
                 <div className="flex">
-                  <span className="w-32 text-gray-600 font-medium">Дата:</span>
+                  <span className="w-48 text-gray-600 font-medium">Дата:</span>
                   <span className="font-medium">{selectedSalary.date}</span>
                 </div>
 
-                {isAdmin && selectedSalary.hasContract && (
-                  <div className="flex items-center mt-4 pt-4 border-t">
-                    <span className="w-32 text-gray-600 font-medium">
-                      Договор:
-                    </span>
-                    <Button variant="outline" className="gap-2">
-                      <FileText className="w-4 h-4" />
-                      Скачать договор
-                    </Button>
+                {selectedSalary.hasVerification && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <FileText className="text-green-500" size={18} />
+                      <p className="text-green-600 font-medium">
+                        Данные подтверждены трудовым договором
+                      </p>
+                    </div>
+                    {isAdmin && selectedSalary.contractDocumentUrl && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 ml-8"
+                        onClick={() =>
+                          window.open(
+                            selectedSalary.contractDocumentUrl,
+                            "_blank"
+                          )
+                        }
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Скачать договор
+                      </Button>
+                    )}
                   </div>
                 )}
 
-                {isAdmin && (
+                {selectedSalary.adminComment && (
+                  <div className="mt-4 pt-4 border-t">
+                    <span className="text-gray-600 font-medium">
+                      Комментарий администратора:
+                    </span>
+                    <div className="bg-gray-50 p-3 rounded-md mt-2 text-gray-800">
+                      {selectedSalary.adminComment}
+                    </div>
+                  </div>
+                )}
+
+                {isAdmin && selectedSalary.approvalStatus === "PENDING" && (
                   <div className="mt-4 pt-4 border-t">
                     <label
-                      htmlFor="admin-comment"
+                      htmlFor="admin-comment-details"
                       className="block text-gray-600 font-medium mb-2"
                     >
                       Комментарий администратора:
                     </label>
                     <Textarea
-                      id="admin-comment"
+                      id="admin-comment-details"
                       placeholder="Введите комментарий..."
                       value={adminComment}
                       onChange={(e) => setAdminComment(e.target.value)}
@@ -580,10 +812,13 @@ export default function SalariesPage() {
               </div>
             </div>
 
-            <DialogFooter className="mt-6 bg-white">
-              {!isAdmin && selectedSalary.status !== "Одобрено" && (
+            <DialogFooter className="mt-6">
+              {!isAdmin && canEdit(selectedSalary) && (
                 <Button
-                  onClick={() => handleEditSalary(selectedSalary.id)}
+                  onClick={() => {
+                    setDetailsDialogOpen(false);
+                    handleEditSalary(selectedSalary.id.toString());
+                  }}
                   className="mr-auto"
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
@@ -591,12 +826,12 @@ export default function SalariesPage() {
                 </Button>
               )}
 
-              {isAdmin && selectedSalary.status === "Новый" && (
+              {isAdmin && selectedSalary.approvalStatus === "PENDING" && (
                 <div className="flex gap-2">
                   <Button
                     onClick={() => {
                       setDetailsDialogOpen(false);
-                      handleApproveClick(selectedSalary.id);
+                      handleApproveClick(selectedSalary.id.toString());
                     }}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -606,7 +841,7 @@ export default function SalariesPage() {
                   <Button
                     onClick={() => {
                       setDetailsDialogOpen(false);
-                      handleRejectClick(selectedSalary.id);
+                      handleRejectClick(selectedSalary.id.toString());
                     }}
                     variant="outline"
                     className="text-red-600 border-red-200 hover:bg-red-50"
