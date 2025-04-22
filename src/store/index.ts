@@ -1,8 +1,10 @@
+// src/store/index.ts
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "@/features/auth/authSlice";
 import profileReducer from "@/features/profile/profileSlice";
 import reviewReducer from "@/features/review/reviewSlice";
 import salaryReducer from "@/features/salary/salarySlice";
+import companyReducer from "@/features/company/companySlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +12,7 @@ export const store = configureStore({
     profile: profileReducer,
     review: reviewReducer,
     salary: salaryReducer,
+    company: companyReducer,
   },
 });
 

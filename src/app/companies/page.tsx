@@ -1,7 +1,7 @@
 // src/app/companies/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Input } from "@/components/ui/input";
@@ -28,63 +28,109 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { mockCompanies } from "@/features/company/mockData";
+import { useCompany } from "@/hooks/useCompany";
 import styles from "./CompaniesPage.module.scss";
 
 const CompaniesPage = () => {
+  const {
+    companies,
+    filters,
+    pagination,
+    loading,
+    getCompanies,
+    updateFilters,
+    resetAllFilters,
+  } = useCompany();
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [location, setLocation] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [page, setPage] = useState(1);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [localSearch, setLocalSearch] = useState("");
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(mockCompanies.length / itemsPerPage);
-  const startIndex = (page - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentCompanies = mockCompanies.slice(startIndex, endIndex);
+  // Local state for search input
+  const [searchInput, setSearchInput] = useState("");
 
-  const handleChangePage = (pageNumber: number) => {
-    setPage(pageNumber);
+  // Update local filters when Redux filters change
+  useEffect(() => {
+    // Build selectedFilters array based on active filters
+    const newSelectedFilters = [];
+
+    if (filters.location) {
+      newSelectedFilters.push(`Локация: ${filters.location}`);
+    }
+
+    if (filters.industry) {
+      newSelectedFilters.push(`Отрасль: ${filters.industry}`);
+    }
+
+    if (filters.minRating) {
+      newSelectedFilters.push(`${filters.minRating}★ и выше`);
+    }
+
+    if (filters.size) {
+      newSelectedFilters.push(`Размер: ${filters.size}`);
+    }
+
+    setSelectedFilters(newSelectedFilters);
+  }, [filters]);
+
+  // Handle search form submission
+  const handleSearch = () => {
+    updateFilters({ search: searchInput });
   };
 
-  const handleSwitchToGrid = () => {
-    setViewMode("grid");
-  };
-
-  const handleSwitchToList = () => {
-    setViewMode("list");
-  };
-
+  // Handle location change
   const handleLocationChange = (value: string) => {
-    setLocation(value);
+    updateFilters({ location: value === "all" ? "" : value });
   };
 
+  // Handle industry change
   const handleIndustryChange = (value: string) => {
-    setIndustry(value);
+    updateFilters({ industry: value === "all" ? "" : value });
   };
 
-  const addFilter = (filter: string) => {
-    if (!selectedFilters.includes(filter)) {
-      setSelectedFilters([...selectedFilters, filter]);
+  // Handle rating change - only one can be selected
+  const handleRatingChange = (rating: number, checked: boolean) => {
+    updateFilters({ minRating: checked ? rating : undefined });
+  };
+
+  // Handle size change
+  const handleSizeChange = (value: string) => {
+    updateFilters({ size: value === "all" ? "" : value });
+  };
+
+  // Handle page change
+  const handleChangePage = (pageNumber: number) => {
+    getCompanies({ ...filters, page: pageNumber - 1 });
+  };
+
+  // Toggle view mode
+  const handleSwitchToGrid = () => setViewMode("grid");
+  const handleSwitchToList = () => setViewMode("list");
+
+  // Toggle filters panel on mobile
+  const toggleFilters = () => setShowFilters(!showFilters);
+
+  // Remove specific filter
+  const removeFilter = (filter: string) => {
+    if (filter.startsWith("Локация:")) {
+      updateFilters({ location: "" });
+    } else if (filter.startsWith("Отрасль:")) {
+      updateFilters({ industry: "" });
+    } else if (filter.includes("★")) {
+      updateFilters({ minRating: undefined });
+    } else if (filter.startsWith("Размер:")) {
+      updateFilters({ size: "" });
     }
   };
 
-  const removeFilter = (filter: string) => {
-    setSelectedFilters(selectedFilters.filter((f) => f !== filter));
-  };
-
+  // Clear all filters
   const clearAllFilters = () => {
-    setSelectedFilters([]);
-    setLocation("");
-    setIndustry("");
+    resetAllFilters();
+    setSearchInput("");
   };
 
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
+  // Render star rating
   const renderRating = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -173,7 +219,10 @@ const CompaniesPage = () => {
 
             <div className={styles.filterSection}>
               <h3 className={styles.filterSectionTitle}>Локация</h3>
-              <Select value={location} onValueChange={handleLocationChange}>
+              <Select
+                value={filters.location || "all"}
+                onValueChange={handleLocationChange}
+              >
                 <SelectTrigger className={styles.filterSelect}>
                   <SelectValue placeholder="Выберите локацию" />
                 </SelectTrigger>
@@ -183,27 +232,21 @@ const CompaniesPage = () => {
                   </SelectItem>
                   <SelectItem
                     className={styles.filterSelectItem}
-                    value="almaty"
+                    value="Алматы, Казахстан"
                   >
                     Алматы, Казахстан
                   </SelectItem>
                   <SelectItem
                     className={styles.filterSelectItem}
-                    value="astana"
+                    value="Астана, Казахстан"
                   >
                     Астана, Казахстан
                   </SelectItem>
                   <SelectItem
                     className={styles.filterSelectItem}
-                    value="moscow"
+                    value="Костанай, Казахстан"
                   >
-                    Москва, Россия
-                  </SelectItem>
-                  <SelectItem
-                    className={styles.filterSelectItem}
-                    value="newyork"
-                  >
-                    Нью-Йорк, США
+                    Костанай, Казахстан
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -211,7 +254,10 @@ const CompaniesPage = () => {
 
             <div className={styles.filterSection}>
               <h3 className={styles.filterSectionTitle}>Отрасли</h3>
-              <Select value={industry} onValueChange={handleIndustryChange}>
+              <Select
+                value={filters.industry || "all"}
+                onValueChange={handleIndustryChange}
+              >
                 <SelectTrigger className={styles.filterSelect}>
                   <SelectValue placeholder="Выберите отрасль" />
                 </SelectTrigger>
@@ -219,26 +265,71 @@ const CompaniesPage = () => {
                   <SelectItem className={styles.filterSelectItem} value="all">
                     Все отрасли
                   </SelectItem>
-                  <SelectItem className={styles.filterSelectItem} value="it">
-                    IT и технологии
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Почтовые услуги"
+                  >
+                    Почтовые услуги
                   </SelectItem>
                   <SelectItem
                     className={styles.filterSelectItem}
-                    value="finance"
+                    value="Логистика"
                   >
-                    Финансы
+                    Логистика
                   </SelectItem>
                   <SelectItem
                     className={styles.filterSelectItem}
-                    value="manufacturing"
+                    value="Финансовые услуги"
                   >
-                    Производство
+                    Финансовые услуги
                   </SelectItem>
                   <SelectItem
                     className={styles.filterSelectItem}
-                    value="education"
+                    value="Банковское дело"
                   >
-                    Образование
+                    Банковское дело
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Финансовые технологии"
+                  >
+                    Финансовые технологии
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Нефть и газ"
+                  >
+                    Нефть и газ
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Энергетика"
+                  >
+                    Энергетика
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Телекоммуникации"
+                  >
+                    Телекоммуникации
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Интернет-услуги"
+                  >
+                    Интернет-услуги
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Авиаперевозки"
+                  >
+                    Авиаперевозки
+                  </SelectItem>
+                  <SelectItem
+                    className={styles.filterSelectItem}
+                    value="Розничная торговля"
+                  >
+                    Розничная торговля
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -252,11 +343,10 @@ const CompaniesPage = () => {
                     <Checkbox
                       id={`rating-${rating}`}
                       className={styles.ratingCheckbox}
-                      onCheckedChange={(checked) => {
-                        checked
-                          ? addFilter(`${rating}★ и выше`)
-                          : removeFilter(`${rating}★ и выше`);
-                      }}
+                      checked={filters.minRating === rating}
+                      onCheckedChange={(checked) =>
+                        handleRatingChange(rating, checked === true)
+                      }
                     />
                     <Label
                       htmlFor={`rating-${rating}`}
@@ -274,32 +364,48 @@ const CompaniesPage = () => {
 
             <div className={styles.filterSection}>
               <h3 className={styles.filterSectionTitle}>Размер компании</h3>
-              <RadioGroup defaultValue="any" className={styles.sizeFilter}>
+              <RadioGroup
+                defaultValue="all"
+                value={filters.size || "all"}
+                onValueChange={handleSizeChange}
+                className={styles.sizeFilter}
+              >
                 {[
-                  { value: "1-50", label: "1 - 50" },
-                  { value: "51-200", label: "51 - 200" },
-                  { value: "201-500", label: "201 - 500" },
-                  { value: "501-1000", label: "501 - 1000" },
-                  { value: "1001-5000", label: "1001 - 5000" },
-                  { value: "5001+", label: "5001+" },
-                  { value: "any", label: "Любой размер" },
+                  { value: "all", label: "Любой размер" },
+                  {
+                    value: "Более 1000 сотрудников",
+                    label: "Более 1000 сотрудников",
+                  },
+                  {
+                    value: "Более 2000 сотрудников",
+                    label: "Более 2000 сотрудников",
+                  },
+                  {
+                    value: "Более 3000 сотрудников",
+                    label: "Более 3000 сотрудников",
+                  },
+                  {
+                    value: "Более 5000 сотрудников",
+                    label: "Более 5000 сотрудников",
+                  },
+                  {
+                    value: "Более 10000 сотрудников",
+                    label: "Более 10000 сотрудников",
+                  },
+                  {
+                    value: "Более 20000 сотрудников",
+                    label: "Более 20000 сотрудников",
+                  },
+                  {
+                    value: "Более 50000 сотрудников",
+                    label: "Более 50000 сотрудников",
+                  },
                 ].map((size) => (
                   <div key={size.value} className={styles.sizeOption}>
                     <RadioGroupItem
                       value={size.value}
                       id={`size-${size.value}`}
                       className={styles.sizeRadio}
-                      onClick={() => {
-                        if (size.value !== "any") {
-                          addFilter(`Размер: ${size.label}`);
-                        } else {
-                          removeFilter(
-                            selectedFilters.find((f) =>
-                              f.startsWith("Размер:")
-                            ) || ""
-                          );
-                        }
-                      }}
                     />
                     <Label htmlFor={`size-${size.value}`}>{size.label}</Label>
                   </div>
@@ -319,7 +425,7 @@ const CompaniesPage = () => {
           <div className={styles.resultsPanel}>
             <div className={styles.resultsHeader}>
               <div className={styles.resultsCount}>
-                <p>Найдено {mockCompanies.length} компаний</p>
+                <p>Найдено {pagination.totalElements || 0} компаний</p>
               </div>
               <div className={styles.viewToggle}>
                 <Button
@@ -349,61 +455,84 @@ const CompaniesPage = () => {
               </div>
             </div>
 
-            <div
-              className={`${styles.companyGrid} ${
-                viewMode === "list" ? styles.listView : ""
-              }`}
-            >
-              {currentCompanies.map((company) => (
-                <Link
-                  href={`/companies/${company.id}`}
-                  key={company.id}
-                  className={styles.companyCard}
-                >
-                  <Card className={styles.companyCardd}>
-                    <CardContent className={styles.companyCardContent}>
-                      <div className={styles.companyLogo}>
-                        <img
-                          src={company.logoUrl || "/placeholder.svg"}
-                          alt={company.name}
-                        />
-                      </div>
-                      <div className={styles.companyInfo}>
-                        <h3 className={styles.companyName}>{company.name}</h3>
-                        <div className={styles.companyRating}>
-                          <span className={styles.ratingValue}>
-                            {company.rating}
-                          </span>
-                          <div className={styles.ratingStars}>
-                            {renderRating(company.rating)}
+            {loading ? (
+              <div className="py-8 text-center">
+                <p>Загрузка компаний...</p>
+              </div>
+            ) : (
+              <div
+                className={`${styles.companyGrid} ${
+                  viewMode === "list" ? styles.listView : ""
+                }`}
+              >
+                {companies && companies.length > 0 ? (
+                  companies.map((company) => (
+                    <Link
+                      href={`/companies/${company.id}`}
+                      key={company.id}
+                      className={styles.companyCard}
+                    >
+                      <Card className={styles.companyCardd}>
+                        <CardContent className={styles.companyCardContent}>
+                          <div className={styles.companyLogo}>
+                            <img
+                              src={company.logoUrl || "/placeholder.svg"}
+                              alt={company.name}
+                            />
                           </div>
-                        </div>
-                        <p className={styles.companyLocation}>
-                          {company.location}
-                        </p>
-                        <p className={styles.companyDescription}>
-                          {company.description}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+                          <div className={styles.companyInfo}>
+                            <h3 className={styles.companyName}>
+                              {company.name}
+                            </h3>
+                            <div className={styles.companyRating}>
+                              <span className={styles.ratingValue}>
+                                {company.rating}
+                              </span>
+                              <div className={styles.ratingStars}>
+                                {renderRating(company.rating)}
+                              </div>
+                            </div>
+                            <p className={styles.companyLocation}>
+                              {company.location}
+                            </p>
+                            <p className={styles.companyDescription}>
+                              {company.description}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="py-8 text-center w-full">
+                    <p>Компании не найдены</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-            <div className={styles.pagination}>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <Button
-                  key={i + 1}
-                  variant={page === i + 1 ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleChangePage(i + 1)}
-                  className={styles.paginationBtn}
-                >
-                  {i + 1}
-                </Button>
-              ))}
-            </div>
+            {pagination.totalPages > 1 && (
+              <div className={styles.pagination}>
+                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                  <Button
+                    key={i + 1}
+                    variant={
+                      pagination.pageNumber + 1 === i + 1
+                        ? "default"
+                        : "outline"
+                    }
+                    size="sm"
+                    onClick={() => handleChangePage(i + 1)}
+                    className={styles.paginationBtn}
+                    data-state={
+                      pagination.pageNumber + 1 === i + 1 ? "on" : "off"
+                    }
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Container>

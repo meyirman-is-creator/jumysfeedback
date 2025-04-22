@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import styles from "./Header.module.scss";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompany } from "@/hooks/useCompany";
 
 export default function Header() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const { user, isAuthenticated, logoutUser } = useAuth();
   const pathname = usePathname();
+  const { updateFilters } = useCompany();
 
   // Fix hydration mismatch by setting mounted state
   useEffect(() => {
@@ -69,6 +71,16 @@ export default function Header() {
     router.push("/auth/login");
   };
 
+  // Handle search form submission
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      updateFilters({ search: searchValue.trim() });
+      router.push("/companies");
+      closeDrawer();
+    }
+  };
+
   return (
     <header className={styles.header}>
       <Container>
@@ -78,7 +90,10 @@ export default function Header() {
           </Link>
 
           <div className={styles.searchBar}>
-            <div className={styles.searchWrapper}>
+            <form
+              onSubmit={handleSearchSubmit}
+              className={styles.searchWrapper}
+            >
               <Search className={styles.searchIcon} size={18} />
               <Input
                 type="text"
@@ -87,14 +102,10 @@ export default function Header() {
                 onChange={(e) => setSearchValue(e.target.value)}
                 className={styles.searchInput}
               />
-            </div>
-            <Button
-              size="sm"
-              className={styles.searchButton}
-              onClick={closeDrawer}
-            >
-              Найти
-            </Button>
+              <Button type="submit" size="sm" className={styles.searchButton}>
+                Найти
+              </Button>
+            </form>
           </div>
 
           {/* Desktop Navigation */}
