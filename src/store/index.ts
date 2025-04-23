@@ -5,6 +5,7 @@ import profileReducer from "@/features/profile/profileSlice";
 import reviewReducer from "@/features/review/reviewSlice";
 import salaryReducer from "@/features/salary/salarySlice";
 import companyReducer from "@/features/company/companySlice";
+import companyDetailsReducer from "@/features/companyDetails/companyDetailsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     review: reviewReducer,
     salary: salaryReducer,
     company: companyReducer,
+    companyDetails: companyDetailsReducer,
   },
 });
 
