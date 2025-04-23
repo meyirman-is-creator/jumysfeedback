@@ -1,8 +1,6 @@
-// src/app/companies/[companyId]/taxes/page.tsx
 "use client";
 import React, { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Typography, Box, Grid, Paper, Tooltip } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveLine } from "@nivo/line";
@@ -10,6 +8,12 @@ import { ResponsivePie } from "@nivo/pie";
 import { Info } from "lucide-react";
 import { useCompanyDetails } from "@/hooks/useCompanyDetails";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import styles from "./CompanyTaxesPage.module.scss";
 
 const CompanyTaxesPage = () => {
@@ -17,10 +21,10 @@ const CompanyTaxesPage = () => {
   const { taxes, loading, error, fetchTaxes } = useCompanyDetails();
 
   useEffect(() => {
-    if (companyId) {
+    if (companyId && !taxes) {
       fetchTaxes(companyId);
     }
-  }, [companyId, fetchTaxes]);
+  }, [companyId, taxes, fetchTaxes]);
 
   // Prepare data for charts if taxes data exists
   const getTaxBarData = () => {
@@ -28,7 +32,7 @@ const CompanyTaxesPage = () => {
 
     return taxes.yearlyTaxes.map((tax) => ({
       year: tax.year.toString(),
-      Налоги: tax.amount / 1e9, // Convert to billions for readability
+      Налоги: +(tax.amount / 1e9).toFixed(2), // Convert to billions and round for display
     }));
   };
 
@@ -60,298 +64,287 @@ const CompanyTaxesPage = () => {
 
   if (error.taxes) {
     return (
-      <Box className={styles.container}>
-        <Typography variant="h4" gutterBottom color="error">
+      <div className="max-w-7xl mx-auto p-4 mt-8 text-center">
+        <h2 className="text-2xl font-semibold text-red-600 mb-2">
           Ошибка при загрузке данных о налогах
-        </Typography>
-        <Typography>{error.taxes}</Typography>
-      </Box>
+        </h2>
+        <p>{error.taxes}</p>
+      </div>
     );
   }
 
   return (
-    <Box className={styles.container}>
-      <Typography variant="h4" gutterBottom>
+    <div className="py-8 px-4 w-full">
+      <h1 className="text-3xl font-bold mb-6">
         {loading.taxes ? (
           <Skeleton className="h-10 w-96" />
         ) : (
           `Налоговая статистика компании ${taxes?.companyName || ""}`
         )}
-      </Typography>
+      </h1>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card className={styles.card}>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6">
-                  Ежегодные налоговые отчисления (млрд ₸)
-                </Typography>
-                <Tooltip title="Показывает динамику ежегодных налоговых отчислений компании в миллиардах тенге">
-                  <Info size={16} color="#800000" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Card className="overflow-hidden transition-all hover:shadow-md">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Ежегодные налоговые отчисления (млрд ₸)
+              </h2>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info size={16} className="text-primary cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">
+                      Показывает динамику ежегодных налоговых отчислений
+                      компании в миллиардах тенге
+                    </p>
+                  </TooltipContent>
                 </Tooltip>
-              </Box>
+              </TooltipProvider>
+            </div>
 
-              {loading.taxes ? (
-                <Skeleton className="h-80 w-full" />
-              ) : taxes ? (
-                <Box className={styles.chartContainer}>
-                  <ResponsiveBar
-                    data={taxBarData}
-                    keys={["Налоги"]}
-                    indexBy="year"
-                    margin={{ top: 50, right: 30, bottom: 50, left: 80 }}
-                    padding={0.3}
-                    colors={{ scheme: "red_blue" }}
-                    colorBy="indexValue"
-                    borderColor={{
-                      from: "color",
-                      modifiers: [["darker", 1.6]],
-                    }}
-                    axisTop={null}
-                    axisRight={null}
-                    axisBottom={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      legend: "Год",
-                      legendPosition: "middle",
-                      legendOffset: 32,
-                    }}
-                    axisLeft={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      legend: "Сумма (млрд ₸)",
-                      legendPosition: "middle",
-                      legendOffset: -60,
-                    }}
-                    labelSkipWidth={12}
-                    labelSkipHeight={12}
-                    labelTextColor={{
-                      from: "color",
-                      modifiers: [["darker", 1.6]],
-                    }}
-                    animate={true}
-                    motionStiffness={90}
-                    motionDamping={15}
-                  />
-                </Box>
-              ) : null}
-
-              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
-                График демонстрирует динамику налоговых отчислений компании по
-                годам. Показатели приведены в миллиардах тенге на основе
-                официальной финансовой отчетности.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card className={styles.card}>
-            <CardContent>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6">Налоговые показатели</Typography>
-                <Tooltip title="Ключевые налоговые показатели компании">
-                  <Info size={16} color="#800000" />
-                </Tooltip>
-              </Box>
-
-              {loading.taxes ? (
-                <>
-                  <Skeleton className="h-12 w-full mb-4" />
-                  <Skeleton className="h-12 w-full mb-4" />
-                  <Skeleton className="h-12 w-full" />
-                </>
-              ) : taxes ? (
-                <>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <Paper elevation={1} className="p-4">
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Последние отчисления ({latestYearTax?.year})
-                        </Typography>
-                        <Typography
-                          variant="h5"
-                          className="font-bold text-[#800000]"
-                        >
-                          {latestYearTax?.formattedAmount}
-                        </Typography>
-                        {taxGrowth && (
-                          <Typography
-                            variant="body2"
-                            className={`font-medium ${
-                              parseFloat(taxGrowth) >= 0
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {parseFloat(taxGrowth) >= 0 ? "+" : ""}
-                            {taxGrowth}% к предыдущему году
-                          </Typography>
-                        )}
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <Paper elevation={1} className="p-4">
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Статус плательщика НДС
-                        </Typography>
-                        <Typography variant="h6">
-                          {taxes.vatPayer
-                            ? "Плательщик НДС"
-                            : "Не является плательщиком НДС"}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <Paper elevation={1} className="p-4">
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Юридический статус
-                        </Typography>
-                        <Typography variant="h6">
-                          {taxes.companyType} "{taxes.companyStatus}"
-                        </Typography>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Paper elevation={1} className="p-4">
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Основной вид деятельности
-                        </Typography>
-                        <Typography variant="body1">
-                          {taxes.businessActivity} (код{" "}
-                          {taxes.businessActivityCode})
-                        </Typography>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <Paper elevation={1} className="p-4">
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Размер компании
-                        </Typography>
-                        <Typography variant="body1">
-                          {taxes.companySize}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <Paper elevation={1} className="p-4">
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Количество лицензий
-                        </Typography>
-                        <Typography variant="body1">
-                          {taxes.licenseCount}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                  </Grid>
-                </>
-              ) : null}
-
-              <Typography variant="body2" sx={{ mt: 2, color: "#666" }}>
-                Данные представлены на основе официальной отчетности,
-                предоставляемой государственными органами. Последнее обновление:{" "}
-                {taxes?.lastUpdateDate || "н/д"}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {!loading.taxes && taxes && (
-          <Grid item xs={12}>
-            <Card className={styles.card}>
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 2,
+            {loading.taxes ? (
+              <div className="h-80 w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
+            ) : taxes ? (
+              <div className="h-80">
+                <ResponsiveBar
+                  data={taxBarData}
+                  keys={["Налоги"]}
+                  indexBy="year"
+                  margin={{ top: 30, right: 20, bottom: 50, left: 70 }}
+                  padding={0.3}
+                  colors={{ scheme: "red_blue" }}
+                  colorBy="indexValue"
+                  borderColor={{
+                    from: "color",
+                    modifiers: [["darker", 1.6]],
                   }}
-                >
-                  <Typography variant="h6">
-                    Дополнительная информация
-                  </Typography>
-                  <Tooltip title="Информация о регистрации и участии компании">
-                    <Info size={16} color="#800000" />
-                  </Tooltip>
-                </Box>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={4}>
-                    <Paper elevation={1} className="p-4">
-                      <Typography variant="subtitle2" color="textSecondary">
-                        Дата регистрации
-                      </Typography>
-                      <Typography variant="body1">
-                        {taxes.registrationDate}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-
-                  <Grid item xs={12} sm={4}>
-                    <Paper elevation={1} className="p-4">
-                      <Typography variant="subtitle2" color="textSecondary">
-                        Участие в других компаниях
-                      </Typography>
-                      <Typography variant="body1">
-                        {taxes.participationsInOtherCompanies > 0
-                          ? `${taxes.participationsInOtherCompanies} компаний`
-                          : "Не участвует"}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-
-                  <Grid item xs={12} sm={4}>
-                    <Paper elevation={1} className="p-4">
-                      <Typography variant="subtitle2" color="textSecondary">
-                        Участие в гос. закупках
-                      </Typography>
-                      <Typography variant="body1">
-                        {taxes.governmentProcurementParticipant
-                          ? "Участвует"
-                          : "Не участвует"}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      className="italic"
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: "Год",
+                    legendPosition: "middle",
+                    legendOffset: 32,
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: "Сумма (млрд ₸)",
+                    legendPosition: "middle",
+                    legendOffset: -50,
+                    format: (value) => Math.round(value),
+                  }}
+                  labelSkipWidth={12}
+                  labelSkipHeight={12}
+                  labelTextColor="white"
+                  theme={{
+                    tooltip: {
+                      container: {
+                        background: "#fff",
+                        fontSize: "12px",
+                        borderRadius: "4px",
+                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                        padding: "8px 12px",
+                      },
+                    },
+                  }}
+                  tooltip={({ id, value, color }) => (
+                    <div
+                      style={{
+                        padding: 8,
+                        color: "#333",
+                        background: "#fff",
+                        borderRadius: "4px",
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                        border: `1px solid ${color}`,
+                      }}
                     >
-                      Источник данных: {taxes.dataSource}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-      </Grid>
-    </Box>
+                      <strong>
+                        {id}: {value} млрд ₸
+                      </strong>
+                    </div>
+                  )}
+                  animate={true}
+                />
+              </div>
+            ) : null}
+
+            <p className="mt-6 text-gray-600 text-sm">
+              График демонстрирует динамику налоговых отчислений компании по
+              годам. Показатели приведены в миллиардах тенге на основе
+              официальной финансовой отчетности.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden transition-all hover:shadow-md">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Налоговые показатели
+              </h2>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info size={16} className="text-primary cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Ключевые налоговые показатели компании</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {loading.taxes ? (
+              <div className="space-y-6">
+                <Skeleton className="h-16 w-full mb-4" />
+                <Skeleton className="h-16 w-full mb-4" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : taxes ? (
+              <div className="space-y-4">
+                <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                  <p className="text-gray-500 text-sm mb-1">
+                    Последние отчисления ({latestYearTax?.year})
+                  </p>
+                  <p className="text-2xl font-bold text-primary">
+                    {latestYearTax?.formattedAmount}
+                  </p>
+                  {taxGrowth && (
+                    <p
+                      className={`text-sm font-medium ${
+                        parseFloat(taxGrowth) >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {parseFloat(taxGrowth) >= 0 ? "+" : ""}
+                      {taxGrowth}% к предыдущему году
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">
+                      Статус плательщика НДС
+                    </p>
+                    <p className="font-medium">
+                      {taxes.vatPayer
+                        ? "Плательщик НДС"
+                        : "Не является плательщиком НДС"}
+                    </p>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">
+                      Юридический статус
+                    </p>
+                    <p className="font-medium">
+                      {taxes.companyType} "{taxes.companyStatus}"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                  <p className="text-gray-500 text-sm mb-1">
+                    Основной вид деятельности
+                  </p>
+                  <p className="font-medium">
+                    {taxes.businessActivity} (код {taxes.businessActivityCode})
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">
+                      Размер компании
+                    </p>
+                    <p className="font-medium">{taxes.companySize}</p>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                    <p className="text-gray-500 text-sm mb-1">
+                      Количество лицензий
+                    </p>
+                    <p className="font-medium">{taxes.licenseCount}</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <p className="mt-6 text-gray-600 text-sm">
+              Данные представлены на основе официальной отчетности,
+              предоставляемой государственными органами. Последнее обновление:{" "}
+              {taxes?.lastUpdateDate || "н/д"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {!loading.taxes && taxes && (
+        <Card className="overflow-hidden transition-all hover:shadow-md mb-8">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Дополнительная информация
+              </h2>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info size={16} className="text-primary cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Информация о регистрации и участии компании</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                <p className="text-gray-500 text-sm mb-1">Дата регистрации</p>
+                <p className="font-medium">{taxes.registrationDate}</p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                <p className="text-gray-500 text-sm mb-1">
+                  Участие в других компаниях
+                </p>
+                <p className="font-medium">
+                  {taxes.participationsInOtherCompanies > 0
+                    ? `${taxes.participationsInOtherCompanies} компаний`
+                    : "Не участвует"}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                <p className="text-gray-500 text-sm mb-1">
+                  Участие в гос. закупках
+                </p>
+                <p className="font-medium">
+                  {taxes.governmentProcurementParticipant
+                    ? "Участвует"
+                    : "Не участвует"}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-gray-500 text-sm italic">
+              Источник данных: {taxes.dataSource}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 
