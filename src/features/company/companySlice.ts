@@ -38,7 +38,6 @@ const initialState: CompanyState = {
   lastFetchedAt: null,
 };
 
-// Async thunks
 export const fetchCompanies = createAsyncThunk(
   "company/fetchCompanies",
   async (params: CompanyListParams, { getState, rejectWithValue }) => {
@@ -46,7 +45,6 @@ export const fetchCompanies = createAsyncThunk(
       const state = getState() as RootState;
       const { filters } = state.company;
 
-      // Merge current filters with new params
       const mergedParams = { ...filters, ...params };
 
       const response = await companyAPI.getCompanies(mergedParams);
@@ -64,7 +62,6 @@ export const fetchCompanyById = createAsyncThunk(
       const state = getState() as RootState;
       const existingCompany = state.company.companyDetails[id];
 
-      // If we already have detailed data, don't fetch again
       if (existingCompany && existingCompany.overallInfo) {
         return existingCompany;
       }
@@ -102,14 +99,13 @@ const companySlice = createSlice({
       })
       .addCase(fetchCompanies.fulfilled, (state, action) => {
         state.loading = false;
-        state.companies = action.payload.content;
-        state.pageNumber = action.payload.pageNumber;
-        state.pageSize = action.payload.pageSize;
-        state.totalElements = action.payload.totalElements;
-        state.totalPages = action.payload.totalPages;
+        state.companies = action.payload.data.content;
+        state.pageNumber = action.payload.data.pageNumber;
+        state.pageSize = action.payload.data.pageSize;
+        state.totalElements = action.payload.data.totalElements;
+        state.totalPages = action.payload.data.totalPages;
         state.lastFetchedAt = Date.now();
 
-        // Also update filters based on what was used for this request
         if (action.meta.arg) {
           state.filters = { ...state.filters, ...action.meta.arg };
         }
@@ -136,7 +132,6 @@ const companySlice = createSlice({
 export const { setFilters, resetFilters, clearCompanies } =
   companySlice.actions;
 
-// Selectors
 export const selectCompanies = (state: RootState) => state.company.companies;
 export const selectCompanyDetails = (id: string) => (state: RootState) =>
   state.company.companyDetails[id];

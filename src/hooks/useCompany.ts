@@ -66,16 +66,16 @@ export const useCompany = () => {
     };
   }, []);
 
-  // Initial fetch on component mount if not already loaded
+  // Initial fetch on component mount if not already loaded - FIX HERE
   useEffect(() => {
-    if (!initialLoadDone && (!lastFetchedAt)) {
+    if (!initialLoadDone && !lastFetchedAt) {
       getCompanies();
       setInitialLoadDone(true);
     }
-  }, [getCompanies, lastFetchedAt, companies, initialLoadDone]);
+  }, [getCompanies, initialLoadDone]);
 
   return {
-    companies,
+    companies: companies || [], // Ensure companies is never undefined
     filters,
     pagination,
     loading,

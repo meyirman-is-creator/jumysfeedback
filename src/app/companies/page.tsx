@@ -29,6 +29,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useCompany } from "@/hooks/useCompany";
+import searchAPI from "@/services/searchAPI";
 import styles from "./CompaniesPage.module.scss";
 
 const CompaniesPage = () => {
@@ -46,13 +47,23 @@ const CompaniesPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [localSearch, setLocalSearch] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-
-  // Local state for search input
+  const [locationOptions, setLocationOptions] = useState<string[]>([
+    "Алматы, Казахстан",
+    "Астана, Казахстан",
+    "Костанай, Казахстан",
+  ]);
+  const [locationSearchValue, setLocationSearchValue] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [showLocationResults, setShowLocationResults] = useState(false);
+  const [locationSearchResults, setLocationSearchResults] = useState<string[]>([]);
 
-  // Update local filters when Redux filters change
   useEffect(() => {
-    // Build selectedFilters array based on active filters
+    if (companies?.length === 0 && !loading) {
+      getCompanies();
+    }
+  }, [companies?.length, getCompanies, loading]);
+
+  useEffect(() => {
     const newSelectedFilters = [];
 
     if (filters.location) {
@@ -74,44 +85,65 @@ const CompaniesPage = () => {
     setSelectedFilters(newSelectedFilters);
   }, [filters]);
 
-  // Handle search form submission
   const handleSearch = () => {
     updateFilters({ search: searchInput });
   };
 
-  // Handle location change
+  const handleLocationSearchChange = async (e) => {
+    const value = e.target.value;
+    setLocationSearchValue(value);
+    
+    if (value.trim().length > 2) {
+      try {
+        const response = await searchAPI.searchLocations(value);
+        setLocationSearchResults(response || []);
+        setShowLocationResults(true);
+      } catch (error) {
+        console.error("Error searching locations:", error);
+        setLocationSearchResults([]);
+        // Fallback to filtering existing options if API fails
+        const filtered = locationOptions.filter(loc => 
+          loc.toLowerCase().includes(value.toLowerCase())
+        );
+        setLocationSearchResults(filtered);
+      }
+    } else {
+      setLocationSearchResults([]);
+      setShowLocationResults(false);
+    }
+  };
+
+  const handleLocationSelect = (location) => {
+    updateFilters({ location });
+    setLocationSearchValue("");
+    setShowLocationResults(false);
+  };
+
   const handleLocationChange = (value: string) => {
     updateFilters({ location: value === "all" ? "" : value });
   };
 
-  // Handle industry change
   const handleIndustryChange = (value: string) => {
     updateFilters({ industry: value === "all" ? "" : value });
   };
 
-  // Handle rating change - only one can be selected
   const handleRatingChange = (rating: number, checked: boolean) => {
     updateFilters({ minRating: checked ? rating : undefined });
   };
 
-  // Handle size change
   const handleSizeChange = (value: string) => {
     updateFilters({ size: value === "all" ? "" : value });
   };
 
-  // Handle page change
   const handleChangePage = (pageNumber: number) => {
     getCompanies({ ...filters, page: pageNumber - 1 });
   };
 
-  // Toggle view mode
   const handleSwitchToGrid = () => setViewMode("grid");
   const handleSwitchToList = () => setViewMode("list");
 
-  // Toggle filters panel on mobile
   const toggleFilters = () => setShowFilters(!showFilters);
 
-  // Remove specific filter
   const removeFilter = (filter: string) => {
     if (filter.startsWith("Локация:")) {
       updateFilters({ location: "" });
@@ -124,13 +156,12 @@ const CompaniesPage = () => {
     }
   };
 
-  // Clear all filters
   const clearAllFilters = () => {
     resetAllFilters();
     setSearchInput("");
+    setLocationSearchValue("");
   };
 
-  // Render star rating
   const renderRating = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -219,6 +250,33 @@ const CompaniesPage = () => {
 
             <div className={styles.filterSection}>
               <h3 className={styles.filterSectionTitle}>Локация</h3>
+              <div className="relative mb-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <Input 
+                    type="text" 
+                    placeholder="Поиск локаций..."
+                    value={locationSearchValue}
+                    onChange={handleLocationSearchChange}
+                    className="pl-10 pr-4 py-2 w-full border rounded"
+                  />
+                </div>
+                
+                {showLocationResults && locationSearchResults.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    {locationSearchResults.map((location, idx) => (
+                      <div 
+                        key={idx}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleLocationSelect(location)}
+                      >
+                        {location}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
               <Select
                 value={filters.location || "all"}
                 onValueChange={handleLocationChange}
@@ -230,24 +288,15 @@ const CompaniesPage = () => {
                   <SelectItem className={styles.filterSelectItem} value="all">
                     Все локации
                   </SelectItem>
-                  <SelectItem
-                    className={styles.filterSelectItem}
-                    value="Алматы, Казахстан"
-                  >
-                    Алматы, Казахстан
-                  </SelectItem>
-                  <SelectItem
-                    className={styles.filterSelectItem}
-                    value="Астана, Казахстан"
-                  >
-                    Астана, Казахстан
-                  </SelectItem>
-                  <SelectItem
-                    className={styles.filterSelectItem}
-                    value="Костанай, Казахстан"
-                  >
-                    Костанай, Казахстан
-                  </SelectItem>
+                  {locationOptions.map((location) => (
+                    <SelectItem 
+                      key={location} 
+                      className={styles.filterSelectItem} 
+                      value={location}
+                    >
+                      {location}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -465,7 +514,7 @@ const CompaniesPage = () => {
                   viewMode === "list" ? styles.listView : ""
                 }`}
               >
-                {companies && companies.length > 0 ? (
+                {companies && companies?.length > 0 ? (
                   companies.map((company) => (
                     <Link
                       href={`/companies/${company.id}`}

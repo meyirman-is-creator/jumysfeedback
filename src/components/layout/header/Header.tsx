@@ -1,7 +1,7 @@
 // src/components/layout/header/Header.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Container } from "@/components/ui/container";
@@ -34,24 +34,38 @@ import {
 import styles from "./Header.module.scss";
 import { useAuth } from "@/hooks/useAuth";
 import { useCompany } from "@/hooks/useCompany";
+import searchAPI from "@/services/searchAPI";
 
 export default function Header() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const searchResultsRef = useRef(null);
   const { user, isAuthenticated, logoutUser } = useAuth();
   const pathname = usePathname();
   const { updateFilters } = useCompany();
 
-  // Fix hydration mismatch by setting mounted state
   useEffect(() => {
     setMounted(true);
+
+    const handleClickOutside = (event) => {
+      if (
+        searchResultsRef.current &&
+        !searchResultsRef.current.contains(event.target)
+      ) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  // Check if the given path is active
   const isActive = (path: string) => {
     if (path === "/companies") {
       return pathname === "/companies" || pathname?.startsWith("/companies/");
@@ -59,7 +73,6 @@ export default function Header() {
     return pathname === path;
   };
 
-  // Function to close the drawer
   const closeDrawer = () => {
     setIsMenuOpen(false);
   };
@@ -67,18 +80,42 @@ export default function Header() {
   const handleLogout = async () => {
     await logoutUser();
     closeDrawer();
-
     router.push("/auth/login");
   };
 
-  // Handle search form submission
+  const handleSearchChange = async (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
+
+    if (value.trim().length > 2) {
+      try {
+        const response = await searchAPI.searchCompanies(value);
+        setSearchResults(response.content || []);
+        setShowResults(true);
+      } catch (error) {
+        console.error("Error searching companies:", error);
+        setSearchResults([]);
+      }
+    } else {
+      setSearchResults([]);
+      setShowResults(false);
+    }
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
       updateFilters({ search: searchValue.trim() });
       router.push("/companies");
       closeDrawer();
+      setShowResults(false);
     }
+  };
+
+  const handleCompanySelect = (companyId: string) => {
+    router.push(`/companies/${companyId}`);
+    setSearchValue("");
+    setShowResults(false);
   };
 
   return (
@@ -99,16 +136,40 @@ export default function Header() {
                 type="text"
                 placeholder="Поиск по компаниям"
                 value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
+                onChange={handleSearchChange}
                 className={styles.searchInput}
               />
+
+              {showResults && searchResults.length > 0 && (
+                <div
+                  className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-60 overflow-y-auto"
+                  ref={searchResultsRef}
+                >
+                  {searchResults.map((company) => (
+                    <div
+                      key={company.id}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                      onClick={() => handleCompanySelect(company.id)}
+                    >
+                      {company.logoUrl && (
+                        <img
+                          src={company.logoUrl}
+                          alt={company.name}
+                          className="w-6 h-6 mr-2 object-contain"
+                        />
+                      )}
+                      <span>{company.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <Button type="submit" size="sm" className={styles.searchButton}>
                 Найти
               </Button>
             </form>
           </div>
 
-          {/* Desktop Navigation */}
           <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ""}`}>
             <Link
               href="/companies"
@@ -127,7 +188,6 @@ export default function Header() {
               Зарплаты
             </Link>
 
-            {/* Only render this part when component is mounted to prevent hydration mismatch */}
             {mounted && (
               <>
                 {isAuthenticated ? (
@@ -217,7 +277,6 @@ export default function Header() {
             )}
           </nav>
 
-          {/* Mobile Navigation Drawer */}
           <div className={styles.mobileNav}>
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>

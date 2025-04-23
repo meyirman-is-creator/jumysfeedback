@@ -8,7 +8,6 @@ export interface ICompany {
   rating: number;
   size: string;
   industries: string[];
-  // Additional fields for detailed view
   overallInfo?: any;
   reviews?: any[];
   salaries?: any[];
@@ -18,12 +17,17 @@ export interface ICompany {
 }
 
 export interface CompanyListResponse {
-  content: ICompany[];
-  pageNumber: number;
-  pageSize: number;
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
+  data: {
+    content: ICompany[];
+    pageNumber: number;
+    pageSize: number;
+    totalElements: number;
+    totalPages: number;
+    last: boolean;
+  };
+  message: string;
+  error: null | string;
+  code: number;
 }
 
 export interface CompanyListParams {
