@@ -1,123 +1,30 @@
 // src/features/companyDetails/companyDetailsSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import apiClient from "@/services/apiClient";
+import companyDetailsAPI from "./companyDetailsAPI";
 import { RootState } from "@/store";
+import {
+  CompanyDetailsState,
+  FetchSalariesParams,
+  FetchReviewsParams,
+  ExperienceFilter,
+} from "./types";
 
-// Types
-export interface CompanyOverview {
-  id: number;
-  name: string;
-  logoUrl: string;
-  bannerImg: string;
-  description: string;
-  location: string;
-  rating: number;
-  size: string;
-  industries: string[];
-  founded: string;
-  revenue: string;
-  mission: string;
-  topReview: {
-    id: number;
-    title: string;
-    body: string;
-    rating: number;
-    author: string | null;
-    date: string;
-  } | null;
-  totalReviews: number;
-  topSalary: any | null;
-  totalSalaries: number;
-}
+// Helper function to create cache keys
+const createCacheKey = (params: Record<string, any>): string => {
+  const sortedEntries = Object.entries(params)
+    .filter(([_, value]) => value !== undefined && value !== null)
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
 
-export interface CompanyTaxes {
-  companyId: number;
-  companyName: string;
-  registrationDate: string;
-  companyStatus: string;
-  companyType: string;
-  companySize: string;
-  businessActivity: string;
-  businessActivityCode: string;
-  lastUpdateDate: string;
-  dataSource: string;
-  vatPayer: boolean;
-  astanaHubParticipant: boolean;
-  governmentProcurementParticipant: boolean;
-  licenseCount: number;
-  lastDocumentChangeDate: string;
-  participationsInOtherCompanies: number;
-  yearlyTaxes: {
-    year: number;
-    amount: number;
-    formattedAmount: string;
-    dataSource: string;
-  }[];
-  annualRevenue: number;
-  annualRevenueFormatted: string;
-}
+  return sortedEntries.map(([key, value]) => `${key}:${value}`).join("|");
+};
 
-export interface StockHistoricalData {
-  date: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
-
-export interface CompanyStocks {
-  companyId: number;
-  companyName: string;
-  symbol: string;
-  currentPrice: number;
-  previousClose: number;
-  open: number;
-  dayHigh: number;
-  dayLow: number;
-  volume: number;
-  marketCap: number;
-  peRatio: number;
-  dividendYield: number;
-  fiftyTwoWeekHigh: number;
-  fiftyTwoWeekLow: number;
-  currency: string;
-  priceChange: number;
-  priceChangePercent: number;
-  formattedPrice: string;
-  formattedMarketCap: string;
-  timestamp: string;
-  historicalData: StockHistoricalData[];
-}
-
-interface CompanyDetailsState {
-  overview: CompanyOverview | null;
-  taxes: CompanyTaxes | null;
-  stocks: CompanyStocks | null;
-  reviews: any[] | null;
-  salaries: any[] | null;
-  loading: {
-    overview: boolean;
-    taxes: boolean;
-    stocks: boolean;
-    reviews: boolean;
-    salaries: boolean;
-  };
-  error: {
-    overview: string | null;
-    taxes: string | null;
-    stocks: string | null;
-    reviews: string | null;
-    salaries: string | null;
-  };
-}
-
+// Initial state
 const initialState: CompanyDetailsState = {
   overview: null,
   taxes: null,
   stocks: null,
-  reviews: null,
-  salaries: null,
+  reviews: {},
+  salaries: {},
   loading: {
     overview: false,
     taxes: false,
@@ -134,13 +41,13 @@ const initialState: CompanyDetailsState = {
   },
 };
 
-// Thunks
+// Async thunks
 export const fetchCompanyOverview = createAsyncThunk(
   "companyDetails/fetchOverview",
   async (companyId: string, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/companies/${companyId}/overview`);
-      return response.data.data;
+      const response = await companyDetailsAPI.getCompanyOverview(companyId);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch company overview"
@@ -153,8 +60,8 @@ export const fetchCompanyTaxes = createAsyncThunk(
   "companyDetails/fetchTaxes",
   async (companyId: string, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/companies/${companyId}/taxes`);
-      return response.data.data;
+      const response = await companyDetailsAPI.getCompanyTaxes(companyId);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch company taxes"
@@ -167,11 +74,66 @@ export const fetchCompanyStocks = createAsyncThunk(
   "companyDetails/fetchStocks",
   async (companyId: string, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/companies/${companyId}/stocks`);
-      return response.data.data;
+      const response = await companyDetailsAPI.getCompanyStocks(companyId);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch company stocks"
+      );
+    }
+  }
+);
+
+// New async thunks for salaries and reviews
+export const fetchCompanySalaries = createAsyncThunk(
+  "companyDetails/fetchSalaries",
+  async (params: FetchSalariesParams, { getState, rejectWithValue }) => {
+    try {
+      // Create a cache key for these parameters
+      const cacheKey = createCacheKey(params);
+      const state = getState() as RootState;
+
+      // Check if we already have this data cached
+      const cachedData = state.companyDetails.salaries[cacheKey];
+
+      // If data is cached and not specifically requesting a refresh, return it
+      if (cachedData) {
+        return { data: cachedData, cacheKey };
+      }
+
+      // Otherwise fetch new data
+      const response = await companyDetailsAPI.getCompanySalaries(params);
+      return { data: response.data, cacheKey };
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch company salaries"
+      );
+    }
+  }
+);
+
+export const fetchCompanyReviews = createAsyncThunk(
+  "companyDetails/fetchReviews",
+  async (params: FetchReviewsParams, { getState, rejectWithValue }) => {
+    try {
+      // Create a cache key for these parameters
+      const cacheKey = createCacheKey(params);
+      const state = getState() as RootState;
+
+      // Check if we already have this data cached
+      const cachedData = state.companyDetails.reviews[cacheKey];
+
+      // If data is cached and not specifically requesting a refresh, return it
+      if (cachedData) {
+        return { data: cachedData, cacheKey };
+      }
+
+      // Otherwise fetch new data
+      const response = await companyDetailsAPI.getCompanyReviews(params);
+      return { data: response.data, cacheKey };
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch company reviews"
       );
     }
   }
@@ -184,6 +146,13 @@ const companyDetailsSlice = createSlice({
   reducers: {
     clearCompanyDetails: (state) => {
       return initialState;
+    },
+    // Add a reducer to clear specific cached data if needed
+    clearCachedSalaries: (state) => {
+      state.salaries = {};
+    },
+    clearCachedReviews: (state) => {
+      state.reviews = {};
     },
   },
   extraReducers: (builder) => {
@@ -231,22 +200,72 @@ const companyDetailsSlice = createSlice({
         state.loading.stocks = false;
         state.error.stocks = action.payload as string;
       });
+
+    // Salaries with caching
+    builder
+      .addCase(fetchCompanySalaries.pending, (state) => {
+        state.loading.salaries = true;
+        state.error.salaries = null;
+      })
+      .addCase(fetchCompanySalaries.fulfilled, (state, action) => {
+        state.loading.salaries = false;
+        // Store data with the cache key
+        state.salaries[action.payload.cacheKey] = action.payload.data;
+      })
+      .addCase(fetchCompanySalaries.rejected, (state, action) => {
+        state.loading.salaries = false;
+        state.error.salaries = action.payload as string;
+      });
+
+    // Reviews with caching
+    builder
+      .addCase(fetchCompanyReviews.pending, (state) => {
+        state.loading.reviews = true;
+        state.error.reviews = null;
+      })
+      .addCase(fetchCompanyReviews.fulfilled, (state, action) => {
+        state.loading.reviews = false;
+        // Store data with the cache key
+        state.reviews[action.payload.cacheKey] = action.payload.data;
+      })
+      .addCase(fetchCompanyReviews.rejected, (state, action) => {
+        state.loading.reviews = false;
+        state.error.reviews = action.payload as string;
+      });
   },
 });
 
 // Actions
-export const { clearCompanyDetails } = companyDetailsSlice.actions;
+export const { clearCompanyDetails, clearCachedSalaries, clearCachedReviews } =
+  companyDetailsSlice.actions;
 
 // Selectors
 export const selectCompanyOverview = (state: RootState) =>
   state.companyDetails.overview;
+
 export const selectCompanyTaxes = (state: RootState) =>
   state.companyDetails.taxes;
+
 export const selectCompanyStocks = (state: RootState) =>
   state.companyDetails.stocks;
+
 export const selectCompanyLoadingState = (state: RootState) =>
   state.companyDetails.loading;
+
 export const selectCompanyErrorState = (state: RootState) =>
   state.companyDetails.error;
+
+// New selectors with parameter-based lookup
+export const selectCompanySalaries =
+  (params: FetchSalariesParams) => (state: RootState) => {
+    const cacheKey = createCacheKey(params);
+    return state.companyDetails.salaries[cacheKey];
+  };
+
+export const selectCompanyReviews =
+  (params: FetchReviewsParams) => (state: RootState) => {
+    const cacheKey = createCacheKey(params);
+    return state.companyDetails.reviews[cacheKey];
+  };
 
 export default companyDetailsSlice.reducer;

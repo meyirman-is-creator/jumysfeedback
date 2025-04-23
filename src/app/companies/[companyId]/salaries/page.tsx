@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Typography, Box, Grid, TextField, Chip } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,142 +13,167 @@ import {
 } from "@/components/ui/select";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveLine } from "@nivo/line";
-import { ResponsivePie } from "@nivo/pie";
 import { Search, DollarSign, TrendingUp, Briefcase } from "lucide-react";
-import { mockCompanies } from "@/features/company/mockData";
+import { useCompanyDetails } from "@/hooks/useCompanyDetails";
+import { ExperienceFilter } from "@/features/companyDetails/types";
+import { Skeleton } from "@/components/ui/skeleton";
 import styles from "./CompanySalariesPage.module.scss";
 
 const CompanySalariesPage = () => {
   const { companyId } = useParams() as { companyId: string };
-  const company = mockCompanies.find((c) => c.id === companyId);
 
-  const [experienceFilter, setExperienceFilter] = useState("all");
+  // State for UI filters and pagination
+  const [experienceFilter, setExperienceFilter] =
+    useState<ExperienceFilter>("all");
   const [positionSearch, setPositionSearch] = useState("");
-  const [sortOption, setSortOption] = useState("highest");
-  const [page, setPage] = useState(1);
-  const salariesPerPage = 5;
+  const [sortOption, setSortOption] = useState<"highest" | "lowest">("highest");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
 
-  if (!company) {
-    return (
-      <Box className={styles.notFound}>
-        <Typography variant="h5">Компания не найдена</Typography>
-      </Box>
-    );
-  }
+  // Get company details from our hook
+  const { fetchSalaries, loading, error } = useCompanyDetails();
 
-  // Фильтруем зарплаты по опыту и поиску
-  const filteredSalaries = company.salaries.filter((salary) => {
-    const matchesExperience =
-      experienceFilter === "all" ||
-      (experienceFilter === "entry" &&
-        salary.experienceLevel.toLowerCase().includes("entry")) ||
-      (experienceFilter === "mid" &&
-        salary.experienceLevel.toLowerCase().includes("mid")) ||
-      (experienceFilter === "senior" &&
-        salary.experienceLevel.toLowerCase().includes("senior"));
+  // Use our hook to get cached data
+  const { getSalaries } = useCompanyDetails();
 
-    const matchesSearch =
-      positionSearch === "" ||
-      salary.position.toLowerCase().includes(positionSearch.toLowerCase());
-
-    return matchesExperience && matchesSearch;
-  });
-
-  // Сортируем зарплаты
-  const sortedSalaries = [...filteredSalaries].sort((a, b) => {
-    if (sortOption === "highest") {
-      return b.median - a.median;
-    } else if (sortOption === "lowest") {
-      return a.median - b.median;
+  // Fetch salaries on mount and when filters change
+  useEffect(() => {
+    if (companyId) {
+      fetchSalaries({
+        companyId,
+        experienceFilter,
+        search: positionSearch,
+        sort: sortOption,
+        page,
+        pageSize,
+      });
     }
-    return 0;
+  }, [
+    companyId,
+    experienceFilter,
+    positionSearch,
+    sortOption,
+    page,
+    pageSize,
+    fetchSalaries,
+  ]);
+
+  // Get the cached data for current filters
+  const salaryData = getSalaries({
+    companyId,
+    experienceFilter,
+    search: positionSearch,
+    sort: sortOption,
+    page,
+    pageSize,
   });
 
-  // Пагинация
-  const totalPages = Math.ceil(sortedSalaries.length / salariesPerPage);
-  const currentSalaries = sortedSalaries.slice(
-    (page - 1) * salariesPerPage,
-    page * salariesPerPage
-  );
+  // Handle filter changes
+  const handleExperienceFilterChange = (value: ExperienceFilter) => {
+    setExperienceFilter(value);
+    setPage(0); // Reset to first page when filter changes
+  };
 
-  const handleChangePage = (pageNumber) => {
+  const handlePositionSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setPositionSearch(e.target.value);
+    setPage(0); // Reset to first page when search changes
+  };
+
+  const handleSortChange = (value: "highest" | "lowest") => {
+    setSortOption(value);
+    setPage(0); // Reset to first page when sort changes
+  };
+
+  const handleChangePage = (pageNumber: number) => {
     setPage(pageNumber);
   };
 
-  // Подготовка данных для визуализации
-  const avgSalaryByLevel = {
-    Entry: 0,
-    Mid: 0,
-    Senior: 0,
-    counts: {
-      Entry: 0,
-      Mid: 0,
-      Senior: 0,
-    },
+  // Prepare data for visualizations if salary data exists
+  const prepareAverageSalaryByLevelData = () => {
+    if (!salaryData || !salaryData.statistics.averageSalaryByExperience)
+      return [];
+
+    const data = [];
+    const averageByExp = salaryData.statistics.averageSalaryByExperience;
+
+    if (averageByExp.entry) {
+      data.push({ level: "Начальный", value: averageByExp.entry });
+    }
+    if (averageByExp.mid) {
+      data.push({ level: "Средний", value: averageByExp.mid });
+    }
+    if (averageByExp.senior) {
+      data.push({ level: "Старший", value: averageByExp.senior });
+    }
+    if (averageByExp.executive) {
+      data.push({ level: "Руководитель", value: averageByExp.executive });
+    }
+
+    return data;
   };
 
-  company.salaries.forEach((salary) => {
-    if (salary.experienceLevel.toLowerCase().includes("entry")) {
-      avgSalaryByLevel["Entry"] += salary.median;
-      avgSalaryByLevel.counts["Entry"]++;
-    } else if (salary.experienceLevel.toLowerCase().includes("senior")) {
-      avgSalaryByLevel["Senior"] += salary.median;
-      avgSalaryByLevel.counts["Senior"]++;
-    } else {
-      avgSalaryByLevel["Mid"] += salary.median;
-      avgSalaryByLevel.counts["Mid"]++;
-    }
-  });
+  // Prepare top positions data
+  const prepareTopPositionsData = () => {
+    if (!salaryData || !salaryData.statistics.topSalaries) return [];
 
-  // Вычисляем средние значения
-  Object.keys(avgSalaryByLevel.counts).forEach((level) => {
-    if (avgSalaryByLevel.counts[level] > 0) {
-      avgSalaryByLevel[level] /= avgSalaryByLevel.counts[level];
-    }
-  });
-
-  // Подготовка данных для графика зарплат по опыту
-  const salaryByLevelData = [
-    { level: "Начальный", value: avgSalaryByLevel["Entry"] },
-    { level: "Средний", value: avgSalaryByLevel["Mid"] },
-    { level: "Старший", value: avgSalaryByLevel["Senior"] },
-  ];
-
-  // Подготовка данных для графика топ позиций
-  const topPositions = [...company.salaries]
-    .sort((a, b) => b.median - a.median)
-    .slice(0, 5)
-    .map((salary) => ({
+    return salaryData.statistics.topSalaries.map((salary) => ({
       position: salary.position,
       salary: salary.median,
     }));
+  };
 
-  // Подготовка данных для распределения зарплат
-  const salaryCounts = {};
-  company.salaries.forEach((salary) => {
-    // Округляем до ближайшей тысячи
-    const roundedSalary = Math.round(salary.median / 1000) * 1000;
-    salaryCounts[roundedSalary] = (salaryCounts[roundedSalary] || 0) + 1;
-  });
+  // Prepare salary distribution data
+  const prepareSalaryDistributionData = () => {
+    if (!salaryData || !salaryData.statistics.salaryDistribution) return [];
 
-  const salaryDistribution = Object.keys(salaryCounts)
-    .map((salary) => ({
-      x: `$${parseInt(salary).toLocaleString()}`,
-      y: salaryCounts[salary],
-    }))
-    .sort(
-      (a, b) =>
-        parseInt(a.x.replace(/\D/g, "")) - parseInt(b.x.replace(/\D/g, ""))
+    return salaryData.statistics.salaryDistribution.map((item) => ({
+      x: `₸${Math.round(item.salaryRange).toLocaleString()}`,
+      y: item.count,
+    }));
+  };
+
+  // Calculate statistics
+  const salaryByLevelData = prepareAverageSalaryByLevelData();
+  const topPositionsData = prepareTopPositionsData();
+  const salaryDistributionData = prepareSalaryDistributionData();
+
+  // Filter salaries from current page for rendering
+  const filteredSalaries = salaryData ? salaryData.salaries : [];
+
+  // Calculate total pages
+  const totalPages = salaryData ? salaryData.totalPages : 0;
+
+  if (error.salaries) {
+    return (
+      <Box className={styles.notFound}>
+        <Typography variant="h5">
+          Ошибка при загрузке данных о зарплатах
+        </Typography>
+        <Typography>{error.salaries}</Typography>
+      </Box>
     );
+  }
 
   return (
     <Box className={styles.companySalaries}>
       <Box className={styles.header}>
         <Typography variant="h4" className={styles.title}>
-          Зарплаты в компании {company.name}
+          {loading.salaries ? (
+            <Skeleton className="h-10 w-96" />
+          ) : (
+            `Зарплаты в компании ${salaryData?.companyName || ""}`
+          )}
         </Typography>
         <Typography variant="body1" className={styles.subtitle}>
-          Данные о {company.salaries.length} зарплатах в различных должностях
+          {loading.salaries ? (
+            <Skeleton className="h-4 w-64" />
+          ) : (
+            `Данные о ${
+              salaryData?.totalSalaries || 0
+            } зарплатах в различных должностях`
+          )}
         </Typography>
       </Box>
 
@@ -160,51 +185,70 @@ const CompanySalariesPage = () => {
                 Средние зарплаты по уровню опыта
               </Typography>
               <Box className={styles.chartContainer}>
-                <ResponsiveBar
-                  data={salaryByLevelData}
-                  keys={["value"]}
-                  indexBy="level"
-                  margin={{ top: 50, right: 30, bottom: 50, left: 80 }}
-                  padding={0.3}
-                  valueScale={{ type: "linear" }}
-                  indexScale={{ type: "band", round: true }}
-                  colors={["#800000"]}
-                  borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
-                  axisTop={null}
-                  axisRight={null}
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: "Уровень опыта",
-                    legendPosition: "middle",
-                    legendOffset: 32,
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: "Зарплата (USD)",
-                    legendPosition: "middle",
-                    legendOffset: -60,
-                    format: (value) => `$${Math.round(value).toLocaleString()}`,
-                  }}
-                  labelSkipWidth={12}
-                  labelSkipHeight={12}
-                  labelTextColor={{
-                    from: "color",
-                    modifiers: [["darker", 1.6]],
-                  }}
-                  animate={true}
-                  motionStiffness={90}
-                  motionDamping={15}
-                  tooltip={({ data, value }) => (
-                    <div className={styles.tooltip}>
-                      <strong>{data.level}</strong>
-                      <br />${Math.round(value).toLocaleString()}
-                    </div>
-                  )}
-                />
+                {loading.salaries ? (
+                  <Skeleton className="h-full w-full" />
+                ) : salaryByLevelData.length > 0 ? (
+                  <ResponsiveBar
+                    data={salaryByLevelData}
+                    keys={["value"]}
+                    indexBy="level"
+                    margin={{ top: 50, right: 30, bottom: 50, left: 80 }}
+                    padding={0.3}
+                    valueScale={{ type: "linear" }}
+                    indexScale={{ type: "band", round: true }}
+                    colors={["#800000"]}
+                    borderColor={{
+                      from: "color",
+                      modifiers: [["darker", 1.6]],
+                    }}
+                    axisTop={null}
+                    axisRight={null}
+                    axisBottom={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: "Уровень опыта",
+                      legendPosition: "middle",
+                      legendOffset: 32,
+                    }}
+                    axisLeft={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: "Зарплата (₸)",
+                      legendPosition: "middle",
+                      legendOffset: -60,
+                      format: (value) =>
+                        `₸${Math.round(value).toLocaleString()}`,
+                    }}
+                    labelSkipWidth={12}
+                    labelSkipHeight={12}
+                    labelTextColor={{
+                      from: "color",
+                      modifiers: [["darker", 1.6]],
+                    }}
+                    animate={true}
+                    motionStiffness={90}
+                    motionDamping={15}
+                    tooltip={({ data, value }) => (
+                      <div className={styles.tooltip}>
+                        <strong>{data.level}</strong>
+                        <br />₸{Math.round(value).toLocaleString()}
+                      </div>
+                    )}
+                  />
+                ) : (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="100%"
+                  >
+                    <Typography>
+                      Недостаточно данных для отображения графика
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </CardContent>
           </Card>
@@ -216,178 +260,219 @@ const CompanySalariesPage = () => {
               <Typography variant="h6" className={styles.cardTitle}>
                 Ключевые показатели зарплат
               </Typography>
-              <Box className={styles.statsGrid}>
-                <Box className={styles.statItem}>
-                  <Box className={styles.statIcon}>
-                    <DollarSign size={20} />
-                  </Box>
-                  <Box className={styles.statContent}>
-                    <Typography
-                      variant="subtitle2"
-                      className={styles.statLabel}
-                    >
-                      Средняя зарплата
-                    </Typography>
-                    <Typography variant="h6" className={styles.statValue}>
-                      $
-                      {Math.round(
-                        company.salaries.reduce((sum, s) => sum + s.median, 0) /
-                          company.salaries.length
-                      ).toLocaleString()}
-                    </Typography>
-                  </Box>
+              {loading.salaries ? (
+                <Box className={styles.statsGrid}>
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-20 w-full mb-4" />
+                  ))}
                 </Box>
+              ) : salaryData ? (
+                <Box className={styles.statsGrid}>
+                  <Box className={styles.statItem}>
+                    <Box className={styles.statIcon}>
+                      <DollarSign size={20} />
+                    </Box>
+                    <Box className={styles.statContent}>
+                      <Typography
+                        variant="subtitle2"
+                        className={styles.statLabel}
+                      >
+                        Средняя зарплата
+                      </Typography>
+                      <Typography variant="h6" className={styles.statValue}>
+                        ₸
+                        {Math.round(
+                          salaryData.statistics.averageSalary
+                        ).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Box>
 
-                <Box className={styles.statItem}>
-                  <Box className={styles.statIcon}>
-                    <TrendingUp size={20} />
+                  <Box className={styles.statItem}>
+                    <Box className={styles.statIcon}>
+                      <TrendingUp size={20} />
+                    </Box>
+                    <Box className={styles.statContent}>
+                      <Typography
+                        variant="subtitle2"
+                        className={styles.statLabel}
+                      >
+                        Высшая зарплата
+                      </Typography>
+                      <Typography variant="h6" className={styles.statValue}>
+                        ₸
+                        {Math.round(
+                          salaryData.statistics.highestSalary
+                        ).toLocaleString()}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box className={styles.statContent}>
-                    <Typography
-                      variant="subtitle2"
-                      className={styles.statLabel}
-                    >
-                      Высшая зарплата
-                    </Typography>
-                    <Typography variant="h6" className={styles.statValue}>
-                      $
-                      {Math.max(
-                        ...company.salaries.map((s) => s.max)
-                      ).toLocaleString()}
-                    </Typography>
-                  </Box>
-                </Box>
 
-                <Box className={styles.statItem}>
-                  <Box className={styles.statIcon}>
-                    <Briefcase size={20} />
-                  </Box>
-                  <Box className={styles.statContent}>
-                    <Typography
-                      variant="subtitle2"
-                      className={styles.statLabel}
-                    >
-                      Количество должностей
-                    </Typography>
-                    <Typography variant="h6" className={styles.statValue}>
-                      {company.salaries.length}
-                    </Typography>
+                  <Box className={styles.statItem}>
+                    <Box className={styles.statIcon}>
+                      <Briefcase size={20} />
+                    </Box>
+                    <Box className={styles.statContent}>
+                      <Typography
+                        variant="subtitle2"
+                        className={styles.statLabel}
+                      >
+                        Количество должностей
+                      </Typography>
+                      <Typography variant="h6" className={styles.statValue}>
+                        {salaryData.statistics.totalPositions}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
+              ) : null}
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Card className={styles.infoCard}>
-            <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Топ-5 высокооплачиваемых должностей
-              </Typography>
-              <Box className={styles.chartContainer}>
-                <ResponsiveBar
-                  data={topPositions}
-                  keys={["salary"]}
-                  indexBy="position"
-                  margin={{ top: 50, right: 50, bottom: 70, left: 80 }}
-                  padding={0.3}
-                  layout="horizontal"
-                  valueScale={{ type: "linear" }}
-                  indexScale={{ type: "band", round: true }}
-                  colors={["#336699"]}
-                  borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
-                  axisTop={null}
-                  axisRight={null}
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: "Зарплата (USD)",
-                    legendPosition: "middle",
-                    legendOffset: 40,
-                    format: (value) => `$${Math.round(value).toLocaleString()}`,
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legendPosition: "middle",
-                    legendOffset: -60,
-                  }}
-                  tooltip={({ data, value }) => (
-                    <div className={styles.tooltip}>
-                      <strong>{data.position}</strong>
-                      <br />${Math.round(value).toLocaleString()}
-                    </div>
-                  )}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        {!loading.salaries && salaryData && (
+          <>
+            <Grid item xs={12} md={6}>
+              <Card className={styles.infoCard}>
+                <CardContent>
+                  <Typography variant="h6" className={styles.cardTitle}>
+                    Топ-5 высокооплачиваемых должностей
+                  </Typography>
+                  <Box className={styles.chartContainer}>
+                    {topPositionsData.length > 0 ? (
+                      <ResponsiveBar
+                        data={topPositionsData}
+                        keys={["salary"]}
+                        indexBy="position"
+                        margin={{ top: 50, right: 50, bottom: 70, left: 80 }}
+                        padding={0.3}
+                        layout="horizontal"
+                        valueScale={{ type: "linear" }}
+                        indexScale={{ type: "band", round: true }}
+                        colors={["#336699"]}
+                        borderColor={{
+                          from: "color",
+                          modifiers: [["darker", 1.6]],
+                        }}
+                        axisTop={null}
+                        axisRight={null}
+                        axisBottom={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 0,
+                          legend: "Зарплата (₸)",
+                          legendPosition: "middle",
+                          legendOffset: 40,
+                          format: (value) =>
+                            `₸${Math.round(value).toLocaleString()}`,
+                        }}
+                        axisLeft={{
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 0,
+                          legendPosition: "middle",
+                          legendOffset: -60,
+                        }}
+                        tooltip={({ data, value }) => (
+                          <div className={styles.tooltip}>
+                            <strong>{data.position}</strong>
+                            <br />₸{Math.round(value).toLocaleString()}
+                          </div>
+                        )}
+                      />
+                    ) : (
+                      <Box
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        height="100%"
+                      >
+                        <Typography>
+                          Недостаточно данных для отображения графика
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Card className={styles.infoCard}>
-            <CardContent>
-              <Typography variant="h6" className={styles.cardTitle}>
-                Распределение зарплат
-              </Typography>
-              <Box className={styles.chartContainer}>
-                <ResponsiveLine
-                  data={[
-                    {
-                      id: "зарплаты",
-                      color: "#800000",
-                      data: salaryDistribution,
-                    },
-                  ]}
-                  margin={{ top: 50, right: 50, bottom: 70, left: 60 }}
-                  xScale={{ type: "point" }}
-                  yScale={{
-                    type: "linear",
-                    min: 0,
-                    max: "auto",
-                    stacked: false,
-                    reverse: false,
-                  }}
-                  curve="monotoneX"
-                  axisTop={null}
-                  axisRight={null}
-                  axisBottom={{
-                    orient: "bottom",
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 45,
-                    legend: "Уровень зарплаты",
-                    legendOffset: 50,
-                    legendPosition: "middle",
-                  }}
-                  axisLeft={{
-                    orient: "left",
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: "Количество должностей",
-                    legendOffset: -50,
-                    legendPosition: "middle",
-                  }}
-                  colors={["#800000"]}
-                  pointSize={10}
-                  pointColor={{ theme: "background" }}
-                  pointBorderWidth={2}
-                  pointBorderColor={{ from: "serieColor" }}
-                  pointLabelYOffset={-12}
-                  areaBaselineValue={0}
-                  enableArea={true}
-                  areaOpacity={0.15}
-                  useMesh={true}
-                  enableSlices="x"
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <Grid item xs={12} md={6}>
+              <Card className={styles.infoCard}>
+                <CardContent>
+                  <Typography variant="h6" className={styles.cardTitle}>
+                    Распределение зарплат
+                  </Typography>
+                  <Box className={styles.chartContainer}>
+                    {salaryDistributionData.length > 0 ? (
+                      <ResponsiveLine
+                        data={[
+                          {
+                            id: "зарплаты",
+                            color: "#800000",
+                            data: salaryDistributionData,
+                          },
+                        ]}
+                        margin={{ top: 50, right: 50, bottom: 70, left: 60 }}
+                        xScale={{ type: "point" }}
+                        yScale={{
+                          type: "linear",
+                          min: 0,
+                          max: "auto",
+                          stacked: false,
+                          reverse: false,
+                        }}
+                        curve="monotoneX"
+                        axisTop={null}
+                        axisRight={null}
+                        axisBottom={{
+                          orient: "bottom",
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 45,
+                          legend: "Уровень зарплаты",
+                          legendOffset: 50,
+                          legendPosition: "middle",
+                        }}
+                        axisLeft={{
+                          orient: "left",
+                          tickSize: 5,
+                          tickPadding: 5,
+                          tickRotation: 0,
+                          legend: "Количество должностей",
+                          legendOffset: -50,
+                          legendPosition: "middle",
+                        }}
+                        colors={["#800000"]}
+                        pointSize={10}
+                        pointColor={{ theme: "background" }}
+                        pointBorderWidth={2}
+                        pointBorderColor={{ from: "serieColor" }}
+                        pointLabelYOffset={-12}
+                        areaBaselineValue={0}
+                        enableArea={true}
+                        areaOpacity={0.15}
+                        useMesh={true}
+                        enableSlices="x"
+                      />
+                    ) : (
+                      <Box
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        height="100%"
+                      >
+                        <Typography>
+                          Недостаточно данных для отображения графика
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </>
+        )}
       </Grid>
 
       <Box className={styles.salarySearch}>
@@ -399,7 +484,7 @@ const CompanySalariesPage = () => {
           <TextField
             placeholder="Поиск по должности..."
             value={positionSearch}
-            onChange={(e) => setPositionSearch(e.target.value)}
+            onChange={handlePositionSearchChange}
             variant="outlined"
             className={styles.searchInput}
             InputProps={{
@@ -415,7 +500,9 @@ const CompanySalariesPage = () => {
             </Typography>
             <Select
               value={experienceFilter}
-              onValueChange={(value) => setExperienceFilter(value)}
+              onValueChange={(value: ExperienceFilter) =>
+                handleExperienceFilterChange(value)
+              }
             >
               <SelectTrigger className={styles.selectTrigger}>
                 <SelectValue placeholder="Выберите уровень" />
@@ -425,6 +512,7 @@ const CompanySalariesPage = () => {
                 <SelectItem value="entry">Начальный уровень</SelectItem>
                 <SelectItem value="mid">Средний уровень</SelectItem>
                 <SelectItem value="senior">Старший уровень</SelectItem>
+                <SelectItem value="executive">Руководитель</SelectItem>
               </SelectContent>
             </Select>
           </Box>
@@ -435,7 +523,9 @@ const CompanySalariesPage = () => {
             </Typography>
             <Select
               value={sortOption}
-              onValueChange={(value) => setSortOption(value)}
+              onValueChange={(value: "highest" | "lowest") =>
+                handleSortChange(value)
+              }
             >
               <SelectTrigger className={styles.selectTrigger}>
                 <SelectValue placeholder="Сортировка" />
@@ -450,14 +540,40 @@ const CompanySalariesPage = () => {
 
         <Box className={styles.resultsCount}>
           <Typography variant="body2">
-            Найдено {filteredSalaries.length} результатов
+            {loading.salaries ? (
+              <Skeleton className="h-4 w-40" />
+            ) : (
+              `Найдено ${salaryData?.totalSalaries || 0} результатов`
+            )}
           </Typography>
         </Box>
       </Box>
 
       <Box className={styles.salariesList}>
-        {currentSalaries.length > 0 ? (
-          currentSalaries.map((salary, index) => (
+        {loading.salaries ? (
+          Array(3)
+            .fill(0)
+            .map((_, index) => (
+              <Card key={index} className={styles.salaryCard}>
+                <CardContent>
+                  <Skeleton className="h-6 w-64 mb-4" />
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={4}>
+                      <Skeleton className="h-16 w-full" />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Skeleton className="h-16 w-full" />
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Skeleton className="h-16 w-full" />
+                    </Grid>
+                  </Grid>
+                  <Skeleton className="h-8 w-full mt-4" />
+                </CardContent>
+              </Card>
+            ))
+        ) : filteredSalaries.length > 0 ? (
+          filteredSalaries.map((salary, index) => (
             <Card key={index} className={styles.salaryCard}>
               <CardContent className={styles.salaryContent}>
                 <Box className={styles.salaryHeader}>
@@ -486,7 +602,7 @@ const CompanySalariesPage = () => {
                         Средняя зарплата
                       </Typography>
                       <Typography variant="h6" className={styles.salaryValue}>
-                        ${salary.median.toLocaleString()}
+                        ₸{salary.median.toLocaleString()}
                       </Typography>
                     </Box>
                   </Grid>
@@ -503,7 +619,7 @@ const CompanySalariesPage = () => {
                         variant="body1"
                         className={styles.salaryRange}
                       >
-                        ${salary.min.toLocaleString()} - $
+                        ₸{salary.min.toLocaleString()} - ₸
                         {salary.max.toLocaleString()}
                       </Typography>
                     </Box>
@@ -518,7 +634,7 @@ const CompanySalariesPage = () => {
                         Дополнительные выплаты
                       </Typography>
                       <Typography variant="body1" className={styles.bonusValue}>
-                        ${salary.additionalPay.toLocaleString()}
+                        ₸{salary.additionalPay.toLocaleString()}
                       </Typography>
                     </Box>
                   </Grid>
@@ -549,10 +665,10 @@ const CompanySalariesPage = () => {
                   </Box>
                   <Box className={styles.rangeLabels}>
                     <Typography variant="caption" className={styles.minLabel}>
-                      ${salary.min.toLocaleString()}
+                      ₸{salary.min.toLocaleString()}
                     </Typography>
                     <Typography variant="caption" className={styles.maxLabel}>
-                      ${salary.max.toLocaleString()}
+                      ₸{salary.max.toLocaleString()}
                     </Typography>
                   </Box>
                 </Box>
@@ -570,11 +686,12 @@ const CompanySalariesPage = () => {
         <div className={styles.pagination}>
           {Array.from({ length: totalPages }, (_, i) => (
             <Button
-              key={i + 1}
-              variant={page === i + 1 ? "default" : "outline"}
+              key={i}
+              variant={page === i ? "default" : "outline"}
               size="sm"
-              onClick={() => handleChangePage(i + 1)}
+              onClick={() => handleChangePage(i)}
               className={styles.paginationBtn}
+              data-state={page === i ? "on" : "off"}
             >
               {i + 1}
             </Button>

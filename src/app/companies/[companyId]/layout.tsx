@@ -27,12 +27,13 @@ export default function CompanyLayout({
 
   useEffect(() => {
     if (companyId) {
+      // Fetch company overview when the layout loads
       fetchOverview(companyId);
     }
 
     // Cleanup function
     return () => {
-      // You can add cleanup if needed
+      // Any cleanup if needed
     };
   }, [companyId, fetchOverview]);
 
@@ -149,4 +150,3 @@ export default function CompanyLayout({
     </div>
   );
 }
-
