@@ -1,4 +1,3 @@
-// src/components/layout/header/Header.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -43,6 +42,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [noResultsFound, setNoResultsFound] = useState(false);
   const searchResultsRef = useRef(null);
   const { user, isAuthenticated, logoutUser } = useAuth();
   const pathname = usePathname();
@@ -86,15 +86,29 @@ export default function Header() {
   const handleSearchChange = async (e) => {
     const value = e.target.value;
     setSearchValue(value);
+    setNoResultsFound(false);
 
-    if (value.trim().length > 2) {
+    if (value.trim().length > 0) {
       try {
         const response = await searchAPI.searchCompanies(value);
-        setSearchResults(response.content || []);
-        setShowResults(true);
+
+        if (
+          response.data &&
+          response.data.content &&
+          response.data.content.length > 0
+        ) {
+          setSearchResults(response.data.content);
+          setShowResults(true);
+          setNoResultsFound(false);
+        } else {
+          setSearchResults([]);
+          setShowResults(true);
+          setNoResultsFound(true);
+        }
       } catch (error) {
         console.error("Error searching companies:", error);
         setSearchResults([]);
+        setShowResults(false);
       }
     } else {
       setSearchResults([]);
@@ -116,6 +130,7 @@ export default function Header() {
     router.push(`/companies/${companyId}`);
     setSearchValue("");
     setShowResults(false);
+    closeDrawer();
   };
 
   return (
@@ -140,33 +155,35 @@ export default function Header() {
                 className={styles.searchInput}
               />
 
-              {showResults && searchResults.length > 0 && (
+              {showResults && (
                 <div
                   className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-60 overflow-y-auto"
                   ref={searchResultsRef}
                 >
-                  {searchResults.map((company) => (
-                    <div
-                      key={company.id}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                      onClick={() => handleCompanySelect(company.id)}
-                    >
-                      {company.logoUrl && (
-                        <img
-                          src={company.logoUrl}
-                          alt={company.name}
-                          className="w-6 h-6 mr-2 object-contain"
-                        />
-                      )}
-                      <span>{company.name}</span>
+                  {noResultsFound ? (
+                    <div className="px-4 py-3 text-gray-500">
+                      Компания с названием "{searchValue}" не найдена
                     </div>
-                  ))}
+                  ) : (
+                    searchResults.map((company) => (
+                      <div
+                        key={company.id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                        onClick={() => handleCompanySelect(company.id)}
+                      >
+                        {company.logoUrl && (
+                          <img
+                            src={company.logoUrl}
+                            alt={company.name}
+                            className="w-6 h-6 mr-2 object-contain"
+                          />
+                        )}
+                        <span>{company.name}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
-
-              <Button type="submit" size="sm" className={styles.searchButton}>
-                Найти
-              </Button>
             </form>
           </div>
 

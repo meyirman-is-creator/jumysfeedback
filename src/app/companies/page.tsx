@@ -1,4 +1,3 @@
-// src/app/companies/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -55,7 +54,10 @@ const CompaniesPage = () => {
   const [locationSearchValue, setLocationSearchValue] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [showLocationResults, setShowLocationResults] = useState(false);
-  const [locationSearchResults, setLocationSearchResults] = useState<string[]>([]);
+  const [locationSearchResults, setLocationSearchResults] = useState<any[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     if (companies?.length === 0 && !loading) {
@@ -92,20 +94,16 @@ const CompaniesPage = () => {
   const handleLocationSearchChange = async (e) => {
     const value = e.target.value;
     setLocationSearchValue(value);
-    
-    if (value.trim().length > 2) {
+
+    if (value.trim().length > 0) {
       try {
         const response = await searchAPI.searchLocations(value);
-        setLocationSearchResults(response || []);
+        setLocationSearchResults(response.data || []);
         setShowLocationResults(true);
       } catch (error) {
         console.error("Error searching locations:", error);
         setLocationSearchResults([]);
-        // Fallback to filtering existing options if API fails
-        const filtered = locationOptions.filter(loc => 
-          loc.toLowerCase().includes(value.toLowerCase())
-        );
-        setLocationSearchResults(filtered);
+        setShowLocationResults(false);
       }
     } else {
       setLocationSearchResults([]);
@@ -114,8 +112,12 @@ const CompaniesPage = () => {
   };
 
   const handleLocationSelect = (location) => {
-    updateFilters({ location });
-    setLocationSearchValue("");
+    setSelectedLocationId(location.id);
+    updateFilters({
+      location: location.locationValue,
+      locationId: location.id,
+    });
+    setLocationSearchValue(location.locationValue);
     setShowLocationResults(false);
   };
 
@@ -146,7 +148,8 @@ const CompaniesPage = () => {
 
   const removeFilter = (filter: string) => {
     if (filter.startsWith("Локация:")) {
-      updateFilters({ location: "" });
+      updateFilters({ location: "", locationId: null });
+      setSelectedLocationId(null);
     } else if (filter.startsWith("Отрасль:")) {
       updateFilters({ industry: "" });
     } else if (filter.includes("★")) {
@@ -160,6 +163,7 @@ const CompaniesPage = () => {
     resetAllFilters();
     setSearchInput("");
     setLocationSearchValue("");
+    setSelectedLocationId(null);
   };
 
   const renderRating = (rating: number) => {
@@ -252,53 +256,35 @@ const CompaniesPage = () => {
               <h3 className={styles.filterSectionTitle}>Локация</h3>
               <div className="relative mb-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <Input 
-                    type="text" 
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
+                  <Input
+                    type="text"
                     placeholder="Поиск локаций..."
                     value={locationSearchValue}
                     onChange={handleLocationSearchChange}
                     className="pl-10 pr-4 py-2 w-full border rounded"
                   />
                 </div>
-                
+
                 {showLocationResults && locationSearchResults.length > 0 && (
                   <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                    {locationSearchResults.map((location, idx) => (
-                      <div 
-                        key={idx}
+                    {locationSearchResults.map((location) => (
+                      <div
+                        key={location.id}
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         onClick={() => handleLocationSelect(location)}
                       >
-                        {location}
+                        {location.locationValue}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              
-              <Select
-                value={filters.location || "all"}
-                onValueChange={handleLocationChange}
-              >
-                <SelectTrigger className={styles.filterSelect}>
-                  <SelectValue placeholder="Выберите локацию" />
-                </SelectTrigger>
-                <SelectContent className={styles.filterSelectContent}>
-                  <SelectItem className={styles.filterSelectItem} value="all">
-                    Все локации
-                  </SelectItem>
-                  {locationOptions.map((location) => (
-                    <SelectItem 
-                      key={location} 
-                      className={styles.filterSelectItem} 
-                      value={location}
-                    >
-                      {location}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+             
             </div>
 
             <div className={styles.filterSection}>
