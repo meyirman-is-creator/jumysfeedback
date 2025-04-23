@@ -29,6 +29,7 @@ import {
   LogOut,
   Building,
   BarChart2,
+  Loader2,
 } from "lucide-react";
 import styles from "./Header.module.scss";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +44,7 @@ export default function Header() {
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [noResultsFound, setNoResultsFound] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const searchResultsRef = useRef(null);
   const { user, isAuthenticated, logoutUser } = useAuth();
   const pathname = usePathname();
@@ -89,6 +91,7 @@ export default function Header() {
     setNoResultsFound(false);
 
     if (value.trim().length > 0) {
+      setIsSearchLoading(true);
       try {
         const response = await searchAPI.searchCompanies(value);
 
@@ -109,6 +112,8 @@ export default function Header() {
         console.error("Error searching companies:", error);
         setSearchResults([]);
         setShowResults(false);
+      } finally {
+        setIsSearchLoading(false);
       }
     } else {
       setSearchResults([]);
@@ -154,6 +159,12 @@ export default function Header() {
                 onChange={handleSearchChange}
                 className={styles.searchInput}
               />
+
+              {isSearchLoading && (
+                <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                </div>
+              )}
 
               {showResults && (
                 <div

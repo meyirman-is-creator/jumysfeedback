@@ -26,6 +26,7 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
+  Loader2,
 } from "lucide-react";
 import { useCompany } from "@/hooks/useCompany";
 import searchAPI from "@/services/searchAPI";
@@ -58,6 +59,7 @@ const CompaniesPage = () => {
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null
   );
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
 
   useEffect(() => {
     if (companies?.length === 0 && !loading) {
@@ -96,6 +98,7 @@ const CompaniesPage = () => {
     setLocationSearchValue(value);
 
     if (value.trim().length > 0) {
+      setIsLocationLoading(true);
       try {
         const response = await searchAPI.searchLocations(value);
         setLocationSearchResults(response.data || []);
@@ -104,6 +107,8 @@ const CompaniesPage = () => {
         console.error("Error searching locations:", error);
         setLocationSearchResults([]);
         setShowLocationResults(false);
+      } finally {
+        setIsLocationLoading(false);
       }
     } else {
       setLocationSearchResults([]);
@@ -267,6 +272,11 @@ const CompaniesPage = () => {
                     onChange={handleLocationSearchChange}
                     className="pl-10 pr-4 py-2 w-full border rounded"
                   />
+                  {isLocationLoading && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                    </div>
+                  )}
                 </div>
 
                 {showLocationResults && locationSearchResults.length > 0 && (
@@ -283,8 +293,6 @@ const CompaniesPage = () => {
                   </div>
                 )}
               </div>
-
-             
             </div>
 
             <div className={styles.filterSection}>
