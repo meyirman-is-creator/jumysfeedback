@@ -12,16 +12,15 @@ import {
   selectSalaryStatisticsLoading,
   selectSalaryStatisticsError,
 } from "@/features/salaryStatistics/salaryStatisticsSlice";
-import SalaryOverview from "./components/SalaryOverview";
 import SalaryBreakdown from "./components/SalaryBreakdown";
 import CareerTrajectory from "./components/CareerTrajectory";
-import TopCompanies from "./components/TopCompanies";
 import SalaryList from "./components/SalaryList";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from "lucide-react";
 import searchAPI from "@/services/searchAPI";
 import styles from "./Salaries.module.scss";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SalaryData {
   minSalary: number;
@@ -44,6 +43,7 @@ export default function SalariesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
+  const { toast } = useToast();
 
   const jobId = searchParams.get("jobId");
   const locationId = searchParams.get("locationId");
@@ -79,11 +79,17 @@ export default function SalariesPage() {
   // If no jobId or locationId, redirect to home
   useEffect(() => {
     if (!jobId || !locationId) {
-      router.push("/?tab=1");
+      toast({
+        title: "Выберите должность и локацию",
+        description:
+          "Для просмотра информации о зарплатах необходимо выбрать должность и локацию",
+        variant: "destructive",
+      });
+      router.push("/?tab=2");
     } else {
       dispatch(fetchSalaryStatistics({ jobId, locationId }));
     }
-  }, [jobId, locationId, router, dispatch]);
+  }, [jobId, locationId, router, dispatch, toast]);
 
   // Job search
   useEffect(() => {
@@ -251,7 +257,7 @@ export default function SalariesPage() {
 
               <Button
                 onClick={handleSearch}
-                className="h-10 md:w-auto bg-[#800000] hover:bg-[#660000]"
+                className="h-10 w-full md:w-auto bg-[#800000] hover:bg-[#660000]"
                 disabled={!selectedJob || !selectedLocation}
               >
                 <Search className="h-4 w-4" />
@@ -263,67 +269,59 @@ export default function SalariesPage() {
     );
   }
 
+  // Get data from salaryStats response data
+  const actualData = salaryStats.data || salaryStats;
+
   // Create data structures for components based on API response
   const salaryData: SalaryData = {
-    minSalary: salaryStats.minSalary,
-    maxSalary: salaryStats.maxSalary,
-    medianSalary: salaryStats.medianSalary,
-    totalEstimate: salaryStats.averageSalary,
-    baseEstimate: salaryStats.averageSalary * 0.7, // Approximate
-    additionalEstimate: salaryStats.averageSalary * 0.3, // Approximate
+    minSalary: actualData.minSalary,
+    maxSalary: actualData.maxSalary,
+    medianSalary: actualData.medianSalary,
+    totalEstimate: actualData.averageSalary,
+    baseEstimate: actualData.averageSalary * 0.7, // Approximate
+    additionalEstimate: actualData.averageSalary * 0.3, // Approximate
     basePay: {
-      min: salaryStats.minSalary * 0.7,
-      max: salaryStats.maxSalary * 0.7,
+      min: actualData.minSalary * 0.7,
+      max: actualData.maxSalary * 0.7,
     },
     additionalPay: {
-      min: salaryStats.minSalary * 0.3,
-      max: salaryStats.maxSalary * 0.3,
+      min: actualData.minSalary * 0.3,
+      max: actualData.maxSalary * 0.3,
     },
   };
 
   // Extract experience levels and create trajectory data
   const experienceLevels = Object.keys(
-    salaryStats.salaryByExperienceLevel || {}
+    actualData.salaryByExperienceLevel || {}
   );
-  const trajectoryData = experienceLevels.map((level, index) => {
-    const salary = salaryStats.salaryByExperienceLevel[level];
-    const isCurrentLevel = index === Math.floor(experienceLevels.length / 2);
 
-    return {
-      role: level,
-      salaryRange: `${formatCurrency(salary * 0.9)} - ${formatCurrency(
-        salary * 1.1
-      )}/год`,
-      current: isCurrentLevel,
-    };
-  });
+  // Create trajectoryData only if there are experience levels
+  const trajectoryData =
+    experienceLevels.length > 0
+      ? experienceLevels.map((level, index) => {
+          const salary = actualData.salaryByExperienceLevel[level];
+          const isCurrentLevel =
+            index === Math.floor(experienceLevels.length / 2);
 
-  // Format top companies data based on the employment type distribution
-  const topCompaniesData = Object.entries(
-    salaryStats.employmentTypeDistribution || {}
-  )
-    .slice(0, 4)
-    .map(([companyType, count], index) => ({
-      name: companyType,
-      logo: `https://cdn-icons-png.flaticon.com/512/2721/${
-        2721287 + index
-      }.png`,
-      rating: 4 + Math.random() * 0.5,
-      salaryRange: `${formatCurrency(salaryStats.minSalary)} - ${formatCurrency(
-        salaryStats.maxSalary
-      )}/год`,
-      openJobs: Math.round(Number(count)),
-    }));
+          return {
+            role: level,
+            salaryRange: `${formatCurrency(salary * 0.9)} - ${formatCurrency(
+              salary * 1.1
+            )}/год`,
+            current: isCurrentLevel,
+          };
+        })
+      : [];
 
   // Format related jobs data based on experience level distribution
   const salaryEntries = Object.entries(
-    salaryStats.experienceLevelDistribution || {}
+    actualData.experienceLevelDistribution || {}
   ).map(([level, count], index) => ({
     id: index + 1,
-    company: `${level} ${salaryStats.jobTitle}`,
+    company: `${level} ${actualData.jobTitle}`,
     logo: `https://cdn-icons-png.flaticon.com/512/5954/${5954315 + index}.png`,
     salary: formatCurrency(
-      salaryStats.salaryByExperienceLevel[level] || salaryStats.medianSalary
+      actualData.salaryByExperienceLevel[level] || actualData.medianSalary
     ),
     verified: Math.random() > 0.3,
   }));
@@ -331,10 +329,8 @@ export default function SalariesPage() {
   function formatCurrency(amount: number) {
     const formatter = new Intl.NumberFormat("ru-RU", {
       style: "currency",
-      currency: salaryStats.currency || "KZT",
+      currency: actualData.currency || "KZT",
       maximumFractionDigits: 0,
-      notation: "compact",
-      compactDisplay: "short",
     });
     return formatter.format(amount);
   }
@@ -343,7 +339,7 @@ export default function SalariesPage() {
     <Container maxWidth="lg" className={styles.salariesContainer}>
       <Box className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <Typography variant="h4" className={styles.pageTitle}>
-          Зарплаты {salaryStats.jobTitle}
+          Зарплаты {actualData.jobTitle}
         </Typography>
 
         <Box className="flex flex-col md:flex-row gap-3 w-full md:w-auto mt-4 md:mt-0">
@@ -423,20 +419,19 @@ export default function SalariesPage() {
         </Box>
       </Box>
 
-      <SalaryOverview data={salaryData} position={salaryStats.jobTitle} />
 
       <SalaryBreakdown data={salaryData} />
 
       {trajectoryData.length > 0 && <CareerTrajectory data={trajectoryData} />}
 
-      {topCompaniesData.length > 0 && <TopCompanies data={topCompaniesData} />}
-
-      <Box className={styles.relatedSection}>
-        <Typography variant="h5" className={styles.sectionTitle}>
-          Зарплаты для смежных должностей
-        </Typography>
-        <SalaryList data={salaryEntries} />
-      </Box>
+      {salaryEntries.length > 0 && (
+        <Box className={styles.relatedSection}>
+          <Typography variant="h5" className={styles.sectionTitle}>
+            Зарплаты для смежных должностей
+          </Typography>
+          <SalaryList data={salaryEntries} />
+        </Box>
+      )}
     </Container>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams,useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
@@ -14,17 +14,28 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import styles from "./CompanyStockes.module.scss";
+import { useToast } from "@/components/ui/use-toast";
 
 const CompanyStocksPage = () => {
   const { companyId } = useParams() as { companyId: string };
-  const { stocks, loading, error, fetchStocks } = useCompanyDetails();
-
+  const {overview, stocks, loading, error, fetchStocks } = useCompanyDetails();
+  const {toast} = useToast();
+  const router = useRouter();
   useEffect(() => {
     if (companyId && !stocks) {
       fetchStocks(companyId);
     }
   }, [companyId, stocks, fetchStocks]);
-
+  useEffect(() => {
+    if (overview && overview.type === "ТОО") {
+      toast({
+        title: "Компания не публичная",
+        description: "У непубличных компаний нет акций для просмотра",
+        variant: "destructive",
+      });
+      router.push(`/companies/${companyId}`);
+    }
+  }, [overview, companyId, router, toast]);
   const prepareHistoricalData = () => {
     if (!stocks || !stocks.historicalData) return [];
 

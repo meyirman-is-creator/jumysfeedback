@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCompanyDetails } from "@/hooks/useCompanyDetails";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function CompanyLayout({
   children,
@@ -22,6 +23,7 @@ export default function CompanyLayout({
   const segments = useSelectedLayoutSegments();
   const companyId =
     typeof params.companyId === "string" ? params.companyId : "";
+  const { toast } = useToast();
 
   const { overview, loading, error, fetchOverview } = useCompanyDetails();
 
@@ -37,17 +39,34 @@ export default function CompanyLayout({
     };
   }, [companyId, fetchOverview]);
 
+  // Redirect if accessing stocks page for a non-public company
+  useEffect(() => {
+    if (overview && overview.type === "ТОО" && segments[0] === "stocks") {
+      toast({
+        title: "Компания не публичная",
+        description: "У непубличных компаний нет акций для просмотра",
+        variant: "destructive",
+      });
+      router.push(`/companies/${companyId}`);
+    }
+  }, [overview, segments, companyId, router, toast]);
+
   const handleAddReview = () => {
     router.push("/profile/add");
   };
 
+  // Filter out the "Акции" tab if the company is a "ТОО"
   const tabs = [
     { label: "Обзор", path: "" },
     { label: "Отзывы", path: "reviews" },
     { label: "Зарплаты", path: "salaries" },
     { label: "Налоги", path: "taxes" },
-    { label: "Акции", path: "stocks" },
   ];
+
+  // Only add the Stocks tab if company is not a ТОО
+  if (!overview || overview.type !== "ТОО") {
+    tabs.push({ label: "Акции", path: "stocks" });
+  }
 
   const isActiveTab = (tabPath: string) => {
     return (!tabPath && !segments[0]) || segments[0] === tabPath;
@@ -114,6 +133,11 @@ export default function CompanyLayout({
               <p className="text-[black] font-medium text-sm">
                 {overview.location}
               </p>
+              {overview.type && (
+                <p className="text-gray-700 text-sm">
+                  Тип компании: {overview.type}
+                </p>
+              )}
             </div>
             <div className="md:w-auto w-full flex">
               <Button

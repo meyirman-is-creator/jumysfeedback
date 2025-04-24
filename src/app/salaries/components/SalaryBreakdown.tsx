@@ -1,3 +1,4 @@
+// src/app/salaries/components/SalaryBreakdown.tsx
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,14 +20,17 @@ interface SalaryBreakdownProps {
 
 export default function SalaryBreakdown({ data }: SalaryBreakdownProps) {
   const formatK = (amount: number) => {
-    return Math.round(amount / 1000) + "K";
+    return new Intl.NumberFormat("ru-RU", {
+      maximumFractionDigits: 0,
+      notation: "compact",
+    }).format(amount);
   };
 
   return (
     <Card className={styles.breakdownCard}>
       <CardContent className={styles.cardContent}>
         <Typography variant="h6" className={styles.title}>
-          Pay breakdown
+          Структура оплаты
         </Typography>
 
         <Separator className={styles.separator} />
@@ -34,10 +38,10 @@ export default function SalaryBreakdown({ data }: SalaryBreakdownProps) {
         <Box className={styles.breakdownItem}>
           <Box className={styles.breakdownHeader}>
             <Typography variant="subtitle1" className={styles.breakdownLabel}>
-              Base pay
+              Базовая оплата
             </Typography>
             <Typography variant="body1" className={styles.breakdownRange}>
-              ${formatK(data.basePay.min)} - ${formatK(data.basePay.max)}/yr
+              {formatK(data.basePay.min)} - {formatK(data.basePay.max)} ₸/год
             </Typography>
           </Box>
           <Box className={styles.rangeBar}>
@@ -48,11 +52,11 @@ export default function SalaryBreakdown({ data }: SalaryBreakdownProps) {
         <Box className={styles.breakdownItem}>
           <Box className={styles.breakdownHeader}>
             <Typography variant="subtitle1" className={styles.breakdownLabel}>
-              Additional pay
+              Дополнительная оплата
             </Typography>
             <Typography variant="body1" className={styles.breakdownRange}>
-              ${formatK(data.additionalPay.min)} - $
-              {formatK(data.additionalPay.max)}/yr
+              {formatK(data.additionalPay.min)} -{" "}
+              {formatK(data.additionalPay.max)} ₸/год
             </Typography>
           </Box>
           <Box className={styles.rangeBar}>
@@ -67,8 +71,8 @@ export default function SalaryBreakdown({ data }: SalaryBreakdownProps) {
 
         <Box className={styles.additionalInfo}>
           <Typography variant="body2" className={styles.additionalText}>
-            Additional pay could include cash bonus, commission, tips, and
-            profit sharing.
+            Дополнительная оплата может включать бонусы, комиссии, чаевые и
+            участие в прибыли.
           </Typography>
         </Box>
       </CardContent>

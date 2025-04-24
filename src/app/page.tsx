@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Container,
@@ -29,6 +29,15 @@ import searchAPI from "@/services/searchAPI";
 export default function Home() {
   const [tabValue, setTabValue] = useState(0);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get tab from URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam) {
+      setTabValue(parseInt(tabParam)-1);
+    }
+  }, [searchParams]);
 
   // Search state
   const [jobSearch, setJobSearch] = useState("");
