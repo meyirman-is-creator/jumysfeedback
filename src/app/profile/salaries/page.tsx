@@ -670,7 +670,7 @@ export default function SalariesPage() {
             />
           </div>
 
-          {isAdmin && (
+          {/* {isAdmin && (
             <div className="mt-4">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -704,7 +704,7 @@ export default function SalariesPage() {
                   </p>
                 )}
             </div>
-          )}
+          )} */}
 
           <DialogFooter className="mt-6">
             <Button
@@ -983,14 +983,7 @@ export default function SalariesPage() {
                         <Label htmlFor="verifyContract" className="text-sm">
                           Подтверждаю подлинность трудового договора
                         </Label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={updateVerificationStatus}
-                          className="ml-2 h-8"
-                        >
-                          Сохранить
-                        </Button>
+                        
                       </div>
                     )}
                   </div>

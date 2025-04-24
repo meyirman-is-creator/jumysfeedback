@@ -1,8 +1,8 @@
 // src/app/salaries/components/CareerTrajectory.tsx
 import React from "react";
-import { Box, Typography } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ChevronRight } from "lucide-react";
 import styles from "./CareerTrajectory.module.scss";
 
 interface TrajectoryItem {
@@ -17,12 +17,10 @@ interface CareerTrajectoryProps {
 
 export default function CareerTrajectory({ data }: CareerTrajectoryProps) {
   return (
-    <Box className={styles.trajectoryContainer}>
-      <Typography variant="h5" className={styles.sectionTitle}>
-        Динамика зарплаты по карьере
-      </Typography>
+    <div className={styles.trajectoryContainer}>
+      <h2 className={styles.sectionTitle}>Динамика зарплаты по карьере</h2>
 
-      <Box className={styles.trajectoryCards}>
+      <div className={styles.trajectoryCards}>
         {data.map((item, index) => (
           <Card
             key={index}
@@ -31,22 +29,22 @@ export default function CareerTrajectory({ data }: CareerTrajectoryProps) {
             }`}
           >
             <CardContent className={styles.cardContent}>
-              <Box className={styles.cardHeader}>
+              <div className={styles.cardHeader}>
                 {item.current && (
                   <Badge className={styles.currentBadge}>Текущий</Badge>
                 )}
-                <Typography variant="subtitle1" className={styles.roleTitle}>
-                  {item.role}
-                </Typography>
-              </Box>
-              <Typography variant="body1" className={styles.salary}>
-                {item.salaryRange}
-              </Typography>
+                <p className={styles.roleTitle}>{item.role}</p>
+              </div>
+              <p className={styles.salary}>{item.salaryRange}</p>
             </CardContent>
-            {index < data.length - 1 && <Box className={styles.arrow}>→</Box>}
+            {index < data.length - 1 && (
+              <div className={styles.arrow}>
+                <ChevronRight className="h-5 w-5" />
+              </div>
+            )}
           </Card>
         ))}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

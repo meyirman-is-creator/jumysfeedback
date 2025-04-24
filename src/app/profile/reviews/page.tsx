@@ -152,7 +152,7 @@ export default function ReviewsPage() {
   const handleViewDetails = (review: any) => {
     setSelectedReview(review);
     setAdminComment(""); // Reset comment when opening details
-    setIsVerified(review.hasVerification || false);
+    setIsVerified(review.hasVerification);
     setDetailsDialogOpen(true);
   };
 
@@ -913,30 +913,6 @@ export default function ReviewsPage() {
                       <Eye className="w-4 h-4 mr-2" />
                       Просмотреть документ
                     </Button>
-
-                    {isAdmin && (
-                      <div className="mt-3 flex items-center space-x-2">
-                        <Checkbox
-                          id="verify-contract-details"
-                          checked={isVerified}
-                          onCheckedChange={handleVerificationChange}
-                        />
-                        <label
-                          htmlFor="verify-contract-details"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Подтвердить подлинность трудового договора
-                        </label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={updateVerificationStatus}
-                          className="ml-2 h-8"
-                        >
-                          Сохранить
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 )}
 

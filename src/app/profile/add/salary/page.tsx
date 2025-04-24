@@ -83,7 +83,7 @@ export default function AddSalaryPage() {
     employmentType: "full-time",
     employmentContract: null as File | null,
     salary: "",
-    currency: "USD",
+    currency: "KZT",
     payPeriod: "monthly",
     bonuses: "",
     stockOptions: "",
@@ -171,7 +171,7 @@ export default function AddSalaryPage() {
       employmentType: typeMapping[salary.employmentType] || "full-time",
       employmentContract: null, // Can't prefill file input
       salary: salary.salary ? salary.salary.toString() : "",
-      currency: salary.currency || "USD",
+      currency: salary.currency || "KZT",
       payPeriod: salary.payPeriod || "monthly",
       bonuses: salary.bonuses || "",
       stockOptions: salary.stockOptions || "",

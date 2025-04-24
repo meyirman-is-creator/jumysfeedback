@@ -1,9 +1,7 @@
-// src/app/salaries/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Container, Typography, Box } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store";
 import {
@@ -15,12 +13,13 @@ import {
 import SalaryBreakdown from "./components/SalaryBreakdown";
 import CareerTrajectory from "./components/CareerTrajectory";
 import SalaryList from "./components/SalaryList";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from "lucide-react";
 import searchAPI from "@/services/searchAPI";
 import styles from "./Salaries.module.scss";
 import { useToast } from "@/components/ui/use-toast";
+import { Container } from "@/components/ui/container";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface SalaryData {
   minSalary: number;
@@ -166,29 +165,29 @@ export default function SalariesPage() {
   // If loading or no data yet, show loading state
   if (isLoading || (!salaryStats && !error)) {
     return (
-      <Container maxWidth="lg" className={styles.salariesContainer}>
-        <Box className="flex flex-col items-center justify-center py-12">
+      <div className="w-full min-h-[50vh] flex items-center justify-center py-12">
+        <div className="flex flex-col items-center">
           <Loader2 className="h-12 w-12 animate-spin text-[#800000] mb-4" />
-          <Typography variant="h5">Загрузка данных о зарплатах...</Typography>
-        </Box>
-      </Container>
+          <p className="text-xl font-medium">Загрузка данных о зарплатах...</p>
+        </div>
+      </div>
     );
   }
 
   // If error, show error message
   if (error) {
     return (
-      <Container maxWidth="lg" className={styles.salariesContainer}>
-        <Box className="py-8 text-center">
-          <Typography variant="h5" color="error" className="mb-4">
+      <Container className={styles.salariesContainer}>
+        <div className="py-8 text-center">
+          <h2 className="text-2xl font-semibold text-red-600 mb-4">
             Произошла ошибка при загрузке данных
-          </Typography>
-          <Typography variant="body1">
+          </h2>
+          <p className="mb-8">
             Пожалуйста, попробуйте еще раз или выполните новый поиск
-          </Typography>
+          </p>
 
-          <Box className="mt-8 max-w-xl mx-auto">
-            <Box className="flex flex-col md:flex-row gap-3 mb-6">
+          <div className="max-w-xl mx-auto">
+            <div className="flex flex-col md:flex-row gap-3 mb-6">
               <div className="w-full relative">
                 <Input
                   value={jobSearch}
@@ -260,11 +259,12 @@ export default function SalariesPage() {
                 className="h-10 w-full md:w-auto bg-[#800000] hover:bg-[#660000]"
                 disabled={!selectedJob || !selectedLocation}
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-4 w-4 mr-2" />
+                Поиск
               </Button>
-            </Box>
-          </Box>
-        </Box>
+            </div>
+          </div>
+        </div>
       </Container>
     );
   }
@@ -313,18 +313,18 @@ export default function SalariesPage() {
         })
       : [];
 
-  // Format related jobs data based on experience level distribution
-  const salaryEntries = Object.entries(
-    actualData.experienceLevelDistribution || {}
-  ).map(([level, count], index) => ({
-    id: index + 1,
-    company: `${level} ${actualData.jobTitle}`,
-    logo: `https://cdn-icons-png.flaticon.com/512/5954/${5954315 + index}.png`,
-    salary: formatCurrency(
-      actualData.salaryByExperienceLevel[level] || actualData.medianSalary
-    ),
-    verified: Math.random() > 0.3,
-  }));
+  // Format salaries data for listing
+  const salaryEntries =
+    actualData.salaries?.map((salary) => ({
+      id: salary.id,
+      companyId: salary.companyId,
+      companyName: salary.companyName,
+      companyLogoUrl:
+        salary.companyLogoUrl ||
+        `https://cdn-icons-png.flaticon.com/512/5954/5954315.png`,
+      salary: formatCurrency(salary.salary),
+      verified: salary.hasVerification,
+    })) || [];
 
   function formatCurrency(amount: number) {
     const formatter = new Intl.NumberFormat("ru-RU", {
@@ -336,13 +336,13 @@ export default function SalariesPage() {
   }
 
   return (
-    <Container maxWidth="lg" className={styles.salariesContainer}>
-      <Box className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <Typography variant="h4" className={styles.pageTitle}>
+    <Container className={styles.salariesContainer}>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 md:mb-0">
           Зарплаты {actualData.jobTitle}
-        </Typography>
+        </h1>
 
-        <Box className="flex flex-col md:flex-row gap-3 w-full md:w-auto mt-4 md:mt-0">
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           <div className="w-full md:w-64 relative">
             <Input
               value={jobSearch}
@@ -414,23 +414,23 @@ export default function SalariesPage() {
             className="h-10 w-full md:w-auto bg-[#800000] hover:bg-[#660000]"
             disabled={!selectedJob || !selectedLocation}
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-4 w-4 mr-2 md:mr-0" />
+            <span className="md:hidden">Поиск</span>
           </Button>
-        </Box>
-      </Box>
-
+        </div>
+      </div>
 
       <SalaryBreakdown data={salaryData} />
 
       {trajectoryData.length > 0 && <CareerTrajectory data={trajectoryData} />}
 
       {salaryEntries.length > 0 && (
-        <Box className={styles.relatedSection}>
-          <Typography variant="h5" className={styles.sectionTitle}>
+        <div className={styles.relatedSection}>
+          <h2 className="text-xl font-semibold text-[#800000] mb-4">
             Зарплаты для смежных должностей
-          </Typography>
+          </h2>
           <SalaryList data={salaryEntries} />
-        </Box>
+        </div>
       )}
     </Container>
   );

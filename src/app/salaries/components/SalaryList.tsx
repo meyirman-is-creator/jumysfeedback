@@ -1,6 +1,7 @@
-// src/app/salaries/components/SalaryList.tsx
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -9,17 +10,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
 import styles from "./SalaryList.module.scss";
 
 interface SalaryListItem {
   id: number;
-  company: string;
-  logo: string;
+  companyId: number;
+  companyName: string;
+  companyLogoUrl: string;
   salary: string;
   verified: boolean;
-  companyId?: string; // Optional company ID for linking
 }
 
 interface SalaryListProps {
@@ -27,8 +26,14 @@ interface SalaryListProps {
 }
 
 export default function SalaryList({ data }: SalaryListProps) {
+  const router = useRouter();
+
+  const handleRowClick = (companyId: number) => {
+    router.push(`/companies/${companyId}/salaries`);
+  };
+
   return (
-    <Box className={styles.listContainer}>
+    <div className={styles.listContainer}>
       <Table>
         <TableHeader>
           <TableRow>
@@ -38,39 +43,41 @@ export default function SalaryList({ data }: SalaryListProps) {
         </TableHeader>
         <TableBody>
           {data.map((item) => (
-            <TableRow key={item.id} className={styles.tableRow}>
+            <TableRow
+              key={item.id}
+              className={`${styles.tableRow} cursor-pointer hover:bg-gray-50`}
+              onClick={() => handleRowClick(item.companyId)}
+            >
               <TableCell className={styles.companyCell}>
-                <Box className={styles.companyInfo}>
-                  <Box className={styles.companyLogo}>
+                <div className={styles.companyInfo}>
+                  <div className={styles.companyLogo}>
                     <img
-                      src={item.logo || "/placeholder.png"}
-                      alt={item.company}
+                      src={item.companyLogoUrl || "/placeholder.png"}
+                      alt={item.companyName}
                     />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" className={styles.companyName}>
-                      {item.company}
-                    </Typography>
+                  </div>
+                  <div>
+                    <p className={styles.companyName}>{item.companyName}</p>
                     {item.verified && (
-                      <Badge variant="outline" className={styles.verifiedBadge}>
-                        Проверено
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-600 border-blue-200 text-xs flex items-center gap-1"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        <span>Проверено</span>
                       </Badge>
                     )}
-                  </Box>
-                </Box>
+                  </div>
+                </div>
               </TableCell>
               <TableCell className={styles.salaryCell}>
-                <Link
-                  href={`/salaries/${item.id}`}
-                  className={styles.salaryLink}
-                >
-                  {item.salary}
-                </Link>
+                <span className={styles.salaryText}>{item.salary}</span>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-    </Box>
+    </div>
   );
 }
+

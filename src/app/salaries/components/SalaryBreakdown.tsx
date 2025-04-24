@@ -1,8 +1,8 @@
 // src/app/salaries/components/SalaryBreakdown.tsx
 import React from "react";
-import { Box, Typography } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import styles from "./SalaryBreakdown.module.scss";
 
 interface SalaryBreakdownProps {
@@ -29,52 +29,44 @@ export default function SalaryBreakdown({ data }: SalaryBreakdownProps) {
   return (
     <Card className={styles.breakdownCard}>
       <CardContent className={styles.cardContent}>
-        <Typography variant="h6" className={styles.title}>
-          Структура оплаты
-        </Typography>
+        <h3 className={styles.title}>Структура оплаты</h3>
 
         <Separator className={styles.separator} />
 
-        <Box className={styles.breakdownItem}>
-          <Box className={styles.breakdownHeader}>
-            <Typography variant="subtitle1" className={styles.breakdownLabel}>
-              Базовая оплата
-            </Typography>
-            <Typography variant="body1" className={styles.breakdownRange}>
+        <div className={styles.breakdownItem}>
+          <div className={styles.breakdownHeader}>
+            <p className={styles.breakdownLabel}>Базовая оплата</p>
+            <p className={styles.breakdownRange}>
               {formatK(data.basePay.min)} - {formatK(data.basePay.max)} ₸/год
-            </Typography>
-          </Box>
-          <Box className={styles.rangeBar}>
-            <Box className={styles.rangeInner}></Box>
-          </Box>
-        </Box>
+            </p>
+          </div>
+          <div className="mt-2">
+            <Progress value={100} className="h-2" />
+          </div>
+        </div>
 
-        <Box className={styles.breakdownItem}>
-          <Box className={styles.breakdownHeader}>
-            <Typography variant="subtitle1" className={styles.breakdownLabel}>
-              Дополнительная оплата
-            </Typography>
-            <Typography variant="body1" className={styles.breakdownRange}>
+        <div className={styles.breakdownItem}>
+          <div className={styles.breakdownHeader}>
+            <p className={styles.breakdownLabel}>Дополнительная оплата</p>
+            <p className={styles.breakdownRange}>
               {formatK(data.additionalPay.min)} -{" "}
               {formatK(data.additionalPay.max)} ₸/год
-            </Typography>
-          </Box>
-          <Box className={styles.rangeBar}>
-            <Box
-              className={styles.rangeInner}
-              style={{
-                width: `${(data.additionalPay.max / data.basePay.max) * 100}%`,
-              }}
-            ></Box>
-          </Box>
-        </Box>
+            </p>
+          </div>
+          <div className="mt-2">
+            <Progress
+              value={(data.additionalPay.max / data.basePay.max) * 100}
+              className="h-2"
+            />
+          </div>
+        </div>
 
-        <Box className={styles.additionalInfo}>
-          <Typography variant="body2" className={styles.additionalText}>
+        <div className={styles.additionalInfo}>
+          <p className={styles.additionalText}>
             Дополнительная оплата может включать бонусы, комиссии, чаевые и
             участие в прибыли.
-          </Typography>
-        </Box>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
