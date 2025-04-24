@@ -1,4 +1,3 @@
-// src/app/profile/add/review/page.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -71,19 +70,19 @@ export default function AddReviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewLoaded, setReviewLoaded] = useState(false);
 
-  // Form state
+  // Form state - updated initial ratings to be 0 instead of 3
   const [formData, setFormData] = useState({
     companyName: "",
     position: "",
     employmentStatus: "current", // 'current' or 'former'
     employmentType: "full-time", // 'full-time', 'part-time', 'contract', etc.
     employmentContract: null as File | null, // To store the uploaded file
-    overallRating: 3,
-    careerOpportunities: 3,
-    workLifeBalance: 3,
-    compensation: 3,
-    jobSecurity: 3,
-    management: 3,
+    overallRating: 0, // Changed from 3 to 0
+    careerOpportunities: 0, // Changed from 3 to 0
+    workLifeBalance: 0, // Changed from 3 to 0
+    compensation: 0, // Changed from 3 to 0
+    jobSecurity: 0, // Changed from 3 to 0
+    management: 0, // Changed from 3 to 0
     title: "",
     body: "", // Main review content
     pros: "",
@@ -170,12 +169,12 @@ export default function AddReviewPage() {
       employmentStatus: statusMapping[review.employmentStatus] || "current",
       employmentType: typeMapping[review.employmentType] || "full-time",
       employmentContract: null, // Can't prefill file input
-      overallRating: review.rating || 3,
-      careerOpportunities: review.careerOpportunities || 3,
-      workLifeBalance: review.workLifeBalance || 3,
-      compensation: review.compensation || 3,
-      jobSecurity: review.jobSecurity || 3,
-      management: review.management || 3,
+      overallRating: review.rating || 0, // Changed from 3 to 0
+      careerOpportunities: review.careerOpportunities || 0, // Changed from 3 to 0
+      workLifeBalance: review.workLifeBalance || 0, // Changed from 3 to 0
+      compensation: review.compensation || 0, // Changed from 3 to 0
+      jobSecurity: review.jobSecurity || 0, // Changed from 3 to 0
+      management: review.management || 0, // Changed from 3 to 0
       title: review.title || "",
       body: review.body || "",
       pros: review.pros || "",
@@ -239,6 +238,7 @@ export default function AddReviewPage() {
     };
   }, [searchCompanies, searchJobs]);
 
+  // Updated validateStep function to validate ratings in step 1
   const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {};
 
@@ -251,12 +251,40 @@ export default function AddReviewPage() {
           newErrors.position = "Выберите должность из списка";
         }
         break;
+      case 1:
+        if (formData.overallRating === 0) {
+          newErrors.overallRating = "Пожалуйста, поставьте общую оценку";
+        }
+        if (formData.careerOpportunities === 0) {
+          newErrors.careerOpportunities =
+            "Пожалуйста, оцените карьерные возможности";
+        }
+        if (formData.workLifeBalance === 0) {
+          newErrors.workLifeBalance =
+            "Пожалуйста, оцените баланс работы и жизни";
+        }
+        if (formData.compensation === 0) {
+          newErrors.compensation = "Пожалуйста, оцените компенсацию";
+        }
+        if (formData.jobSecurity === 0) {
+          newErrors.jobSecurity = "Пожалуйста, оцените стабильность работы";
+        }
+        if (formData.management === 0) {
+          newErrors.management = "Пожалуйста, оцените качество управления";
+        }
+        break;
       case 2:
         if (!formData.title.trim()) {
           newErrors.title = "Добавьте заголовок отзыва";
         }
         if (!formData.body.trim()) {
           newErrors.body = "Добавьте основной текст отзыва";
+        }
+        if (!formData.pros.trim()) {
+          newErrors.pros = "Добавьте плюсы";
+        }
+        if (!formData.cons.trim()) {
+          newErrors.cons = "Добавьте минусы";
         }
         break;
       case 3:
@@ -698,8 +726,15 @@ export default function AddReviewPage() {
                     Оцените свой опыт работы
                   </h2>
 
+                  <p className="text-gray-600 mb-4">
+                    Пожалуйста, оцените следующие аспекты работы, выбрав
+                    соответствующее количество звезд (обязательно)
+                  </p>
+
                   <div className="space-y-2">
-                    <Label>Общая оценка *</Label>
+                    <Label>
+                      Общая оценка <span className="text-red-500">*</span>
+                    </Label>
                     <div className="flex items-center gap-2">
                       <Rating
                         value={formData.overallRating}
@@ -718,6 +753,11 @@ export default function AddReviewPage() {
                         {formData.overallRating} / 5
                       </span>
                     </div>
+                    {errors.overallRating && (
+                      <p className="text-red-500 text-sm">
+                        {errors.overallRating}
+                      </p>
+                    )}
                   </div>
 
                   <Separator className="my-4 bg-[#800000]/10" />
@@ -729,7 +769,8 @@ export default function AddReviewPage() {
                   <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <Label className="min-w-[180px]">
-                        Карьерные возможности
+                        Карьерные возможности{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Rating
                         value={formData.careerOpportunities}
@@ -739,10 +780,16 @@ export default function AddReviewPage() {
                         className="text-xl"
                       />
                     </div>
+                    {errors.careerOpportunities && (
+                      <p className="text-red-500 text-sm">
+                        {errors.careerOpportunities}
+                      </p>
+                    )}
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <Label className="min-w-[180px]">
-                        Баланс работы и личной жизни
+                        Баланс работы и личной жизни{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Rating
                         value={formData.workLifeBalance}
@@ -752,10 +799,16 @@ export default function AddReviewPage() {
                         className="text-xl"
                       />
                     </div>
+                    {errors.workLifeBalance && (
+                      <p className="text-red-500 text-sm">
+                        {errors.workLifeBalance}
+                      </p>
+                    )}
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <Label className="min-w-[180px]">
-                        Компенсация и льготы
+                        Компенсация и льготы{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Rating
                         value={formData.compensation}
@@ -765,10 +818,16 @@ export default function AddReviewPage() {
                         className="text-xl"
                       />
                     </div>
+                    {errors.compensation && (
+                      <p className="text-red-500 text-sm">
+                        {errors.compensation}
+                      </p>
+                    )}
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <Label className="min-w-[180px]">
-                        Стабильность работы
+                        Стабильность работы{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Rating
                         value={formData.jobSecurity}
@@ -778,10 +837,16 @@ export default function AddReviewPage() {
                         className="text-xl"
                       />
                     </div>
+                    {errors.jobSecurity && (
+                      <p className="text-red-500 text-sm">
+                        {errors.jobSecurity}
+                      </p>
+                    )}
 
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                       <Label className="min-w-[180px]">
-                        Качество управления
+                        Качество управления{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Rating
                         value={formData.management}
@@ -791,6 +856,11 @@ export default function AddReviewPage() {
                         className="text-xl"
                       />
                     </div>
+                    {errors.management && (
+                      <p className="text-red-500 text-sm">
+                        {errors.management}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -835,32 +905,40 @@ export default function AddReviewPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="pros">
-                      Плюсы{" "}
-                      <span className="text-gray-400">(необязательно)</span>
+                      Плюсы <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                       id="pros"
                       name="pros"
                       value={formData.pros}
                       onChange={handleChange}
-                      className="min-h-[100px]"
+                      className={`min-h-[100px] ${
+                        errors.pros ? "border-red-500" : ""
+                      }`}
                       placeholder="Что вам нравилось в компании?"
                     />
+                    {errors.pros && (
+                      <p className="text-red-500 text-sm">{errors.pros}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="cons">
-                      Минусы{" "}
-                      <span className="text-gray-400">(необязательно)</span>
+                      Минусы <span className="text-red-500">*</span>
                     </Label>
                     <Textarea
                       id="cons"
                       name="cons"
                       value={formData.cons}
                       onChange={handleChange}
-                      className="min-h-[100px]"
+                      className={`min-h-[100px] ${
+                        errors.cons ? "border-red-500" : ""
+                      }`}
                       placeholder="Что можно было бы улучшить?"
                     />
+                    {errors.cons && (
+                      <p className="text-red-500 text-sm">{errors.cons}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">

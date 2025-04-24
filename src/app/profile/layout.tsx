@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { clearProfileData } from "@/features/profile/profileSlice";
 import { useDispatch } from "react-redux";
 import { useToast } from "@/components/ui/use-toast";
+import { clearAuth } from "@/features/auth/authSlice";
 
 // Track initialization to prevent multiple calls
 let hasCheckedAuth = false;
@@ -35,6 +36,9 @@ export default function ProfileLayout({
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading, logoutUser, initAuth } = useAuth();
   const [isPageLoading, setIsPageLoading] = useState(true);
+
+  // Check if user is admin
+  const isAdmin = user?.role === "ROLE_ADMIN";
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -74,13 +78,13 @@ export default function ProfileLayout({
       active: pathname === "/profile",
     },
     {
-      label: "Мои отзывы",
+      label: isAdmin ? "Модерация отзывов" : "Мои отзывы",
       href: "/profile/reviews",
       icon: <FileText size={20} />,
       active: pathname === "/profile/reviews",
     },
     {
-      label: "Мои зарплаты",
+      label: isAdmin ? "Модерация зарплат" : "Мои зарплаты",
       href: "/profile/salaries",
       icon: <DollarSign size={20} />,
       active: pathname === "/profile/salaries",
@@ -97,11 +101,13 @@ export default function ProfileLayout({
     try {
       await logoutUser();
       dispatch(clearProfileData());
+      dispatch(clearAuth());
       toast({
         title: "Выход выполнен",
         description: "Вы успешно вышли из системы",
       });
-      router.push("/");
+      // Force page refresh after logout
+      window.location.href = "/";
     } catch (error) {
       console.error("Error during logout:", error);
       toast({

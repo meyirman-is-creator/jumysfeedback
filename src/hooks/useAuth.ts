@@ -9,6 +9,7 @@ import {
   resetAuthState,
   updateUserProfile,
   initializeAuth,
+  clearAuth,
 } from "@/features/auth/authSlice";
 import {
   LoginRequest,
@@ -18,6 +19,7 @@ import {
 import apiClient from "@/services/apiClient";
 import { useRouter } from "next/navigation";
 import { clearProfileData } from "@/features/profile/profileSlice";
+import Cookies from "js-cookie";
 
 // Simple tracker to prevent multiple initialization calls
 let authInitialized = false;
@@ -45,7 +47,13 @@ export const useAuth = () => {
   const logoutUser = async () => {
     await dispatch(logout());
     dispatch(clearProfileData());
-    router.push("/");
+    dispatch(clearAuth());
+
+    // Ensure cookies are removed
+    Cookies.remove("accessToken");
+    Cookies.remove("refreshToken");
+
+    return Promise.resolve();
   };
 
   const resetAuth = () => dispatch(resetAuthState());

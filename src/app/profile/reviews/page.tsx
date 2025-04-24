@@ -14,6 +14,8 @@ import {
   XCircle,
   AlertCircle,
   Bot,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -48,6 +50,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
@@ -82,6 +85,11 @@ export default function ReviewsPage() {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [adminComment, setAdminComment] = useState("");
+
+  // New states for document viewing and verification
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
 
   // Get reviews from the store
   const {
@@ -144,6 +152,7 @@ export default function ReviewsPage() {
   const handleViewDetails = (review: any) => {
     setSelectedReview(review);
     setAdminComment(""); // Reset comment when opening details
+    setIsVerified(review.hasVerification || false);
     setDetailsDialogOpen(true);
   };
 
@@ -157,13 +166,43 @@ export default function ReviewsPage() {
     setRejectDialogOpen(true);
   };
 
+  // New function to handle document viewing
+  const handleViewDocument = (url: string) => {
+    // Use direct URL to view in the browser without downloading
+    const viewableUrl = url.includes("?") ? `${url}&view=1` : `${url}?view=1`;
+
+    setDocumentUrl(viewableUrl);
+    setDocumentDialogOpen(true);
+  };
+
+  // New function to handle verification status change
+  const handleVerificationChange = (checked: boolean) => {
+    setIsVerified(checked);
+  };
+
   const confirmApprove = async () => {
+    // If admin and there's a document attached but not verified, show error
+    const selectedReview = (isAdmin ? allReviews : userReviews).find(
+      (r) => r.id.toString() === selectedReviewId
+    );
+
+    if (isAdmin && selectedReview?.contractDocumentUrl && !isVerified) {
+      toast({
+        title: "Требуется верификация",
+        description:
+          "Необходимо подтвердить подлинность трудового договора перед одобрением",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedReviewId) {
       try {
         const data = {
           status: "APPROVED",
           adminComment:
             adminComment.trim() || "Отзыв соответствует правилам сервиса",
+          verified: isAdmin ? isVerified : undefined,
         };
 
         await dispatch(
@@ -174,6 +213,10 @@ export default function ReviewsPage() {
           title: "Отзыв одобрен",
           description: "Отзыв был успешно одобрен",
         });
+
+        setApproveDialogOpen(false);
+        setSelectedReviewId(null);
+        setAdminComment("");
       } catch (error) {
         toast({
           title: "Ошибка",
@@ -182,9 +225,6 @@ export default function ReviewsPage() {
         });
       }
     }
-    setApproveDialogOpen(false);
-    setSelectedReviewId(null);
-    setAdminComment("");
   };
 
   const confirmReject = async () => {
@@ -202,6 +242,7 @@ export default function ReviewsPage() {
         const data = {
           status: "REJECTED",
           adminComment: adminComment,
+          verified: isAdmin ? isVerified : undefined,
         };
 
         await dispatch(
@@ -224,6 +265,43 @@ export default function ReviewsPage() {
     setSelectedReviewId(null);
     setAdminComment("");
   };
+
+  // Function to update verification status from details dialog
+  const updateVerificationStatus = async () => {
+    if (selectedReview && isAdmin) {
+      try {
+        const data = {
+          status: selectedReview.status,
+          adminComment: selectedReview.adminComment || "",
+          verified: isVerified,
+        };
+
+        await dispatch(
+          updateReviewStatus({ reviewId: selectedReview.id.toString(), data })
+        ).unwrap();
+
+        toast({
+          title: "Верификация обновлена",
+          description: isVerified
+            ? "Трудовой договор подтверждён"
+            : "Верификация трудового договора отменена",
+        });
+
+        // Update the local selectedReview to reflect changes
+        setSelectedReview({
+          ...selectedReview,
+          hasVerification: isVerified,
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось обновить статус верификации",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const handleModerate = (reviewId: string, action: "approve" | "reject") => {
     if (action === "approve") {
       handleApproveClick(reviewId);
@@ -233,7 +311,7 @@ export default function ReviewsPage() {
       );
       if (review) {
         setSelectedReview(review);
-        setSelectedReviewId(reviewId); // Add this line
+        setSelectedReviewId(reviewId);
         setRejectDialogOpen(true);
       }
     }
@@ -401,6 +479,18 @@ export default function ReviewsPage() {
                                       </TooltipTrigger>
                                       <TooltipContent>
                                         <p>Есть комментарий от модератора</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                                {review.contractDocumentUrl && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <FileText className="w-4 h-4 text-blue-600" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Прикреплен трудовой договор</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -587,6 +677,32 @@ export default function ReviewsPage() {
             />
           </div>
 
+          {isAdmin && (
+            <div className="mt-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="verify-contract"
+                  checked={isVerified}
+                  onCheckedChange={handleVerificationChange}
+                />
+                <label
+                  htmlFor="verify-contract"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Подтвердить подлинность трудового договора
+                  {selectedReview?.contractDocumentUrl && (
+                    <span className="text-red-500 ml-1">*</span>
+                  )}
+                </label>
+              </div>
+              {selectedReview?.contractDocumentUrl && !isVerified && (
+                <p className="text-red-500 text-xs mt-1 ml-6">
+                  Требуется подтверждение подлинности договора перед одобрением
+                </p>
+              )}
+            </div>
+          )}
+
           <DialogFooter className="mt-6">
             <Button
               variant="outline"
@@ -649,6 +765,22 @@ export default function ReviewsPage() {
             )}
           </div>
 
+          {isAdmin && (
+            <div className="mt-4 flex items-center space-x-2">
+              <Checkbox
+                id="verify-contract-reject"
+                checked={isVerified}
+                onCheckedChange={handleVerificationChange}
+              />
+              <label
+                htmlFor="verify-contract-reject"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Подтвердить подлинность трудового договора
+              </label>
+            </div>
+          )}
+
           <DialogFooter className="mt-6">
             <Button
               variant="outline"
@@ -663,6 +795,44 @@ export default function ReviewsPage() {
             >
               Отклонить
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document viewer dialog */}
+      <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
+        <DialogContent className="sm:max-w-4xl md:max-w-5xl lg:max-w-6xl bg-white max-h-[90vh] p-0">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle>Просмотр трудового договора</DialogTitle>
+          </DialogHeader>
+          <div className="w-full h-[70vh] overflow-hidden bg-gray-100 flex items-center justify-center">
+            {documentUrl ? (
+              <iframe
+                src={documentUrl}
+                className="w-full h-full border-none"
+                title="Трудовой договор"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <div className="text-gray-500">Загрузка документа...</div>
+            )}
+          </div>
+          <DialogFooter className="p-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setDocumentDialogOpen(false)}
+            >
+              Закрыть
+            </Button>
+            {documentUrl && (
+              <Button
+                onClick={() => window.open(documentUrl, "_blank")}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Открыть в новой вкладке
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -716,6 +886,57 @@ export default function ReviewsPage() {
                   <div>
                     <h5 className="font-medium mb-1">Советы руководству</h5>
                     <p className="text-gray-800">{selectedReview.advice}</p>
+                  </div>
+                )}
+
+                {selectedReview.contractDocumentUrl && (
+                  <div className="mt-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      <h5 className="font-medium">Трудовой договор</h5>
+                      {selectedReview.hasVerification && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs bg-blue-50 text-blue-600 border-blue-200"
+                        >
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="mt-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                      onClick={() =>
+                        handleViewDocument(selectedReview.contractDocumentUrl)
+                      }
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Просмотреть документ
+                    </Button>
+
+                    {isAdmin && (
+                      <div className="mt-3 flex items-center space-x-2">
+                        <Checkbox
+                          id="verify-contract-details"
+                          checked={isVerified}
+                          onCheckedChange={handleVerificationChange}
+                        />
+                        <label
+                          htmlFor="verify-contract-details"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Подтвердить подлинность трудового договора
+                        </label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={updateVerificationStatus}
+                          className="ml-2 h-8"
+                        >
+                          Сохранить
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 

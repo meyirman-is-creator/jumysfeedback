@@ -12,6 +12,7 @@ import {
   XCircle,
   FileText,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   fetchUserSalaries,
   fetchAllSalaries,
@@ -68,7 +71,6 @@ export default function SalariesPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useAuth();
 
-  // Determine if user is admin
   const isAdmin = user?.role === "ROLE_ADMIN";
 
   const [currentTab, setCurrentTab] = useState("Все");
@@ -79,8 +81,12 @@ export default function SalariesPage() {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [adminComment, setAdminComment] = useState("");
+  const [verifyContract, setVerifyContract] = useState(false);
 
-  // Get salaries from the store
+  // New states for document viewing
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+
   const {
     userSalaries,
     allSalaries,
@@ -90,7 +96,6 @@ export default function SalariesPage() {
     allSalariesLoaded,
   } = useSelector((state: RootState) => state.salary);
 
-  // Fetch salaries on component mount
   useEffect(() => {
     if (isAdmin) {
       if (!allSalariesLoaded) {
@@ -140,11 +145,35 @@ export default function SalariesPage() {
 
   const handleViewDetails = (salary: any) => {
     setSelectedSalary(salary);
-    setAdminComment(""); // Reset comment when opening details
+    setAdminComment("");
+    setVerifyContract(salary.hasVerification || false);
     setDetailsDialogOpen(true);
   };
 
+  // New function to handle document viewing
+  const handleViewDocument = (url: string) => {
+    // Use direct URL to view in the browser without downloading
+    const viewableUrl = url.includes("?") ? `${url}&view=1` : `${url}?view=1`;
+
+    setDocumentUrl(viewableUrl);
+    setDocumentDialogOpen(true);
+  };
+
   const handleApproveClick = (salaryId: string) => {
+    const salary = (isAdmin ? allSalaries : userSalaries).find(
+      (s) => s.id.toString() === salaryId
+    );
+
+    if (isAdmin && salary?.contractDocumentUrl && !verifyContract) {
+      toast({
+        title: "Требуется верификация",
+        description:
+          "Необходимо подтвердить подлинность трудового договора перед одобрением",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSelectedSalaryId(salaryId);
     setApproveDialogOpen(true);
   };
@@ -155,6 +184,21 @@ export default function SalariesPage() {
   };
 
   const confirmApprove = async () => {
+    // Double check if verification is required
+    const selectedSalary = (isAdmin ? allSalaries : userSalaries).find(
+      (s) => s.id.toString() === selectedSalaryId
+    );
+
+    if (isAdmin && selectedSalary?.contractDocumentUrl && !verifyContract) {
+      toast({
+        title: "Требуется верификация",
+        description:
+          "Необходимо подтвердить подлинность трудового договора перед одобрением",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedSalaryId) {
       try {
         const data = {
@@ -162,6 +206,7 @@ export default function SalariesPage() {
           adminComment:
             adminComment.trim() ||
             "Информация о зарплате соответствует рыночным показателям",
+          verified: isAdmin ? verifyContract : undefined,
         };
 
         await dispatch(
@@ -172,6 +217,10 @@ export default function SalariesPage() {
           title: "Запись одобрена",
           description: "Запись о зарплате была успешно одобрена",
         });
+
+        setApproveDialogOpen(false);
+        setSelectedSalaryId(null);
+        setAdminComment("");
       } catch (error) {
         toast({
           title: "Ошибка",
@@ -180,9 +229,6 @@ export default function SalariesPage() {
         });
       }
     }
-    setApproveDialogOpen(false);
-    setSelectedSalaryId(null);
-    setAdminComment("");
   };
 
   const confirmReject = async () => {
@@ -200,6 +246,7 @@ export default function SalariesPage() {
         const data = {
           status: "REJECTED",
           adminComment: adminComment,
+          verified: isAdmin ? verifyContract : undefined,
         };
 
         await dispatch(
@@ -210,6 +257,10 @@ export default function SalariesPage() {
           title: "Запись отклонена",
           description: "Запись о зарплате была отклонена",
         });
+
+        setRejectDialogOpen(false);
+        setSelectedSalaryId(null);
+        setAdminComment("");
       } catch (error) {
         toast({
           title: "Ошибка",
@@ -218,12 +269,44 @@ export default function SalariesPage() {
         });
       }
     }
-    setRejectDialogOpen(false);
-    setSelectedSalaryId(null);
-    setAdminComment("");
   };
 
-  // Filter salaries based on selected status tab and user role
+  // Function to update verification status from details dialog
+  const updateVerificationStatus = async () => {
+    if (selectedSalary && isAdmin) {
+      try {
+        const data = {
+          status: selectedSalary.approvalStatus,
+          adminComment: selectedSalary.adminComment || "",
+          verified: verifyContract,
+        };
+
+        await dispatch(
+          updateSalaryStatus({ salaryId: selectedSalary.id.toString(), data })
+        ).unwrap();
+
+        toast({
+          title: "Верификация обновлена",
+          description: verifyContract
+            ? "Трудовой договор подтверждён"
+            : "Верификация трудового договора отменена",
+        });
+
+        // Update the local selectedSalary to reflect changes
+        setSelectedSalary({
+          ...selectedSalary,
+          hasVerification: verifyContract,
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось обновить статус верификации",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const getFilteredSalaries = () => {
     const salaries = isAdmin ? allSalaries : userSalaries;
 
@@ -386,13 +469,27 @@ export default function SalariesPage() {
                               {salary.date}
                             </TableCell>
                             <TableCell>
-                              <Badge
-                                variant={getStatusBadgeVariant(
-                                  salary.approvalStatus
+                              <div className="flex items-center gap-1">
+                                <Badge
+                                  variant={getStatusBadgeVariant(
+                                    salary.approvalStatus
+                                  )}
+                                >
+                                  {getStatusDisplay(salary.approvalStatus)}
+                                </Badge>
+                                {salary.contractDocumentUrl && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <FileText className="w-4 h-4 text-blue-600" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Прикреплен трудовой договор</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 )}
-                              >
-                                {getStatusDisplay(salary.approvalStatus)}
-                              </Badge>
+                              </div>
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1">
@@ -470,11 +567,15 @@ export default function SalariesPage() {
                                             <Button
                                               variant="ghost"
                                               size="icon"
-                                              onClick={() =>
+                                              onClick={() => {
+                                                setVerifyContract(
+                                                  salary.hasVerification ||
+                                                    false
+                                                );
                                                 handleApproveClick(
                                                   salary.id.toString()
-                                                )
-                                              }
+                                                );
+                                              }}
                                               className="text-green-600 hover:text-green-700 hover:bg-green-50"
                                             >
                                               <CheckCircle className="w-4 h-4" />
@@ -523,7 +624,6 @@ export default function SalariesPage() {
         ))}
       </Tabs>
 
-      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
@@ -545,7 +645,6 @@ export default function SalariesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Approve confirmation dialog */}
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
@@ -571,6 +670,42 @@ export default function SalariesPage() {
             />
           </div>
 
+          {isAdmin && (
+            <div className="mt-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="verify-contract"
+                  checked={verifyContract}
+                  onCheckedChange={(checked) =>
+                    setVerifyContract(checked as boolean)
+                  }
+                />
+                <label
+                  htmlFor="verify-contract"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Подтвердить подлинность трудового договора
+                  {selectedSalaryId &&
+                    (isAdmin ? allSalaries : userSalaries).find(
+                      (s) => s.id.toString() === selectedSalaryId
+                    )?.contractDocumentUrl && (
+                      <span className="text-red-500 ml-1">*</span>
+                    )}
+                </label>
+              </div>
+              {selectedSalaryId &&
+                (isAdmin ? allSalaries : userSalaries).find(
+                  (s) => s.id.toString() === selectedSalaryId
+                )?.contractDocumentUrl &&
+                !verifyContract && (
+                  <p className="text-red-500 text-xs mt-1 ml-6">
+                    Требуется подтверждение подлинности договора перед
+                    одобрением
+                  </p>
+                )}
+            </div>
+          )}
+
           <DialogFooter className="mt-6">
             <Button
               variant="outline"
@@ -588,7 +723,6 @@ export default function SalariesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Reject dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
@@ -621,6 +755,24 @@ export default function SalariesPage() {
             )}
           </div>
 
+          {isAdmin && (
+            <div className="mt-4 flex items-center space-x-2">
+              <Checkbox
+                id="verify-contract-reject"
+                checked={verifyContract}
+                onCheckedChange={(checked) =>
+                  setVerifyContract(checked as boolean)
+                }
+              />
+              <label
+                htmlFor="verify-contract-reject"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Подтвердить подлинность трудового договора
+              </label>
+            </div>
+          )}
+
           <DialogFooter className="mt-6">
             <Button
               variant="outline"
@@ -639,7 +791,44 @@ export default function SalariesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Salary details dialog */}
+      {/* Document viewer dialog */}
+      <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
+        <DialogContent className="sm:max-w-4xl md:max-w-5xl lg:max-w-6xl bg-white max-h-[90vh] p-0">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle>Просмотр трудового договора</DialogTitle>
+          </DialogHeader>
+          <div className="w-full h-[70vh] overflow-hidden bg-gray-100 flex items-center justify-center">
+            {documentUrl ? (
+              <iframe
+                src={documentUrl}
+                className="w-full h-full border-none"
+                title="Трудовой договор"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <div className="text-gray-500">Загрузка документа...</div>
+            )}
+          </div>
+          <DialogFooter className="p-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setDocumentDialogOpen(false)}
+            >
+              Закрыть
+            </Button>
+            {documentUrl && (
+              <Button
+                onClick={() => window.open(documentUrl, "_blank")}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Открыть в новой вкладке
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         {selectedSalary && (
           <DialogContent className="sm:max-w-md md:max-w-xl bg-white">
@@ -754,29 +943,55 @@ export default function SalariesPage() {
                   <span className="font-medium">{selectedSalary.date}</span>
                 </div>
 
-                {selectedSalary.hasVerification && (
+                {selectedSalary.contractDocumentUrl && (
                   <div className="mt-4 pt-4 border-t">
                     <div className="flex items-center gap-2">
-                      <FileText className="text-green-500" size={18} />
-                      <p className="text-green-600 font-medium">
-                        Данные подтверждены трудовым договором
+                      <FileText className="text-blue-600" size={18} />
+                      <p
+                        className={`font-medium ${
+                          selectedSalary.hasVerification
+                            ? "text-green-600"
+                            : "text-blue-600"
+                        }`}
+                      >
+                        Трудовой договор
+                        {selectedSalary.hasVerification && " (Подтвержден)"}
                       </p>
                     </div>
-                    {isAdmin && selectedSalary.contractDocumentUrl && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-2 ml-8"
-                        onClick={() =>
-                          window.open(
-                            selectedSalary.contractDocumentUrl,
-                            "_blank"
-                          )
-                        }
-                      >
-                        <FileText className="w-4 h-4 mr-2" />
-                        Скачать договор
-                      </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 ml-8"
+                      onClick={() =>
+                        handleViewDocument(selectedSalary.contractDocumentUrl)
+                      }
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Просмотреть договор
+                    </Button>
+
+                    {isAdmin && (
+                      <div className="mt-3 flex items-center space-x-2 ml-8">
+                        <Checkbox
+                          id="verifyContract"
+                          checked={verifyContract}
+                          onCheckedChange={(checked) =>
+                            setVerifyContract(checked as boolean)
+                          }
+                        />
+                        <Label htmlFor="verifyContract" className="text-sm">
+                          Подтверждаю подлинность трудового договора
+                        </Label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={updateVerificationStatus}
+                          className="ml-2 h-8"
+                        >
+                          Сохранить
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -831,6 +1046,18 @@ export default function SalariesPage() {
                   <Button
                     onClick={() => {
                       setDetailsDialogOpen(false);
+                      if (
+                        selectedSalary.contractDocumentUrl &&
+                        !verifyContract
+                      ) {
+                        toast({
+                          title: "Требуется верификация",
+                          description:
+                            "Необходимо подтвердить подлинность трудового договора",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
                       handleApproveClick(selectedSalary.id.toString());
                     }}
                     className="bg-green-600 hover:bg-green-700"

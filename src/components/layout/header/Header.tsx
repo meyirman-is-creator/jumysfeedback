@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Container } from "@/components/ui/container";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import Cookies from "js-cookie";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,8 @@ export default function Header() {
   const pathname = usePathname();
   const { updateFilters } = useCompany();
 
+  const isAdmin = user?.role === "ROLE_ADMIN";
+
   useEffect(() => {
     setMounted(true);
 
@@ -80,9 +83,15 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
-    await logoutUser();
-    closeDrawer();
-    router.push("/auth/login");
+    try {
+      await logoutUser();
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
+      closeDrawer();
+      window.location.href = "/companies";
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
 
   const handleSearchChange = async (e) => {
@@ -254,7 +263,7 @@ export default function Header() {
                         >
                           <DropdownMenuItem>
                             <FileText size={16} className={styles.menuIcon} />
-                            Мои отзывы
+                            {isAdmin ? "Модерация отзывов" : "Мои отзывы"}
                           </DropdownMenuItem>
                         </Link>
                         <Link
@@ -263,7 +272,7 @@ export default function Header() {
                         >
                           <DropdownMenuItem>
                             <DollarSign size={16} className={styles.menuIcon} />
-                            Мои зарплаты
+                            {isAdmin ? "Модерация зарплат" : "Мои зарплаты"}
                           </DropdownMenuItem>
                         </Link>
                         <div className={styles.dropdownDivider}></div>
@@ -381,7 +390,9 @@ export default function Header() {
                         onClick={closeDrawer}
                       >
                         <FileText size={20} />
-                        <span>Мои отзывы</span>
+                        <span>
+                          {isAdmin ? "Модерация отзывов" : "Мои отзывы"}
+                        </span>
                       </Link>
                       <Link
                         href="/profile/salaries"
@@ -393,7 +404,9 @@ export default function Header() {
                         onClick={closeDrawer}
                       >
                         <DollarSign size={20} />
-                        <span>Мои зарплаты</span>
+                        <span>
+                          {isAdmin ? "Модерация зарплат" : "Мои зарплаты"}
+                        </span>
                       </Link>
 
                       <Link href="/profile/add" onClick={closeDrawer}>
