@@ -1,34 +1,181 @@
+// src/app/page.tsx
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Box,
-  Typography,
   Container,
   Grid,
   Tabs,
   Tab,
-  TextField,
-  Button,
+  Typography,
   Card,
-  CardContent,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import {
-  ArrowRight,
+  Search,
   Building2,
   DollarSign,
   FileText,
-  Star,
   TrendingUp,
+  Loader2,
+  Star,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import searchAPI from "@/services/searchAPI";
 
 export default function Home() {
-  const [tabValue, setTabValue] = React.useState(0);
+  const [tabValue, setTabValue] = useState(0);
+  const router = useRouter();
+
+  // Search state
+  const [jobSearch, setJobSearch] = useState("");
+  const [locationSearch, setLocationSearch] = useState("");
+  const [companySearch, setCompanySearch] = useState("");
+
+  const [jobResults, setJobResults] = useState([]);
+  const [locationResults, setLocationResults] = useState([]);
+  const [companyResults, setCompanyResults] = useState([]);
+
+  const [jobLoading, setJobLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [companyLoading, setCompanyLoading] = useState(false);
+
+  const [showJobResults, setShowJobResults] = useState(false);
+  const [showLocationResults, setShowLocationResults] = useState(false);
+  const [showCompanyResults, setShowCompanyResults] = useState(false);
+
+  const [selectedJob, setSelectedJob] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    id: string;
+    locationValue: string;
+  } | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    // Reset search fields when changing tabs
+    setJobSearch("");
+    setLocationSearch("");
+    setCompanySearch("");
+    setSelectedJob(null);
+    setSelectedLocation(null);
+    setSelectedCompany(null);
+  };
+
+  // Job search
+  useEffect(() => {
+    const searchJobs = async () => {
+      if (jobSearch.trim().length < 2) {
+        setJobResults([]);
+        setShowJobResults(false);
+        return;
+      }
+
+      setJobLoading(true);
+      try {
+        const response = await searchAPI.searchJobs(jobSearch);
+        setJobResults(response.data || []);
+        setShowJobResults(true);
+      } catch (error) {
+        console.error("Error searching jobs:", error);
+        setJobResults([]);
+      } finally {
+        setJobLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(searchJobs, 300);
+    return () => clearTimeout(timeoutId);
+  }, [jobSearch]);
+
+  // Location search
+  useEffect(() => {
+    const searchLocations = async () => {
+      if (locationSearch.trim().length < 2) {
+        setLocationResults([]);
+        setShowLocationResults(false);
+        return;
+      }
+
+      setLocationLoading(true);
+      try {
+        const response = await searchAPI.searchLocations(locationSearch);
+        setLocationResults(response.data || []);
+        setShowLocationResults(true);
+      } catch (error) {
+        console.error("Error searching locations:", error);
+        setLocationResults([]);
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(searchLocations, 300);
+    return () => clearTimeout(timeoutId);
+  }, [locationSearch]);
+
+  // Company search
+  useEffect(() => {
+    const searchCompanies = async () => {
+      if (companySearch.trim().length < 2) {
+        setCompanyResults([]);
+        setShowCompanyResults(false);
+        return;
+      }
+
+      setCompanyLoading(true);
+      try {
+        const response = await searchAPI.searchCompanies(companySearch);
+        setCompanyResults(response.data?.content || []);
+        setShowCompanyResults(true);
+      } catch (error) {
+        console.error("Error searching companies:", error);
+        setCompanyResults([]);
+      } finally {
+        setCompanyLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(searchCompanies, 300);
+    return () => clearTimeout(timeoutId);
+  }, [companySearch]);
+
+  const handleJobSelect = (job) => {
+    setSelectedJob(job);
+    setJobSearch(job.title);
+    setShowJobResults(false);
+  };
+
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+    setLocationSearch(location.locationValue);
+    setShowLocationResults(false);
+  };
+
+  const handleCompanySelect = (company) => {
+    setSelectedCompany(company);
+    setCompanySearch(company.name);
+    setShowCompanyResults(false);
+    router.push(`/companies/${company.id}/reviews`);
+  };
+
+  const handleSearch = () => {
+    if (tabValue === 0 && selectedCompany) {
+      router.push(`/companies/${selectedCompany.id}/reviews`);
+    } else if (tabValue === 1 && selectedJob && selectedLocation) {
+      router.push(
+        `/salaries?jobId=${selectedJob.id}&locationId=${selectedLocation.id}`
+      );
+    }
   };
 
   return (
@@ -116,51 +263,158 @@ export default function Home() {
                 gap: 2,
               }}
             >
-              <TextField
-                variant="outlined"
-                placeholder={
-                  tabValue === 0
-                    ? "Название компании"
-                    : tabValue === 1
-                    ? "Должность"
-                    : "Должность или компания"
-                }
-                sx={{
-                  flex: 1,
-                  bgcolor: "white",
-                  borderRadius: 1,
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 1,
-                  },
-                }}
-                fullWidth
-              />
-              <TextField
-                variant="outlined"
-                placeholder="Местоположение"
-                sx={{
-                  flex: 1,
-                  bgcolor: "white",
-                  borderRadius: 1,
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 1,
-                  },
-                }}
-                fullWidth
-              />
+              {tabValue === 0 ? (
+                <div className="w-full relative">
+                  <Input
+                    value={companySearch}
+                    onChange={(e) => setCompanySearch(e.target.value)}
+                    placeholder="Название компании"
+                    className="pl-10 bg-white"
+                  />
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
+
+                  {companyLoading && (
+                    <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                    </div>
+                  )}
+
+                  {showCompanyResults && companyResults.length > 0 && (
+                    <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-60 overflow-y-auto">
+                      {companyResults.map((company) => (
+                        <div
+                          key={company.id}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                          onClick={() => handleCompanySelect(company)}
+                        >
+                          {company.logoUrl && (
+                            <img
+                              src={company.logoUrl}
+                              alt={company.name}
+                              className="w-6 h-6 mr-2 object-contain"
+                            />
+                          )}
+                          <span>{company.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {showCompanyResults &&
+                    companyResults.length === 0 &&
+                    !companyLoading &&
+                    companySearch.length >= 2 && (
+                      <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1">
+                        <div className="px-4 py-3 text-gray-500">
+                          Компания с названием "{companySearch}" не найдена
+                        </div>
+                      </div>
+                    )}
+                </div>
+              ) : (
+                <>
+                  <div className="w-full relative">
+                    <Input
+                      value={jobSearch}
+                      onChange={(e) => setJobSearch(e.target.value)}
+                      placeholder="Должность"
+                      className="pl-10 bg-white"
+                    />
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
+
+                    {jobLoading && (
+                      <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                      </div>
+                    )}
+
+                    {showJobResults && jobResults.length > 0 && (
+                      <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-60 overflow-y-auto">
+                        {jobResults.map((job) => (
+                          <div
+                            key={job.id}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleJobSelect(job)}
+                          >
+                            {job.title}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {showJobResults &&
+                      jobResults.length === 0 &&
+                      !jobLoading &&
+                      jobSearch.length >= 2 && (
+                        <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1">
+                          <div className="px-4 py-3 text-gray-500">
+                            Должность "{jobSearch}" не найдена
+                          </div>
+                        </div>
+                      )}
+                  </div>
+
+                  <div className="w-full relative">
+                    <Input
+                      value={locationSearch}
+                      onChange={(e) => setLocationSearch(e.target.value)}
+                      placeholder="Местоположение"
+                      className="pl-10 bg-white"
+                    />
+                    <Search
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      size={18}
+                    />
+
+                    {locationLoading && (
+                      <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                      </div>
+                    )}
+
+                    {showLocationResults && locationResults.length > 0 && (
+                      <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-60 overflow-y-auto">
+                        {locationResults.map((location) => (
+                          <div
+                            key={location.id}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleLocationSelect(location)}
+                          >
+                            {location.locationValue}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {showLocationResults &&
+                      locationResults.length === 0 &&
+                      !locationLoading &&
+                      locationSearch.length >= 2 && (
+                        <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1">
+                          <div className="px-4 py-3 text-gray-500">
+                            Локация "{locationSearch}" не найдена
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                </>
+              )}
+
               <Button
-                variant="contained"
-                sx={{
-                  height: { xs: 56, md: "auto" },
-                  minWidth: { xs: "100%", md: 56 },
-                  bgcolor: "#004085",
-                  color: "white",
-                  "&:hover": {
-                    bgcolor: "#002752",
-                  },
-                }}
+                onClick={handleSearch}
+                className="h-10 w-full md:w-auto bg-[#800000] hover:bg-[#660000]"
+                disabled={
+                  (tabValue === 0 && !selectedCompany) ||
+                  (tabValue === 1 && (!selectedJob || !selectedLocation))
+                }
               >
-                <SearchIcon />
+                <Search className="h-4 w-4" />
               </Button>
             </Box>
           </Box>
@@ -256,15 +510,7 @@ export default function Home() {
 
           <Box sx={{ textAlign: "center", mt: 4 }}>
             <Link href="/companies" style={{ textDecoration: "none" }}>
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#800000",
-                  "&:hover": { bgcolor: "#a20000" },
-                  px: 4,
-                  py: 1.5,
-                }}
-              >
+              <Button className="bg-[#800000] hover:bg-[#a20000] px-4 py-1.5">
                 Посмотреть все компании
               </Button>
             </Link>
@@ -296,47 +542,13 @@ export default function Home() {
             отзывов, зарплат и вопросов с собеседований
           </Typography>
           <Link href="/auth/register" style={{ textDecoration: "none" }}>
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: "white",
-                color: "#800000",
-                "&:hover": { bgcolor: "#f0f0f0" },
-                px: 4,
-                py: 1.5,
-                fontWeight: 600,
-                fontSize: "1rem",
-              }}
-            >
+            <Button className="bg-white text-[#800000] hover:bg-[#f0f0f0] px-4 py-1.5 font-semibold text-base">
               Зарегистрироваться бесплатно
             </Button>
           </Link>
         </Container>
       </Box>
     </Box>
-  );
-}
-
-// Добавляем интерфейсы для типизации пропсов компонентов
-interface SalaryLinkProps {
-  title: string;
-}
-
-function SalaryLink({ title }: SalaryLinkProps) {
-  return (
-    <Link href="/salaries" style={{ textDecoration: "none" }}>
-      <Typography
-        sx={{
-          color: "#444",
-          "&:hover": {
-            color: "#a20000",
-            textDecoration: "underline",
-          },
-        }}
-      >
-        {title}
-      </Typography>
-    </Link>
   );
 }
 
