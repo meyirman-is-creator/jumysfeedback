@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -41,18 +41,27 @@ interface Company {
   logoUrl?: string;
 }
 
-export default function Home() {
-  const [tabValue, setTabValue] = useState(0);
-  const router = useRouter();
+// Search Params Handler Component
+function SearchParamsHandler({
+  onTabChange,
+}: {
+  onTabChange: (tabValue: number) => void;
+}) {
   const searchParams = useSearchParams();
 
-  // Get tab from URL parameter
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam) {
-      setTabValue(parseInt(tabParam) - 1);
+      onTabChange(parseInt(tabParam) - 1);
     }
-  }, [searchParams]);
+  }, [searchParams, onTabChange]);
+
+  return null;
+}
+
+export default function Home() {
+  const [tabValue, setTabValue] = useState(0);
+  const router = useRouter();
 
   // Search state
   const [jobSearch, setJobSearch] = useState("");
@@ -197,6 +206,11 @@ export default function Home() {
 
   return (
     <Box component="main">
+      {/* Wrap the searchParams with Suspense */}
+      <Suspense fallback={null}>
+        <SearchParamsHandler onTabChange={setTabValue} />
+      </Suspense>
+
       {/* Hero Section */}
       <Box
         sx={{
