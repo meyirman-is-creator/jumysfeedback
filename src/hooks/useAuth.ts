@@ -15,11 +15,19 @@ import {
   LoginRequest,
   SignupRequest,
   VerifyEmailRequest,
+  ProfileData, // Added import for ProfileData type
 } from "@/features/auth/types";
 import apiClient from "@/services/apiClient";
 import { useRouter } from "next/navigation";
 import { clearProfileData } from "@/features/profile/profileSlice";
 import Cookies from "js-cookie";
+
+// Define password update interface if not already defined in types
+interface PasswordUpdateData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
 
 // Simple tracker to prevent multiple initialization calls
 let authInitialized = false;
@@ -58,14 +66,16 @@ export const useAuth = () => {
 
   const resetAuth = () => dispatch(resetAuthState());
 
-  const updateProfile = (profileData) => {
+  // Fixed the type for profileData parameter
+  const updateProfile = (profileData: ProfileData) => {
     if (auth.isAuthenticated) {
       return dispatch(updateUserProfile(profileData));
     }
     return Promise.resolve();
   };
 
-  const updatePassword = async (passwordData) => {
+  // Fixed the type for passwordData parameter
+  const updatePassword = async (passwordData: PasswordUpdateData) => {
     if (auth.isAuthenticated) {
       try {
         const response = await apiClient.post(

@@ -34,6 +34,29 @@ import {
   fetchReviewById,
 } from "@/features/review/reviewSlice";
 
+// Define employment status and type mapping interfaces
+interface StatusMapping {
+  CURRENT_EMPLOYEE: string;
+  FORMER_EMPLOYEE: string;
+  current: string;
+  former: string;
+  [key: string]: string;
+}
+
+interface TypeMapping {
+  FULL_TIME: string;
+  PART_TIME: string;
+  CONTRACT: string;
+  INTERNSHIP: string;
+  FREELANCE: string;
+  "full-time": string;
+  "part-time": string;
+  contract: string;
+  internship: string;
+  freelance: string;
+  [key: string]: string;
+}
+
 export default function AddReviewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -129,7 +152,7 @@ export default function AddReviewPage() {
           });
       }
     }
-  }, [isEditing, reviewId, userReviews, dispatch, reviewLoaded]);
+  }, [isEditing, reviewId, userReviews, dispatch, reviewLoaded, toast]);
 
   // When currentReview changes (after API fetch), prefill the form
   useEffect(() => {
@@ -142,7 +165,7 @@ export default function AddReviewPage() {
   // Helper function to prefill form data from a review
   const prefillFormData = (review: any) => {
     // Map employmentStatus from API to form format
-    const statusMapping = {
+    const statusMapping: StatusMapping = {
       CURRENT_EMPLOYEE: "current",
       FORMER_EMPLOYEE: "former",
       current: "current",
@@ -150,7 +173,7 @@ export default function AddReviewPage() {
     };
 
     // Map employmentType from API to form format
-    const typeMapping = {
+    const typeMapping: TypeMapping = {
       FULL_TIME: "full-time",
       PART_TIME: "part-time",
       CONTRACT: "contract",
@@ -163,11 +186,19 @@ export default function AddReviewPage() {
       freelance: "freelance",
     };
 
+    const employmentStatus = review.employmentStatus
+      ? statusMapping[review.employmentStatus] || "current"
+      : "current";
+
+    const employmentType = review.employmentType
+      ? typeMapping[review.employmentType] || "full-time"
+      : "full-time";
+
     setFormData({
       companyName: review.companyName || "",
       position: review.position || "",
-      employmentStatus: statusMapping[review.employmentStatus] || "current",
-      employmentType: typeMapping[review.employmentType] || "full-time",
+      employmentStatus,
+      employmentType,
       employmentContract: null, // Can't prefill file input
       overallRating: review.rating || 0, // Changed from 3 to 0
       careerOpportunities: review.careerOpportunities || 0, // Changed from 3 to 0
@@ -418,7 +449,6 @@ export default function AddReviewPage() {
         toast({
           title: "Успешно!",
           description: "Ваш отзыв успешно обновлен",
-          variant: "success",
         });
       } else {
         // Create new review
@@ -426,7 +456,6 @@ export default function AddReviewPage() {
         toast({
           title: "Успешно!",
           description: "Ваш отзыв успешно отправлен",
-          variant: "success",
         });
       }
 

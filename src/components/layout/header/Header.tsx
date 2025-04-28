@@ -37,16 +37,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCompany } from "@/hooks/useCompany";
 import searchAPI from "@/services/searchAPI";
 
+// Define interface for company search results
+interface CompanySearchResult {
+  id: string;
+  name: string;
+  logoUrl?: string;
+}
+
 export default function Header() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<CompanySearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [noResultsFound, setNoResultsFound] = useState(false);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
-  const searchResultsRef = useRef(null);
+  const searchResultsRef = useRef<HTMLDivElement>(null);
   const { user, isAuthenticated, logoutUser } = useAuth();
   const pathname = usePathname();
   const { updateFilters } = useCompany();
@@ -56,10 +63,10 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
 
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: MouseEvent) => {
       if (
         searchResultsRef.current &&
-        !searchResultsRef.current.contains(event.target)
+        !searchResultsRef.current.contains(event.target as Node)
       ) {
         setShowResults(false);
       }
@@ -94,7 +101,7 @@ export default function Header() {
     }
   };
 
-  const handleSearchChange = async (e) => {
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchValue(value);
     setNoResultsFound(false);

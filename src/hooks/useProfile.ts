@@ -7,6 +7,7 @@ import {
   updateProfile,
   updatePassword,
 } from "@/features/profile/profileSlice";
+import { ProfileData, PasswordUpdateData } from "@/features/auth/types";
 
 // Track initialization to prevent multiple calls
 let profileInitialized = false;
@@ -29,7 +30,8 @@ export const useProfile = () => {
     return Promise.resolve(profileState.data || user);
   };
 
-  const updateUserProfile = async (data) => {
+  // Added proper type annotation for data parameter
+  const updateUserProfile = async (data: ProfileData) => {
     try {
       const result = await dispatch(updateProfile(data)).unwrap();
       return result;
@@ -39,7 +41,8 @@ export const useProfile = () => {
     }
   };
 
-  const changePassword = async (data) => {
+  // Added proper type annotation for data parameter
+  const changePassword = async (data: PasswordUpdateData) => {
     try {
       const result = await dispatch(updatePassword(data)).unwrap();
       return result;

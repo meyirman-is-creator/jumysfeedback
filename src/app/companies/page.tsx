@@ -32,6 +32,11 @@ import { useCompany } from "@/hooks/useCompany";
 import searchAPI from "@/services/searchAPI";
 import styles from "./CompaniesPage.module.scss";
 
+interface LocationResult {
+  id: number;
+  locationValue: string;
+}
+
 const CompaniesPage = () => {
   const {
     companies,
@@ -55,7 +60,9 @@ const CompaniesPage = () => {
   const [locationSearchValue, setLocationSearchValue] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [showLocationResults, setShowLocationResults] = useState(false);
-  const [locationSearchResults, setLocationSearchResults] = useState<any[]>([]);
+  const [locationSearchResults, setLocationSearchResults] = useState<
+    LocationResult[]
+  >([]);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null
   );
@@ -93,7 +100,9 @@ const CompaniesPage = () => {
     updateFilters({ search: searchInput });
   };
 
-  const handleLocationSearchChange = async (e) => {
+  const handleLocationSearchChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
     setLocationSearchValue(value);
 
@@ -116,7 +125,7 @@ const CompaniesPage = () => {
     }
   };
 
-  const handleLocationSelect = (location) => {
+  const handleLocationSelect = (location: LocationResult) => {
     setSelectedLocationId(location.id);
     updateFilters({
       location: location.locationValue,

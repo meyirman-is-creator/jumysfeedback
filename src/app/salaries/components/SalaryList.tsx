@@ -13,12 +13,12 @@ import {
 import styles from "./SalaryList.module.scss";
 
 interface SalaryListItem {
-  id: number;
-  companyId: number;
+  id: string; // Changed from number to string
+  companyId: string; // Changed from number to string
   companyName: string;
   companyLogoUrl: string;
   salary: string;
-  verified: boolean;
+  verified?: boolean; // Made optional with ?
 }
 
 interface SalaryListProps {
@@ -28,7 +28,7 @@ interface SalaryListProps {
 export default function SalaryList({ data }: SalaryListProps) {
   const router = useRouter();
 
-  const handleRowClick = (companyId: number) => {
+  const handleRowClick = (companyId: string) => { // Changed parameter type from number to string
     router.push(`/companies/${companyId}/salaries`);
   };
 
@@ -80,4 +80,3 @@ export default function SalaryList({ data }: SalaryListProps) {
     </div>
   );
 }
-

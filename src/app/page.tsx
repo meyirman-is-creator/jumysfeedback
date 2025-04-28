@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -26,6 +25,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import searchAPI from "@/services/searchAPI";
 
+interface Job {
+  id: string;
+  title: string;
+}
+
+interface Location {
+  id: string;
+  locationValue: string;
+}
+
+interface Company {
+  id: string;
+  name: string;
+  logoUrl?: string;
+}
+
 export default function Home() {
   const [tabValue, setTabValue] = useState(0);
   const router = useRouter();
@@ -35,7 +50,7 @@ export default function Home() {
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam) {
-      setTabValue(parseInt(tabParam)-1);
+      setTabValue(parseInt(tabParam) - 1);
     }
   }, [searchParams]);
 
@@ -44,9 +59,9 @@ export default function Home() {
   const [locationSearch, setLocationSearch] = useState("");
   const [companySearch, setCompanySearch] = useState("");
 
-  const [jobResults, setJobResults] = useState([]);
-  const [locationResults, setLocationResults] = useState([]);
-  const [companyResults, setCompanyResults] = useState([]);
+  const [jobResults, setJobResults] = useState<Job[]>([]);
+  const [locationResults, setLocationResults] = useState<Location[]>([]);
+  const [companyResults, setCompanyResults] = useState<Company[]>([]);
 
   const [jobLoading, setJobLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
@@ -56,18 +71,11 @@ export default function Home() {
   const [showLocationResults, setShowLocationResults] = useState(false);
   const [showCompanyResults, setShowCompanyResults] = useState(false);
 
-  const [selectedJob, setSelectedJob] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<{
-    id: string;
-    locationValue: string;
-  } | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
+    null
+  );
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -158,19 +166,19 @@ export default function Home() {
     return () => clearTimeout(timeoutId);
   }, [companySearch]);
 
-  const handleJobSelect = (job) => {
+  const handleJobSelect = (job: Job) => {
     setSelectedJob(job);
     setJobSearch(job.title);
     setShowJobResults(false);
   };
 
-  const handleLocationSelect = (location) => {
+  const handleLocationSelect = (location: Location) => {
     setSelectedLocation(location);
     setLocationSearch(location.locationValue);
     setShowLocationResults(false);
   };
 
-  const handleCompanySelect = (company) => {
+  const handleCompanySelect = (company: Company) => {
     setSelectedCompany(company);
     setCompanySearch(company.name);
     setShowCompanyResults(false);

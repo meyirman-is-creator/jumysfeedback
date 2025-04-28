@@ -293,6 +293,8 @@ export default function ProfilePage() {
       await changePassword({
         oldPassword: values.oldPassword,
         newPassword: values.newPassword,
+        confirmPassword:"",
+        currentPassword:""
       });
 
       toast({

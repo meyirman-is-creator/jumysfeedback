@@ -228,8 +228,6 @@ const CompanySalariesPage = () => {
                       modifiers: [["darker", 1.6]],
                     }}
                     animate={true}
-                    motionStiffness={90}
-                    motionDamping={15}
                     tooltip={({ data, value }) => (
                       <div className={styles.tooltip}>
                         <strong>{data.level}</strong>
@@ -426,7 +424,6 @@ const CompanySalariesPage = () => {
                         axisTop={null}
                         axisRight={null}
                         axisBottom={{
-                          orient: "bottom",
                           tickSize: 5,
                           tickPadding: 5,
                           tickRotation: 45,
@@ -435,7 +432,6 @@ const CompanySalariesPage = () => {
                           legendPosition: "middle",
                         }}
                         axisLeft={{
-                          orient: "left",
                           tickSize: 5,
                           tickPadding: 5,
                           tickRotation: 0,

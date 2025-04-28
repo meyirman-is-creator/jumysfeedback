@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import { useParams,useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
@@ -18,8 +18,8 @@ import { useToast } from "@/components/ui/use-toast";
 
 const CompanyStocksPage = () => {
   const { companyId } = useParams() as { companyId: string };
-  const {overview, stocks, loading, error, fetchStocks } = useCompanyDetails();
-  const {toast} = useToast();
+  const { overview, stocks, loading, error, fetchStocks } = useCompanyDetails();
+  const { toast } = useToast();
   const router = useRouter();
   useEffect(() => {
     if (companyId && !stocks) {
@@ -60,7 +60,7 @@ const CompanyStocksPage = () => {
         color: "#336699",
         data: stocks.historicalData.map((item) => ({
           x: item.date,
-          y: Math.round(item.volume / 1000), // Convert to thousands for readability and round
+          y: Math.round(item.volume / 1000),
         })),
       },
     ];
@@ -129,7 +129,6 @@ const CompanyStocksPage = () => {
                   axisTop={null}
                   axisRight={null}
                   axisBottom={{
-                    orient: "bottom",
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 45,
@@ -138,7 +137,6 @@ const CompanyStocksPage = () => {
                     legendPosition: "middle",
                   }}
                   axisLeft={{
-                    orient: "left",
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
@@ -327,7 +325,6 @@ const CompanyStocksPage = () => {
                   axisTop={null}
                   axisRight={null}
                   axisBottom={{
-                    orient: "bottom",
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 45,
@@ -336,7 +333,6 @@ const CompanyStocksPage = () => {
                     legendPosition: "middle",
                   }}
                   axisLeft={{
-                    orient: "left",
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,

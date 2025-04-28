@@ -14,6 +14,7 @@ export interface CompanyOverview {
   founded: string;
   revenue: string;
   mission: string;
+  type: string; // Added the missing type property
   topReview: {
     id: number;
     title: string;

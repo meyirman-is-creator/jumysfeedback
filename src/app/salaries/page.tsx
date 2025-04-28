@@ -38,6 +38,49 @@ interface SalaryData {
   };
 }
 
+// Define types for search results
+interface JobResult {
+  id: string;
+  title: string;
+}
+
+interface LocationResult {
+  id: string;
+  locationValue: string;
+}
+
+// Define type for salary entries
+interface SalaryEntry {
+  id: string;
+  companyId: string;
+  companyName: string;
+  companyLogoUrl?: string;
+  salary: number;
+  hasVerification?: boolean;
+}
+
+// Define type for salary statistics response
+interface SalaryStatistics {
+  data?: {
+    jobTitle: string;
+    minSalary: number;
+    maxSalary: number;
+    medianSalary: number;
+    averageSalary: number;
+    currency: string;
+    salaryByExperienceLevel?: Record<string, number>;
+    salaries?: SalaryEntry[];
+  };
+  jobTitle?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  medianSalary?: number;
+  averageSalary?: number;
+  currency?: string;
+  salaryByExperienceLevel?: Record<string, number>;
+  salaries?: SalaryEntry[];
+}
+
 export default function SalariesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,7 +90,7 @@ export default function SalariesPage() {
   const jobId = searchParams.get("jobId");
   const locationId = searchParams.get("locationId");
 
-  const salaryStats = useSelector(
+  const salaryStats: SalaryStatistics | null = useSelector(
     jobId && locationId ? selectSalaryStatistics(jobId, locationId) : () => null
   );
   const isLoading = useSelector(selectSalaryStatisticsLoading);
@@ -57,8 +100,8 @@ export default function SalariesPage() {
   const [jobSearch, setJobSearch] = useState("");
   const [locationSearch, setLocationSearch] = useState("");
 
-  const [jobResults, setJobResults] = useState([]);
-  const [locationResults, setLocationResults] = useState([]);
+  const [jobResults, setJobResults] = useState<JobResult[]>([]);
+  const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
 
   const [jobLoading, setJobLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
@@ -66,14 +109,9 @@ export default function SalariesPage() {
   const [showJobResults, setShowJobResults] = useState(false);
   const [showLocationResults, setShowLocationResults] = useState(false);
 
-  const [selectedJob, setSelectedJob] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<{
-    id: string;
-    locationValue: string;
-  } | null>(null);
+  const [selectedJob, setSelectedJob] = useState<JobResult | null>(null);
+  const [selectedLocation, setSelectedLocation] =
+    useState<LocationResult | null>(null);
 
   // If no jobId or locationId, redirect to home
   useEffect(() => {
@@ -142,13 +180,13 @@ export default function SalariesPage() {
     return () => clearTimeout(timeoutId);
   }, [locationSearch]);
 
-  const handleJobSelect = (job) => {
+  const handleJobSelect = (job: JobResult) => {
     setSelectedJob(job);
     setJobSearch(job.title);
     setShowJobResults(false);
   };
 
-  const handleLocationSelect = (location) => {
+  const handleLocationSelect = (location: LocationResult) => {
     setSelectedLocation(location);
     setLocationSearch(location.locationValue);
     setShowLocationResults(false);
@@ -270,23 +308,24 @@ export default function SalariesPage() {
   }
 
   // Get data from salaryStats response data
-  const actualData = salaryStats.data || salaryStats;
+  const actualData =
+    salaryStats?.data || salaryStats || ({} as SalaryStatistics);
 
   // Create data structures for components based on API response
   const salaryData: SalaryData = {
-    minSalary: actualData.minSalary,
-    maxSalary: actualData.maxSalary,
-    medianSalary: actualData.medianSalary,
-    totalEstimate: actualData.averageSalary,
-    baseEstimate: actualData.averageSalary * 0.7, // Approximate
-    additionalEstimate: actualData.averageSalary * 0.3, // Approximate
+    minSalary: actualData.minSalary || 0,
+    maxSalary: actualData.maxSalary || 0,
+    medianSalary: actualData.medianSalary || 0,
+    totalEstimate: actualData.averageSalary || 0,
+    baseEstimate: (actualData.averageSalary || 0) * 0.7, // Approximate
+    additionalEstimate: (actualData.averageSalary || 0) * 0.3, // Approximate
     basePay: {
-      min: actualData.minSalary * 0.7,
-      max: actualData.maxSalary * 0.7,
+      min: (actualData.minSalary || 0) * 0.7,
+      max: (actualData.maxSalary || 0) * 0.7,
     },
     additionalPay: {
-      min: actualData.minSalary * 0.3,
-      max: actualData.maxSalary * 0.3,
+      min: (actualData.minSalary || 0) * 0.3,
+      max: (actualData.maxSalary || 0) * 0.3,
     },
   };
 
@@ -299,7 +338,7 @@ export default function SalariesPage() {
   const trajectoryData =
     experienceLevels.length > 0
       ? experienceLevels.map((level, index) => {
-          const salary = actualData.salaryByExperienceLevel[level];
+          const salary = (actualData.salaryByExperienceLevel || {})[level] || 0;
           const isCurrentLevel =
             index === Math.floor(experienceLevels.length / 2);
 
@@ -315,14 +354,14 @@ export default function SalariesPage() {
 
   // Format salaries data for listing
   const salaryEntries =
-    actualData.salaries?.map((salary) => ({
+    actualData.salaries?.map((salary: SalaryEntry) => ({
       id: salary.id,
       companyId: salary.companyId,
       companyName: salary.companyName,
       companyLogoUrl:
         salary.companyLogoUrl ||
         `https://cdn-icons-png.flaticon.com/512/5954/5954315.png`,
-      salary: formatCurrency(salary.salary),
+      salary: formatCurrency(Number(salary.salary)),
       verified: salary.hasVerification,
     })) || [];
 
@@ -339,7 +378,7 @@ export default function SalariesPage() {
     <Container className={styles.salariesContainer}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 md:mb-0">
-          Зарплаты {actualData.jobTitle}
+          Зарплаты {actualData.jobTitle || ""}
         </h1>
 
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">

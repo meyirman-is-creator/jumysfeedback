@@ -1,6 +1,6 @@
 // src/hooks/useCompany.ts
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/store";
+import { AppDispatch,RootState } from "@/store";
 import {
   fetchCompanies,
   fetchCompanyById,
@@ -59,7 +59,7 @@ export const useCompany = () => {
   // Function to get company details either from store or API
   const getCompanyDetails = useCallback((id: string) => {
     const selectCompany = selectCompanyDetails(id);
-    return (state) => {
+    return (state: RootState) => {
       const company = selectCompany(state);
       if (company) return company;
       return null;
@@ -72,7 +72,7 @@ export const useCompany = () => {
       getCompanies();
       setInitialLoadDone(true);
     }
-  }, [getCompanies, initialLoadDone]);
+  }, [getCompanies, initialLoadDone, lastFetchedAt]);
 
   return {
     companies: companies || [], // Ensure companies is never undefined

@@ -33,6 +33,29 @@ import {
   fetchSalaryById,
 } from "@/features/salary/salarySlice";
 
+// Define proper type interfaces for status and type mappings
+interface StatusMapping {
+  CURRENT_EMPLOYEE: string;
+  FORMER_EMPLOYEE: string;
+  current: string;
+  former: string;
+  [key: string]: string;
+}
+
+interface TypeMapping {
+  FULL_TIME: string;
+  PART_TIME: string;
+  CONTRACT: string;
+  INTERNSHIP: string;
+  FREELANCE: string;
+  "full-time": string;
+  "part-time": string;
+  contract: string;
+  internship: string;
+  freelance: string;
+  [key: string]: string;
+}
+
 export default function AddSalaryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -129,7 +152,7 @@ export default function AddSalaryPage() {
           });
       }
     }
-  }, [isEditing, salaryId, userSalaries, dispatch, salaryLoaded]);
+  }, [isEditing, salaryId, userSalaries, dispatch, salaryLoaded, toast]);
 
   // When currentSalary changes (after API fetch), prefill the form
   useEffect(() => {
@@ -142,7 +165,7 @@ export default function AddSalaryPage() {
   // Helper function to prefill form data from a salary record
   const prefillFormData = (salary: any) => {
     // Map employmentStatus from API to form format
-    const statusMapping = {
+    const statusMapping: StatusMapping = {
       CURRENT_EMPLOYEE: "current",
       FORMER_EMPLOYEE: "former",
       current: "current",
@@ -150,7 +173,7 @@ export default function AddSalaryPage() {
     };
 
     // Map employmentType from API to form format
-    const typeMapping = {
+    const typeMapping: TypeMapping = {
       FULL_TIME: "full-time",
       PART_TIME: "part-time",
       CONTRACT: "contract",
@@ -163,12 +186,18 @@ export default function AddSalaryPage() {
       freelance: "freelance",
     };
 
+    const employmentStatus = salary.employmentStatus ? 
+      (statusMapping[salary.employmentStatus] || "current") : "current";
+      
+    const employmentType = salary.employmentType ? 
+      (typeMapping[salary.employmentType] || "full-time") : "full-time";
+
     setFormData({
       companyName: salary.companyName || "",
       position: salary.position || "",
       department: salary.department || "",
-      employmentStatus: statusMapping[salary.employmentStatus] || "current",
-      employmentType: typeMapping[salary.employmentType] || "full-time",
+      employmentStatus,
+      employmentType,
       employmentContract: null, // Can't prefill file input
       salary: salary.salary ? salary.salary.toString() : "",
       currency: salary.currency || "KZT",
@@ -427,7 +456,6 @@ export default function AddSalaryPage() {
         toast({
           title: "Успешно!",
           description: "Информация о зарплате успешно обновлена",
-          variant: "success",
         });
       } else {
         // Create new salary
@@ -435,7 +463,6 @@ export default function AddSalaryPage() {
         toast({
           title: "Успешно!",
           description: "Информация о зарплате успешно добавлена",
-          variant: "success",
         });
       }
 

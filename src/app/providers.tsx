@@ -2,16 +2,21 @@
 'use client';
 
 import { useEffect } from 'react';
-import { store } from "@/store";
+import { store, AppDispatch } from "@/store";
 import { Provider } from "react-redux";
 import { Toaster } from "@/components/ui/toaster";
 import { useDispatch } from 'react-redux';
 import { initializeAuth } from '@/features/auth/authSlice';
 
+// Create a typed dispatch hook
+const useAppDispatch = () => useDispatch<AppDispatch>();
+
 function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const dispatch = useDispatch();
+  // Use the typed dispatch hook instead of useDispatch directly
+  const dispatch = useAppDispatch();
   
   useEffect(() => {
+    // Now TypeScript knows this is an async thunk action
     dispatch(initializeAuth());
   }, [dispatch]);
   
