@@ -22,6 +22,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -39,9 +40,9 @@ const formSchema = z
       .max(20, {
         message: "Имя пользователя должно содержать максимум 20 символов",
       })
-      .regex(/^[a-zA-Z][a-zA-Z0-9._]*(?<![.*])[a-zA-Z0-9]$/, {
+      .regex(/^[a-zA-Z][a-zA-Z0-9._]*[a-zA-Z0-9]$/, {
         message:
-          "Имя пользователя должно начинаться с буквы, содержать только буквы, цифры, точки и подчеркивания",
+          "Имя пользователя должно начинаться с буквы и заканчиваться буквой или цифрой. Допустимы только буквы, цифры, точки и подчеркивания.",
       }),
     email: z.string().email({
       message: "Введите корректный email адрес",
@@ -52,13 +53,13 @@ const formSchema = z
         message: "Пароль должен содержать минимум 8 символов",
       })
       .regex(/[A-Z]/, {
-        message: "Пароль должен содержать хотя бы одну заглавную букву",
+        message: "Пароль должен содержать хотя бы одну заглавную букву (A-Z)",
       })
       .regex(/[a-z]/, {
-        message: "Пароль должен содержать хотя бы одну строчную букву",
+        message: "Пароль должен содержать хотя бы одну строчную букву (a-z)",
       })
       .regex(/[0-9]/, {
-        message: "Пароль должен содержать хотя бы одну цифру",
+        message: "Пароль должен содержать хотя бы одну цифру (0-9)",
       }),
     confirmPassword: z.string(),
   })
@@ -72,6 +73,7 @@ export default function RegisterPage() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const { signupUser, isLoading, error, resetAuth } = useAuth();
 
   useEffect(() => {
@@ -88,7 +90,19 @@ export default function RegisterPage() {
       password: "",
       confirmPassword: "",
     },
+    mode: "onChange",
   });
+
+  const watchPassword = form.watch("password");
+
+  useEffect(() => {
+    let strength = 0;
+    if (watchPassword.length >= 8) strength += 1;
+    if (/[A-Z]/.test(watchPassword)) strength += 1;
+    if (/[a-z]/.test(watchPassword)) strength += 1;
+    if (/[0-9]/.test(watchPassword)) strength += 1;
+    setPasswordStrength(strength);
+  }, [watchPassword]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -146,6 +160,10 @@ export default function RegisterPage() {
                         />
                       </div>
                     </FormControl>
+                    <FormDescription className="text-xs text-gray-500">
+                      Имя пользователя должно начинаться с буквы, содержать 3-20
+                      символов. Допустимы буквы, цифры, точки и подчеркивания.
+                    </FormDescription>
                     <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
@@ -197,6 +215,77 @@ export default function RegisterPage() {
                         </button>
                       </div>
                     </FormControl>
+                    <div className="mt-2">
+                      <div className="flex items-center gap-1 mb-1">
+                        <div
+                          className={`h-1 flex-1 rounded-full ${
+                            passwordStrength >= 1 ? "bg-red-500" : "bg-gray-200"
+                          }`}
+                        ></div>
+                        <div
+                          className={`h-1 flex-1 rounded-full ${
+                            passwordStrength >= 2
+                              ? "bg-orange-500"
+                              : "bg-gray-200"
+                          }`}
+                        ></div>
+                        <div
+                          className={`h-1 flex-1 rounded-full ${
+                            passwordStrength >= 3
+                              ? "bg-yellow-500"
+                              : "bg-gray-200"
+                          }`}
+                        ></div>
+                        <div
+                          className={`h-1 flex-1 rounded-full ${
+                            passwordStrength >= 4
+                              ? "bg-green-500"
+                              : "bg-gray-200"
+                          }`}
+                        ></div>
+                      </div>
+                    </div>
+                    <FormDescription className="text-xs text-gray-500">
+                      Пароль должен содержать минимум 8 символов, включая:
+                    </FormDescription>
+                    <div className="mt-1 space-y-1 text-xs">
+                      <div
+                        className={
+                          watchPassword.length >= 8
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }
+                      >
+                        • Минимум 8 символов
+                      </div>
+                      <div
+                        className={
+                          /[A-Z]/.test(watchPassword)
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }
+                      >
+                        • Хотя бы одну заглавную букву (A-Z)
+                      </div>
+                      <div
+                        className={
+                          /[a-z]/.test(watchPassword)
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }
+                      >
+                        • Хотя бы одну строчную букву (a-z)
+                      </div>
+                      <div
+                        className={
+                          /[0-9]/.test(watchPassword)
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }
+                      >
+                        • Хотя бы одну цифру (0-9)
+                      </div>
+                    </div>
                     <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
@@ -233,11 +322,15 @@ export default function RegisterPage() {
                 )}
               />
 
-              {error && <div className="text-red-500 text-sm">{error}</div>}
+              {error && (
+                <div className="text-red-500 text-sm bg-red-50 p-2 rounded border border-red-200">
+                  {error}
+                </div>
+              )}
 
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !form.formState.isValid}
                 className="w-full bg-[#800000] hover:bg-[#660000]"
               >
                 {isLoading ? "Регистрация..." : "Зарегистрироваться"}

@@ -141,25 +141,7 @@ export default function LoginPage() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="rememberMe"
-                render={({ field }) => (
-                  <FormItem className="flex items-center space-x-2">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="leading-none !mt-0">
-                      <FormLabel className="text-sm m-0 text-gray-600">
-                        Запомнить меня
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
+              
 
               {error && <div className="text-red-500 text-sm">{error}</div>}
 
