@@ -1,7 +1,8 @@
+// src/app/companies/[companyId]/reviews/page.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Typography, Box, Grid, Avatar, Rating } from "@mui/material";
+import { Typography, Box, Avatar, Rating } from "@mui/material";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useCompanyDetails } from "@/hooks/useCompanyDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 import styles from "./CompanyReviewsPage.module.scss";
@@ -75,6 +76,34 @@ const CompanyReviewsPage = () => {
 
   // Calculate total pages
   const totalPages = reviewData ? reviewData.totalPages : 0;
+
+  // Employment status translation
+  const translateEmploymentStatus = (status: string) => {
+    switch (status) {
+      case "current":
+        return "Текущий сотрудник";
+      case "former":
+        return "Бывший сотрудник";
+      default:
+        return status;
+    }
+  };
+
+  // Employment type translation
+  const translateEmploymentType = (type: string) => {
+    switch (type) {
+      case "full-time":
+        return "Полная занятость";
+      case "part-time":
+        return "Частичная занятость";
+      case "contract":
+        return "Контракт";
+      case "internship":
+        return "Стажировка";
+      default:
+        return type;
+    }
+  };
 
   if (error.reviews) {
     return (
@@ -233,10 +262,6 @@ const CompanyReviewsPage = () => {
                   <Skeleton className="h-4 w-full my-1" />
                   <Skeleton className="h-4 w-full my-1" />
                   <Skeleton className="h-4 w-3/4 my-1" />
-                  <Box className={styles.reviewActions} sx={{ mt: 2 }}>
-                    <Skeleton className="h-4 w-36" />
-                    <Skeleton className="h-4 w-32" />
-                  </Box>
                 </CardContent>
               </Card>
             ))
@@ -269,6 +294,40 @@ const CompanyReviewsPage = () => {
                   </Box>
                 </Box>
 
+                <Box className="flex flex-wrap gap-2 my-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                    {review.position}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="bg-emerald-50 text-emerald-700"
+                  >
+                    {translateEmploymentStatus(review.employmentStatus)}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="bg-amber-50 text-amber-700"
+                  >
+                    {translateEmploymentType(review.employmentType)}
+                  </Badge>
+                  {review.recommendToFriend && (
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 text-green-700"
+                    >
+                      Рекомендует
+                    </Badge>
+                  )}
+                  {review.hasVerification && (
+                    <Badge
+                      variant="outline"
+                      className="bg-purple-50 text-purple-700"
+                    >
+                      Верифицирован
+                    </Badge>
+                  )}
+                </Box>
+
                 <Typography variant="h6" className={styles.reviewTitle}>
                   {review.title}
                 </Typography>
@@ -277,45 +336,103 @@ const CompanyReviewsPage = () => {
                   {review.body}
                 </Typography>
 
-                {review.pros && (
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Плюсы:</strong> {review.pros}
-                  </Typography>
-                )}
+                <Box className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                  {review.pros && (
+                    <Box className="bg-green-50 p-3 rounded-md">
+                      <Typography
+                        variant="subtitle2"
+                        className="text-green-700 font-semibold mb-1"
+                      >
+                        Плюсы:
+                      </Typography>
+                      <Typography variant="body2" className="text-gray-700">
+                        {review.pros}
+                      </Typography>
+                    </Box>
+                  )}
 
-                {review.cons && (
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Минусы:</strong> {review.cons}
-                  </Typography>
-                )}
+                  {review.cons && (
+                    <Box className="bg-red-50 p-3 rounded-md">
+                      <Typography
+                        variant="subtitle2"
+                        className="text-red-700 font-semibold mb-1"
+                      >
+                        Минусы:
+                      </Typography>
+                      <Typography variant="body2" className="text-gray-700">
+                        {review.cons}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
 
                 {review.advice && (
-                  <Typography variant="body2" sx={{ mb: 2 }}>
-                    <strong>Совет руководству:</strong> {review.advice}
-                  </Typography>
+                  <Box className="bg-amber-50 p-3 rounded-md mb-4">
+                    <Typography
+                      variant="subtitle2"
+                      className="text-amber-700 font-semibold mb-1"
+                    >
+                      Совет руководству:
+                    </Typography>
+                    <Typography variant="body2" className="text-gray-700">
+                      {review.advice}
+                    </Typography>
+                  </Box>
                 )}
 
-                <Box className={styles.reviewActions}>
-                  <Box className={styles.helpfulAction}>
-                    <Box className={styles.actionButton}>
-                      <ThumbsUp size={18} />
-                      <Typography variant="body2">
-                        {review.helpfulCount} Полезно
-                      </Typography>
-                    </Box>
-                    <Box className={styles.actionButton}>
-                      <ThumbsDown size={18} />
-                      <Typography variant="body2">
-                        {review.notHelpfulCount} Не полезно
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box className={styles.commentAction}>
-                    <MessageSquare size={18} />
-                    <Typography variant="body2">
-                      {review.commentsCount} Комментарии
+                <Box className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4 pt-4 border-t border-gray-100">
+                  <Box className="flex flex-col items-center">
+                    <Typography
+                      variant="caption"
+                      className="text-gray-500 mb-1"
+                    >
+                      Карьера
                     </Typography>
+                    <Rating
+                      value={review.careerOpportunities}
+                      readOnly
+                      size="small"
+                    />
+                  </Box>
+                  <Box className="flex flex-col items-center">
+                    <Typography
+                      variant="caption"
+                      className="text-gray-500 mb-1"
+                    >
+                      Баланс
+                    </Typography>
+                    <Rating
+                      value={review.workLifeBalance}
+                      readOnly
+                      size="small"
+                    />
+                  </Box>
+                  <Box className="flex flex-col items-center">
+                    <Typography
+                      variant="caption"
+                      className="text-gray-500 mb-1"
+                    >
+                      Оплата
+                    </Typography>
+                    <Rating value={review.compensation} readOnly size="small" />
+                  </Box>
+                  <Box className="flex flex-col items-center">
+                    <Typography
+                      variant="caption"
+                      className="text-gray-500 mb-1"
+                    >
+                      Стабильность
+                    </Typography>
+                    <Rating value={review.jobSecurity} readOnly size="small" />
+                  </Box>
+                  <Box className="flex flex-col items-center">
+                    <Typography
+                      variant="caption"
+                      className="text-gray-500 mb-1"
+                    >
+                      Руководство
+                    </Typography>
+                    <Rating value={review.management} readOnly size="small" />
                   </Box>
                 </Box>
               </CardContent>

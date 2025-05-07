@@ -171,6 +171,7 @@ export interface Review {
   notHelpfulCount: number;
   commentsCount: number;
   date: string;
+  hasVerification:boolean;
 }
 
 // Company Reviews Response
