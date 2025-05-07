@@ -1,3 +1,4 @@
+// src/app/profile/add/salary/page.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -108,8 +109,8 @@ export default function AddSalaryPage() {
     salary: "",
     currency: "KZT",
     payPeriod: "monthly",
-    bonuses: "",
-    stockOptions: "",
+    bonuses: 0,
+    stockOptions: 0,
     experience: "1-3",
     location: "",
     anonymous: true,
@@ -186,11 +187,13 @@ export default function AddSalaryPage() {
       freelance: "freelance",
     };
 
-    const employmentStatus = salary.employmentStatus ? 
-      (statusMapping[salary.employmentStatus] || "current") : "current";
-      
-    const employmentType = salary.employmentType ? 
-      (typeMapping[salary.employmentType] || "full-time") : "full-time";
+    const employmentStatus = salary.employmentStatus
+      ? statusMapping[salary.employmentStatus] || "current"
+      : "current";
+
+    const employmentType = salary.employmentType
+      ? typeMapping[salary.employmentType] || "full-time"
+      : "full-time";
 
     setFormData({
       companyName: salary.companyName || "",
@@ -202,8 +205,8 @@ export default function AddSalaryPage() {
       salary: salary.salary ? salary.salary.toString() : "",
       currency: salary.currency || "KZT",
       payPeriod: salary.payPeriod || "monthly",
-      bonuses: salary.bonuses || "",
-      stockOptions: salary.stockOptions || "",
+      bonuses: salary.bonuses ? parseFloat(salary.bonuses) : 0,
+      stockOptions: salary.stockOptions ? parseFloat(salary.stockOptions) : 0,
       experience: salary.experience || "1-3",
       location: salary.location || "",
       anonymous: salary.anonymous !== undefined ? salary.anonymous : true,
@@ -333,17 +336,24 @@ export default function AddSalaryPage() {
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
+  type StdChangeEvent = React.ChangeEvent<
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+  >;
 
+  // (Опционально) кастом‑событие, если данные прилетают «не из DOM, а с чемоданом»
+  type CustomEvent = { target: { name?: string; value: unknown } };
   const handleChange = (
-    e:
-      | React.ChangeEvent<
-          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-        >
-      | { target: { name?: string; value: unknown } }
-  ) => {
+    e: StdChangeEvent | CustomEvent // сюда можно прилететь двумя путями
+  ): void => {
     const { name, value } = e.target as { name?: string; value: unknown };
     if (name) {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      // Special handling for numeric fields
+      if (name === "bonuses" || name === "stockOptions") {
+        const numValue = value ? parseFloat(value as string) : 0;
+        setFormData((prev) => ({ ...prev, [name]: numValue }));
+      } else {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }
 
       if (errors[name]) {
         setErrors((prev) => {
@@ -844,11 +854,14 @@ export default function AddSalaryPage() {
                     <Input
                       id="bonuses"
                       name="bonuses"
+                      type="number"
                       value={formData.bonuses}
                       onChange={handleChange}
-                      placeholder="Например: Квартальная премия до 20% от оклада"
+                      placeholder="Например: 20"
                     />
-                    <p className="text-gray-500 text-sm">Необязательно</p>
+                    <p className="text-gray-500 text-sm">
+                      Необязательно, указывайте в процентах от оклада
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -856,11 +869,14 @@ export default function AddSalaryPage() {
                     <Input
                       id="stockOptions"
                       name="stockOptions"
+                      type="number"
                       value={formData.stockOptions}
                       onChange={handleChange}
-                      placeholder="Например: Опционы на акции после года работы"
+                      placeholder="Например: 5"
                     />
-                    <p className="text-gray-500 text-sm">Необязательно</p>
+                    <p className="text-gray-500 text-sm">
+                      Необязательно, указывайте в процентах от оклада
+                    </p>
                   </div>
                 </div>
               )}
@@ -1026,19 +1042,19 @@ export default function AddSalaryPage() {
                           </div>
                         )}
 
-                        {formData.bonuses && (
+                        {formData.bonuses > 0 && (
                           <div>
                             <p className="text-gray-600 font-medium">Бонусы:</p>
-                            <p>{formData.bonuses}</p>
+                            <p>{formData.bonuses}% от оклада</p>
                           </div>
                         )}
 
-                        {formData.stockOptions && (
+                        {formData.stockOptions > 0 && (
                           <div>
                             <p className="text-gray-600 font-medium">
                               Опционы и акции:
                             </p>
-                            <p>{formData.stockOptions}</p>
+                            <p>{formData.stockOptions}% от оклада</p>
                           </div>
                         )}
 
