@@ -42,7 +42,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {Progress} from "@/components/ui/progress"
+import { Progress } from "@/components/ui/progress";
+
 // Define types for search results
 interface JobResult {
   id: string;
@@ -85,29 +86,32 @@ interface CompanySalaryData {
   count: number;
 }
 
-// Define type for salary statistics response
-interface SalaryStatistics {
-  data?: {
-    jobTitle: string;
-    location: string;
-    averageSalary: number;
-    minSalary: number;
-    maxSalary: number;
-    medianSalary: number;
-    minAdditionalPay: number;
-    maxAdditionalPay: number;
-    percentile10: number;
-    percentile25: number;
-    percentile75: number;
-    percentile90: number;
-    sampleSize: number;
-    currency: string;
-    payPeriod: string;
-    employmentTypeDistribution: Record<string, number>;
-    experienceLevelDistribution: Record<string, number>;
-    salaryByExperienceLevel: Record<string, number>;
-    salaries: SalaryEntryFromAPI[];
-  };
+// Define type for salary statistics data
+interface SalaryStatisticsData {
+  jobTitle: string;
+  location: string;
+  averageSalary: number;
+  minSalary: number;
+  maxSalary: number;
+  medianSalary: number;
+  minAdditionalPay: number;
+  maxAdditionalPay: number;
+  percentile10: number;
+  percentile25: number;
+  percentile75: number;
+  percentile90: number;
+  sampleSize: number;
+  currency: string;
+  payPeriod: string;
+  employmentTypeDistribution: Record<string, number>;
+  experienceLevelDistribution: Record<string, number>;
+  salaryByExperienceLevel: Record<string, number>;
+  salaries: SalaryEntryFromAPI[];
+}
+
+// Define type for our local use
+interface LocalSalaryStatistics {
+  data?: SalaryStatisticsData;
 }
 
 interface SalaryRangeData {
@@ -143,15 +147,20 @@ export default function SalariesContent() {
 
   // Experience level filter
   const [selectedExperience, setSelectedExperience] = useState<string>("all");
-  const [experienceOptions, setExperienceOptions] = useState<ExperienceFilterOption[]>([]);
+  const [experienceOptions, setExperienceOptions] = useState<
+    ExperienceFilterOption[]
+  >([]);
 
   // Employment type filter
   const [selectedEmployment, setSelectedEmployment] = useState<string>("all");
-  const [employmentOptions, setEmploymentOptions] = useState<EmploymentFilterOption[]>([]);
+  const [employmentOptions, setEmploymentOptions] = useState<
+    EmploymentFilterOption[]
+  >([]);
 
-  const salaryStats: SalaryStatistics | null = useSelector(
+  const salaryStats = useSelector(
     jobId && locationId ? selectSalaryStatistics(jobId, locationId) : () => null
-  );
+  ) as LocalSalaryStatistics | null;
+
   const isLoading = useSelector(selectSalaryStatisticsLoading);
   const error = useSelector(selectSalaryStatisticsError);
 
@@ -474,7 +483,7 @@ export default function SalariesContent() {
   }
 
   // Get data from salaryStats response data
-  const actualData = salaryStats?.data || ({} as SalaryStatistics["data"]);
+  const actualData = salaryStats?.data;
 
   // Format currency
   const formatCurrency = (
@@ -483,7 +492,7 @@ export default function SalariesContent() {
   ) => {
     const formatter = new Intl.NumberFormat("ru-RU", {
       style: "currency",
-      currency: actualData.currency || "KZT",
+      currency: actualData?.currency || "KZT",
       maximumFractionDigits: 0,
       notation: notation,
     });
@@ -493,19 +502,19 @@ export default function SalariesContent() {
   // Create data structures for components based on API response
   const salaryData: SalaryRangeData = {
     basePay: {
-      min: actualData.minSalary || 0,
-      max: actualData.maxSalary || 0,
+      min: actualData?.minSalary || 0,
+      max: actualData?.maxSalary || 0,
     },
     additionalPay: {
-      min: actualData.minAdditionalPay || 0,
-      max: actualData.maxAdditionalPay || 0,
+      min: actualData?.minAdditionalPay || 0,
+      max: actualData?.maxAdditionalPay || 0,
     },
-    totalEstimate: actualData.averageSalary || 0,
+    totalEstimate: actualData?.averageSalary || 0,
   };
 
   // Extract experience levels and create trajectory data
   const experienceLevels = Object.keys(
-    actualData.salaryByExperienceLevel || {}
+    actualData?.salaryByExperienceLevel || {}
   );
 
   // Map experience level to user-friendly names
@@ -528,11 +537,11 @@ export default function SalariesContent() {
 
   // Create trajectoryData array for career progression
   const trajectoryData = experienceLevels.map((level) => {
-    const salary = (actualData.salaryByExperienceLevel || {})[level] || 0;
+    const salary = (actualData?.salaryByExperienceLevel || {})[level] || 0;
     return {
       role: getExperienceLevelName(level),
       salaryRange: `${formatCurrency(salary)}/${
-        actualData.payPeriod === "monthly" ? "мес" : "год"
+        actualData?.payPeriod === "monthly" ? "мес" : "год"
       }`,
       current: true,
     };
@@ -551,7 +560,7 @@ export default function SalariesContent() {
       min: formatCurrency(company.minSalary, "compact"),
       max: formatCurrency(company.maxSalary, "compact"),
       avg: formatCurrency(company.avgSalary, "compact"),
-      count: company.count
+      count: company.count,
     },
     verified: company.verified,
   }));
@@ -560,7 +569,7 @@ export default function SalariesContent() {
     <>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 md:mb-0">
-          Зарплаты {actualData.jobTitle || ""} в {actualData.location || ""}
+          Зарплаты {actualData?.jobTitle || ""} в {actualData?.location || ""}
         </h1>
 
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
@@ -647,10 +656,10 @@ export default function SalariesContent() {
             <CardTitle className="text-[#800000] flex items-center justify-between">
               <span>Обзор зарплат</span>
               <Badge variant="outline" className="ml-2">
-                {actualData.sampleSize}{" "}
-                {actualData.sampleSize === 1
+                {actualData?.sampleSize || 0}{" "}
+                {actualData?.sampleSize === 1
                   ? "запись"
-                  : actualData.sampleSize < 5
+                  : actualData?.sampleSize && actualData.sampleSize < 5
                   ? "записи"
                   : "записей"}
               </Badge>
@@ -661,8 +670,8 @@ export default function SalariesContent() {
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-500">Диапазон зарплат:</span>
                 <span className="font-semibold">
-                  {formatCurrency(actualData.minSalary || 0)} -{" "}
-                  {formatCurrency(actualData.maxSalary || 0)}
+                  {formatCurrency(actualData?.minSalary || 0)} -{" "}
+                  {formatCurrency(actualData?.maxSalary || 0)}
                 </span>
               </div>
 
@@ -691,7 +700,7 @@ export default function SalariesContent() {
                       <TooltipContent>
                         <p>
                           Медианная зарплата:{" "}
-                          {formatCurrency(actualData.medianSalary || 0)}
+                          {formatCurrency(actualData?.medianSalary || 0)}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -709,7 +718,7 @@ export default function SalariesContent() {
                     Средняя зарплата:
                   </p>
                   <p className="text-lg font-bold text-[#800000]">
-                    {formatCurrency(actualData.averageSalary || 0)}
+                    {formatCurrency(actualData?.averageSalary || 0)}
                   </p>
                 </div>
                 <div>
@@ -717,7 +726,7 @@ export default function SalariesContent() {
                     Медианная зарплата:
                   </p>
                   <p className="text-lg font-bold">
-                    {formatCurrency(actualData.medianSalary || 0)}
+                    {formatCurrency(actualData?.medianSalary || 0)}
                   </p>
                 </div>
               </div>
@@ -739,17 +748,28 @@ export default function SalariesContent() {
               </div>
               <div className="grid grid-cols-4 gap-2">
                 <div className="text-xs font-medium text-center">
-                  {formatCurrency(actualData.percentile10 || 0, "compact")}
+                  {formatCurrency(actualData?.percentile10 || 0, "compact")}
                 </div>
                 <div className="text-xs font-medium text-center">
-                  {formatCurrency(actualData.percentile25 || 0, "compact")}
+                  {formatCurrency(actualData?.percentile25 || 0, "compact")}
                 </div>
                 <div className="text-xs font-medium text-center">
-                  {formatCurrency(actualData.percentile75 || 0, "compact")}
+                  {formatCurrency(actualData?.percentile75 || 0, "compact")}
                 </div>
                 <div className="text-xs font-medium text-center">
-                  {formatCurrency(actualData.percentile90 || 0, "compact")}
+                  {formatCurrency(actualData?.percentile90 || 0, "compact")}
                 </div>
+              </div>
+              <div className="mt-2 text-sm text-gray-600">
+                <p>
+                  Процентили зарплат показывают распределение зарплат на рынке.
+                  Например, 10-й процентиль означает, что 10% людей получают
+                  зарплату ниже этого уровня, а 90% - выше. 90-й процентиль
+                  показывает уровень, ниже которого находятся зарплаты 90%
+                  работников. Эти данные помогают понять, к какой части рынка
+                  труда относится ваша зарплата и насколько она
+                  конкурентоспособна в данной профессии и регионе.
+                </p>
               </div>
             </div>
 
@@ -782,7 +802,7 @@ export default function SalariesContent() {
           <CardHeader className="pb-2">
             <CardTitle className="text-[#800000]">Структура оплаты</CardTitle>
             <CardDescription>
-              {actualData.payPeriod === "monthly" ? "Месячная" : "Годовая"}{" "}
+              {actualData?.payPeriod === "monthly" ? "Месячная" : "Годовая"}{" "}
               оплата
             </CardDescription>
           </CardHeader>
