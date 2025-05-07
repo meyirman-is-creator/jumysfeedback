@@ -129,6 +129,10 @@ export interface Salary {
   currency: string;
   additionalPay: number;
   formattedAmount?: string;
+  location:string;
+  employmentType: string;
+  hasVerification: boolean;
+  payPeriod: string;
 }
 
 // Company Salaries Response
