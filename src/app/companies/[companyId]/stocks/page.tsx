@@ -2,7 +2,6 @@
 import React, { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { ResponsiveLine } from "@nivo/line";
 import { ResponsiveBar } from "@nivo/bar";
 import { Info } from "lucide-react";
 import { useCompanyDetails } from "@/hooks/useCompanyDetails";
@@ -21,11 +20,13 @@ const CompanyStocksPage = () => {
   const { overview, stocks, loading, error, fetchStocks } = useCompanyDetails();
   const { toast } = useToast();
   const router = useRouter();
+
   useEffect(() => {
     if (companyId && !stocks) {
       fetchStocks(companyId);
     }
   }, [companyId, stocks, fetchStocks]);
+
   useEffect(() => {
     if (overview && overview.type === "ТОО") {
       toast({
@@ -36,38 +37,46 @@ const CompanyStocksPage = () => {
       router.push(`/companies/${companyId}`);
     }
   }, [overview, companyId, router, toast]);
-  const prepareHistoricalData = () => {
+
+  const prepareYearlyStockData = () => {
     if (!stocks || !stocks.historicalData) return [];
 
-    return [
-      {
-        id: "Цена закрытия",
-        color: "#800000",
-        data: stocks.historicalData.map((item) => ({
-          x: item.date,
-          y: item.close,
-        })),
-      },
-    ];
+    // Define the type for the accumulator object
+    interface YearlyData {
+      [key: string]: {
+        sum: number;
+        count: number;
+      };
+    }
+
+    // Group data by year with properly typed accumulator
+    const yearlyData = stocks.historicalData.reduce<YearlyData>((acc, item) => {
+      // Extract year from date (assuming format like "2023-01-01")
+      const year = item.date.split("-")[0];
+
+      if (!acc[year]) {
+        acc[year] = {
+          sum: 0,
+          count: 0,
+        };
+      }
+
+      acc[year].sum += item.close;
+      acc[year].count += 1;
+
+      return acc;
+    }, {});
+
+    // Calculate average for each year and format for bar chart
+    return Object.keys(yearlyData)
+      .sort() // Sort years in ascending order
+      .map((year) => ({
+        year,
+        "Цена акций": +(yearlyData[year].sum / yearlyData[year].count).toFixed(
+          2
+        ),
+      }));
   };
-
-  const prepareTradingVolumeData = () => {
-    if (!stocks || !stocks.historicalData) return [];
-
-    return [
-      {
-        id: "Объем торгов",
-        color: "#336699",
-        data: stocks.historicalData.map((item) => ({
-          x: item.date,
-          y: Math.round(item.volume / 1000),
-        })),
-      },
-    ];
-  };
-
-  const historicalData = prepareHistoricalData();
-  const volumeData = prepareTradingVolumeData();
 
   if (error.stocks) {
     return (
@@ -95,7 +104,7 @@ const CompanyStocksPage = () => {
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-800">
-                Динамика цены акций
+                Динамика цены акций по годам
               </h2>
               <TooltipProvider>
                 <Tooltip>
@@ -103,7 +112,7 @@ const CompanyStocksPage = () => {
                     <Info size={16} className="text-primary cursor-help" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Отображает изменение стоимости акций компании</p>
+                    <p>Отображает среднегодовую стоимость акций компании</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -115,47 +124,40 @@ const CompanyStocksPage = () => {
               </div>
             ) : stocks ? (
               <div className="h-80">
-                <ResponsiveLine
-                  data={historicalData}
-                  margin={{ top: 30, right: 20, bottom: 50, left: 60 }}
-                  xScale={{ type: "point" }}
-                  yScale={{
-                    type: "linear",
-                    min: "auto",
-                    max: "auto",
-                    stacked: false,
-                    reverse: false,
+                <ResponsiveBar
+                  data={prepareYearlyStockData()}
+                  keys={["Цена акций"]}
+                  indexBy="year"
+                  margin={{ top: 30, right: 20, bottom: 50, left: 70 }}
+                  padding={0.3}
+                  colors={{ scheme: "red_blue" }}
+                  colorBy="indexValue"
+                  borderColor={{
+                    from: "color",
+                    modifiers: [["darker", 1.6]],
                   }}
                   axisTop={null}
                   axisRight={null}
                   axisBottom={{
                     tickSize: 5,
                     tickPadding: 5,
-                    tickRotation: 45,
-                    legend: "Дата",
-                    legendOffset: 40,
+                    tickRotation: 0,
+                    legend: "Год",
                     legendPosition: "middle",
+                    legendOffset: 32,
                   }}
                   axisLeft={{
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: 0,
                     legend: `Цена (${stocks.currency})`,
-                    legendOffset: -45,
                     legendPosition: "middle",
+                    legendOffset: -50,
                     format: (value) => Math.round(value),
                   }}
-                  colors={["#800000"]}
-                  pointSize={6}
-                  pointColor={{ theme: "background" }}
-                  pointBorderWidth={2}
-                  pointBorderColor={{ from: "serieColor" }}
-                  pointLabelYOffset={-12}
-                  useMesh={true}
-                  enableArea={true}
-                  areaOpacity={0.1}
-                  enableSlices="x"
-                  enableGridX={false}
+                  labelSkipWidth={12}
+                  labelSkipHeight={12}
+                  labelTextColor="white"
                   theme={{
                     tooltip: {
                       container: {
@@ -167,28 +169,31 @@ const CompanyStocksPage = () => {
                       },
                     },
                   }}
-                  tooltip={({ point }) => (
+                  tooltip={({ id, value, color }) => (
                     <div
                       style={{
-                        padding: 12,
-                        background: "white",
-                        border: "1px solid #ccc",
-                        borderRadius: 4,
+                        padding: 8,
+                        color: "#333",
+                        background: "#fff",
+                        borderRadius: "4px",
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                        border: `1px solid ${color}`,
                       }}
                     >
-                      <strong>{point.data.xFormatted}</strong>
-                      <br />
-                      Цена: {point.data.yFormatted} {stocks.currency}
+                      <strong>
+                        {id}: {value} {stocks.currency}
+                      </strong>
                     </div>
                   )}
+                  animate={true}
                 />
               </div>
             ) : null}
 
             <p className="mt-6 text-gray-600 text-sm">
-              График отображает динамику цены акций компании. Исторические
-              данные помогают определить тренды и оценить потенциальные
-              инвестиционные возможности.
+              График отображает динамику средней цены акций компании по годам.
+              Исторические данные помогают определить долгосрочные тренды и
+              оценить потенциальные инвестиционные возможности.
             </p>
           </CardContent>
         </Card>
@@ -291,155 +296,61 @@ const CompanyStocksPage = () => {
       </div>
 
       {!loading.stocks && stocks && (
-        <>
-          <Card className="overflow-hidden transition-all hover:shadow-md mb-8">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Объем торгов
-                </h2>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info size={16} className="text-primary cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Отображает объем торгов акциями компании в тысячах</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+        <Card className="overflow-hidden transition-all hover:shadow-md">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Детали торгов за сегодня
+              </h2>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info size={16} className="text-primary cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Подробная информация о торгах за текущий день</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                <p className="text-gray-500 text-sm mb-1">Цена открытия</p>
+                <p className="text-lg font-semibold">
+                  {stocks.open.toLocaleString()} {stocks.currency}
+                </p>
               </div>
 
-              <div className="h-80">
-                <ResponsiveLine
-                  data={volumeData}
-                  margin={{ top: 30, right: 20, bottom: 50, left: 70 }}
-                  xScale={{ type: "point" }}
-                  yScale={{
-                    type: "linear",
-                    min: "auto",
-                    max: "auto",
-                    stacked: false,
-                    reverse: false,
-                  }}
-                  axisTop={null}
-                  axisRight={null}
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 45,
-                    legend: "Дата",
-                    legendOffset: 40,
-                    legendPosition: "middle",
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: "Объем (тыс.)",
-                    legendOffset: -50,
-                    legendPosition: "middle",
-                    format: (value) => Math.round(value),
-                  }}
-                  colors={["#336699"]}
-                  pointSize={6}
-                  pointColor={{ theme: "background" }}
-                  pointBorderWidth={2}
-                  pointBorderColor={{ from: "serieColor" }}
-                  pointLabelYOffset={-12}
-                  useMesh={true}
-                  theme={{
-                    tooltip: {
-                      container: {
-                        background: "#fff",
-                        fontSize: "12px",
-                        borderRadius: "4px",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                        padding: "8px 12px",
-                      },
-                    },
-                  }}
-                  tooltip={({ point }) => (
-                    <div
-                      style={{
-                        padding: 12,
-                        background: "white",
-                        border: "1px solid #ccc",
-                        borderRadius: 4,
-                      }}
-                    >
-                      <strong>{point.data.xFormatted}</strong>
-                      <br />
-                      Объем: {point.data.yFormatted}K акций
-                    </div>
-                  )}
-                />
+              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                <p className="text-gray-500 text-sm mb-1">Максимум дня</p>
+                <p className="text-lg font-semibold">
+                  {stocks.dayHigh.toLocaleString()} {stocks.currency}
+                </p>
               </div>
 
-              <p className="mt-6 text-gray-600 text-sm">
-                График показывает объем торгов акциями компании. Высокие объемы
-                торгов часто указывают на повышенный интерес инвесторов и могут
-                сопровождать значительные изменения в цене акций.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden transition-all hover:shadow-md">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Детали торгов за сегодня
-                </h2>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info size={16} className="text-primary cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Подробная информация о торгах за текущий день</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                <p className="text-gray-500 text-sm mb-1">Минимум дня</p>
+                <p className="text-lg font-semibold">
+                  {stocks.dayLow.toLocaleString()} {stocks.currency}
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                  <p className="text-gray-500 text-sm mb-1">Цена открытия</p>
-                  <p className="text-lg font-semibold">
-                    {stocks.open.toLocaleString()} {stocks.currency}
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                  <p className="text-gray-500 text-sm mb-1">Максимум дня</p>
-                  <p className="text-lg font-semibold">
-                    {stocks.dayHigh.toLocaleString()} {stocks.currency}
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                  <p className="text-gray-500 text-sm mb-1">Минимум дня</p>
-                  <p className="text-lg font-semibold">
-                    {stocks.dayLow.toLocaleString()} {stocks.currency}
-                  </p>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                  <p className="text-gray-500 text-sm mb-1">
-                    Объем торгов сегодня
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {stocks.volume.toLocaleString()}
-                  </p>
-                </div>
+              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
+                <p className="text-gray-500 text-sm mb-1">
+                  Объем торгов сегодня
+                </p>
+                <p className="text-lg font-semibold">
+                  {stocks.volume.toLocaleString()}
+                </p>
               </div>
+            </div>
 
-              <p className="text-right text-gray-500 text-sm">
-                Данные обновлены: {new Date(stocks.timestamp).toLocaleString()}
-              </p>
-            </CardContent>
-          </Card>
-        </>
+            <p className="text-right text-gray-500 text-sm">
+              Данные обновлены: {new Date(stocks.timestamp).toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
