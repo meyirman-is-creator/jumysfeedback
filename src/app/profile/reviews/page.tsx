@@ -1,4 +1,3 @@
-// src/app/profile/reviews/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -73,7 +72,6 @@ export default function ReviewsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useAuth();
 
-  // Determine if user is admin
   const isAdmin = user?.role === "ROLE_ADMIN";
 
   const [currentTab, setCurrentTab] = useState("Все");
@@ -86,12 +84,10 @@ export default function ReviewsPage() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [adminComment, setAdminComment] = useState("");
 
-  // New states for document viewing and verification
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
 
-  // Get reviews from the store
   const {
     userReviews,
     allReviews,
@@ -101,7 +97,6 @@ export default function ReviewsPage() {
     allReviewsLoaded,
   } = useSelector((state: RootState) => state.review);
 
-  // Fetch reviews on component mount
   useEffect(() => {
     if (isAdmin) {
       if (!allReviewsLoaded) {
@@ -151,9 +146,16 @@ export default function ReviewsPage() {
 
   const handleViewDetails = (review: any) => {
     setSelectedReview(review);
-    setAdminComment(""); // Reset comment when opening details
+    setAdminComment("");
     setIsVerified(review.hasVerification);
     setDetailsDialogOpen(true);
+  };
+
+  const handleViewDocument = (url: string) => {
+    const viewableUrl = url.includes("?") ? `${url}&view=1` : `${url}?view=1`;
+
+    setDocumentUrl(viewableUrl);
+    setDocumentDialogOpen(true);
   };
 
   const handleApproveClick = (reviewId: string) => {
@@ -166,36 +168,7 @@ export default function ReviewsPage() {
     setRejectDialogOpen(true);
   };
 
-  // New function to handle document viewing
-  const handleViewDocument = (url: string) => {
-    // Use direct URL to view in the browser without downloading
-    const viewableUrl = url.includes("?") ? `${url}&view=1` : `${url}?view=1`;
-
-    setDocumentUrl(viewableUrl);
-    setDocumentDialogOpen(true);
-  };
-
-  // New function to handle verification status change
-  const handleVerificationChange = (checked: boolean) => {
-    setIsVerified(checked);
-  };
-
   const confirmApprove = async () => {
-    // If admin and there's a document attached but not verified, show error
-    const selectedReview = (isAdmin ? allReviews : userReviews).find(
-      (r) => r.id.toString() === selectedReviewId
-    );
-
-    if (isAdmin && selectedReview?.contractDocumentUrl && !isVerified) {
-      toast({
-        title: "Требуется верификация",
-        description:
-          "Необходимо подтвердить подлинность трудового договора перед одобрением",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (selectedReviewId) {
       try {
         const data = {
@@ -266,7 +239,6 @@ export default function ReviewsPage() {
     setAdminComment("");
   };
 
-  // Function to update verification status from details dialog
   const updateVerificationStatus = async () => {
     if (selectedReview && isAdmin) {
       try {
@@ -287,7 +259,6 @@ export default function ReviewsPage() {
             : "Верификация трудового договора отменена",
         });
 
-        // Update the local selectedReview to reflect changes
         setSelectedReview({
           ...selectedReview,
           hasVerification: isVerified,
@@ -317,25 +288,36 @@ export default function ReviewsPage() {
     }
   };
 
-  // Filter reviews based on selected status tab and user role
   const getFilteredReviews = () => {
     const reviews = isAdmin ? allReviews : userReviews;
 
     if (currentTab === "Все") return reviews;
 
     const statusMap: Record<string, string> = {
-      Новые: "Новый",
-      Одобренные: "Одобрено",
-      Отклоненные: "Отказано",
+      Новые: "PENDING",
+      Одобренные: "APPROVED",
+      Отклоненные: "REJECTED",
     };
 
-    return reviews.filter((review) => review.status === statusMap[currentTab]);
+    return reviews.filter(
+      (review) => review.approvalStatus === statusMap[currentTab]
+    );
   };
 
   const getStatusBadgeVariant = (status: string) => {
-    if (status === "Одобрено") return "primary";
-    if (status === "Отказано") return "destructive";
+    if (status === "APPROVED") return "primary";
+    if (status === "REJECTED" || status === "AI_REJECTED") return "destructive";
     return "secondary";
+  };
+
+  const getStatusDisplay = (status: string) => {
+    const statusMap: Record<string, string> = {
+      PENDING: "Новый",
+      APPROVED: "Одобрено",
+      REJECTED: "Отказано",
+      AI_REJECTED: "Отказано от AI",
+    };
+    return statusMap[status] || status;
   };
 
   const renderStarRating = (rating: number) => {
@@ -348,9 +330,11 @@ export default function ReviewsPage() {
     );
   };
 
-  // Check if a review can be edited (only PENDING or REJECTED reviews)
   const canEdit = (review: any) => {
-    return review.status === "Новый" || review.status === "Отказано";
+    return (
+      review.approvalStatus === "PENDING" ||
+      review.approvalStatus === "REJECTED"
+    );
   };
 
   return (
@@ -467,9 +451,11 @@ export default function ReviewsPage() {
                             <TableCell>
                               <div className="flex items-center gap-1">
                                 <Badge
-                                  variant={getStatusBadgeVariant(review.status)}
+                                  variant={getStatusBadgeVariant(
+                                    review.approvalStatus
+                                  )}
                                 >
-                                  {review.status}
+                                  {getStatusDisplay(review.approvalStatus)}
                                 </Badge>
                                 {review.hasAdminComment && (
                                   <TooltipProvider>
@@ -566,55 +552,56 @@ export default function ReviewsPage() {
                                   </TooltipProvider>
                                 )}
 
-                                {isAdmin && review.status === "Новый" && (
-                                  <>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() =>
-                                              handleModerate(
-                                                review.id.toString(),
-                                                "approve"
-                                              )
-                                            }
-                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                          >
-                                            <CheckCircle className="w-4 h-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Одобрить</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
+                                {isAdmin &&
+                                  review.approvalStatus === "PENDING" && (
+                                    <>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                handleModerate(
+                                                  review.id.toString(),
+                                                  "approve"
+                                                )
+                                              }
+                                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                            >
+                                              <CheckCircle className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Одобрить</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
 
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() =>
-                                              handleModerate(
-                                                review.id.toString(),
-                                                "reject"
-                                              )
-                                            }
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                          >
-                                            <XCircle className="w-4 h-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Отклонить</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </>
-                                )}
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() =>
+                                                handleModerate(
+                                                  review.id.toString(),
+                                                  "reject"
+                                                )
+                                              }
+                                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            >
+                                              <XCircle className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Отклонить</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </>
+                                  )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -629,7 +616,6 @@ export default function ReviewsPage() {
         ))}
       </Tabs>
 
-      {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
@@ -651,7 +637,6 @@ export default function ReviewsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Approve dialog */}
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
@@ -683,23 +668,15 @@ export default function ReviewsPage() {
                 <Checkbox
                   id="verify-contract"
                   checked={isVerified}
-                  onCheckedChange={handleVerificationChange}
+                  onCheckedChange={(checked) => setIsVerified(!!checked)}
                 />
                 <label
                   htmlFor="verify-contract"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Подтвердить подлинность трудового договора
-                  {selectedReview?.contractDocumentUrl && (
-                    <span className="text-red-500 ml-1">*</span>
-                  )}
                 </label>
               </div>
-              {selectedReview?.contractDocumentUrl && !isVerified && (
-                <p className="text-red-500 text-xs mt-1 ml-6">
-                  Требуется подтверждение подлинности договора перед одобрением
-                </p>
-              )}
             </div>
           )}
 
@@ -720,7 +697,6 @@ export default function ReviewsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Reject dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
@@ -765,22 +741,6 @@ export default function ReviewsPage() {
             )}
           </div>
 
-          {isAdmin && (
-            <div className="mt-4 flex items-center space-x-2">
-              <Checkbox
-                id="verify-contract-reject"
-                checked={isVerified}
-                onCheckedChange={handleVerificationChange}
-              />
-              <label
-                htmlFor="verify-contract-reject"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Подтвердить подлинность трудового договора
-              </label>
-            </div>
-          )}
-
           <DialogFooter className="mt-6">
             <Button
               variant="outline"
@@ -799,7 +759,6 @@ export default function ReviewsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Document viewer dialog */}
       <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
         <DialogContent className="sm:max-w-4xl md:max-w-5xl lg:max-w-6xl bg-white max-h-[90vh] p-0">
           <DialogHeader className="p-4 border-b">
@@ -837,7 +796,6 @@ export default function ReviewsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Review details dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
         {selectedReview && (
           <DialogContent className="sm:max-w-md md:max-w-xl bg-white max-h-[80vh] overflow-y-auto">
@@ -994,7 +952,7 @@ export default function ReviewsPage() {
                   </div>
                 )}
 
-                {isAdmin && selectedReview.status === "Новый" && (
+                {isAdmin && selectedReview.approvalStatus === "PENDING" && (
                   <div className="mt-4">
                     <label
                       htmlFor="admin-comment-details"
@@ -1028,7 +986,7 @@ export default function ReviewsPage() {
                 </Button>
               )}
 
-              {isAdmin && selectedReview.status === "Новый" && (
+              {isAdmin && selectedReview.approvalStatus === "PENDING" && (
                 <div className="flex gap-2">
                   <Button
                     onClick={() => {
