@@ -15,6 +15,7 @@ interface SalaryBreakdownProps {
       min: number;
       max: number;
     };
+    totalEstimate: number;
   };
 }
 
@@ -45,21 +46,23 @@ export default function SalaryBreakdown({ data }: SalaryBreakdownProps) {
           </div>
         </div>
 
-        <div className={styles.breakdownItem}>
-          <div className={styles.breakdownHeader}>
-            <p className={styles.breakdownLabel}>Дополнительная оплата</p>
-            <p className={styles.breakdownRange}>
-              {formatK(data.additionalPay.min)} -{" "}
-              {formatK(data.additionalPay.max)} ₸/год
-            </p>
+        {data.additionalPay.max > 0 && (
+          <div className={styles.breakdownItem}>
+            <div className={styles.breakdownHeader}>
+              <p className={styles.breakdownLabel}>Дополнительная оплата</p>
+              <p className={styles.breakdownRange}>
+                {formatK(data.additionalPay.min)} -{" "}
+                {formatK(data.additionalPay.max)} ₸/год
+              </p>
+            </div>
+            <div className="mt-2">
+              <Progress
+                value={(data.additionalPay.max / data.basePay.max) * 100}
+                className="h-2"
+              />
+            </div>
           </div>
-          <div className="mt-2">
-            <Progress
-              value={(data.additionalPay.max / data.basePay.max) * 100}
-              className="h-2"
-            />
-          </div>
-        </div>
+        )}
 
         <div className={styles.additionalInfo}>
           <p className={styles.additionalText}>
