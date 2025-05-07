@@ -60,9 +60,7 @@ const CompaniesPage = () => {
   const [locationSearchValue, setLocationSearchValue] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [showLocationResults, setShowLocationResults] = useState(false);
-  const [locationSearchResults, setLocationSearchResults] = useState<
-    LocationResult[]
-  >([]);
+  const [locationSearchResults, setLocationSearchResults] = useState<LocationResult[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null
   );
@@ -86,7 +84,7 @@ const CompaniesPage = () => {
     }
 
     if (filters.minRating) {
-      newSelectedFilters.push(`${filters.minRating}★ и выше`);
+      newSelectedFilters.push(`${filters.minRating}★`);
     }
 
     if (filters.size) {
@@ -390,7 +388,7 @@ const CompaniesPage = () => {
             <div className={styles.filterSection}>
               <h3 className={styles.filterSectionTitle}>Рейтинг компании</h3>
               <div className={styles.ratingFilter}>
-                {[4, 3, 2].map((rating) => (
+                {[4, 3, 2, 1].map((rating) => (
                   <div key={rating} className={styles.ratingOption}>
                     <Checkbox
                       id={`rating-${rating}`}
@@ -407,7 +405,6 @@ const CompaniesPage = () => {
                       <span className={styles.ratingStars}>
                         {renderRating(rating)}
                       </span>
-                      <span>и выше</span>
                     </Label>
                   </div>
                 ))}
