@@ -30,7 +30,6 @@ export const initializeAuth = createAsyncThunk(
         return null;
       }
 
-      // This will trigger profile data to be cached
       const response = await profileAPI.getProfile();
       return response.data || null;
     } catch (error: any) {
@@ -48,7 +47,9 @@ export const signup = createAsyncThunk(
       return true;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to signup"
+        error.response?.data?.error || 
+        error.response?.data?.message || 
+        "Не удалось зарегистрироваться"
       );
     }
   }
@@ -62,7 +63,9 @@ export const verifyEmail = createAsyncThunk(
       return response;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to verify email"
+        error.response?.data?.error || 
+        error.response?.data?.message || 
+        "Не удалось подтвердить email"
       );
     }
   }
@@ -105,7 +108,9 @@ export const login = createAsyncThunk(
       };
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to login"
+        error.response?.data?.error || 
+        error.response?.data?.message || 
+        "Не удалось войти"
       );
     }
   }
@@ -119,7 +124,9 @@ export const updateUserProfile = createAsyncThunk(
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to update profile"
+        error.response?.data?.error || 
+        error.response?.data?.message || 
+        "Не удалось обновить профиль"
       );
     }
   }
@@ -145,7 +152,9 @@ export const logout = createAsyncThunk(
       return true;
     } catch (error: any) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to logout"
+        error.response?.data?.error || 
+        error.response?.data?.message || 
+        "Не удалось выйти"
       );
     }
   }

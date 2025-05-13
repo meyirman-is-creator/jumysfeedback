@@ -1,4 +1,4 @@
-// Add router import and redirect after login
+// src/app/auth/login/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -44,13 +43,24 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const { loginUser, isLoading, error, isAuthenticated } = useAuth();
+  const { loginUser, isLoading, error, isAuthenticated, resetAuth } = useAuth();
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
       router.push("/companies");
     }
-  }, [isAuthenticated, router]);
+    
+    return () => {
+      resetAuth();
+    };
+  }, [isAuthenticated, router, resetAuth]);
+
+  useEffect(() => {
+    if (error) {
+      setFormError(error);
+    }
+  }, [error]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -62,23 +72,35 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setFormError(null);
+    
     try {
-      await loginUser({
+      const response = await loginUser({
         username: values.username,
         password: values.password,
       });
-      // Redirection happens in the useEffect above when isAuthenticated changes
+      
+      if (response && !error && isAuthenticated) {
+        router.push("/companies");
+      }
     } catch (err: any) {
+      if (err.response?.data?.error) {
+        setFormError(err.response.data.error);
+      } else if (err.message) {
+        setFormError(err.message);
+      } else {
+        setFormError("Проверьте логин и пароль");
+      }
+      
       toast({
         title: "Ошибка входа",
-        description: err.message || "Проверьте логин и пароль",
+        description: formError,
         variant: "destructive",
       });
     }
   };
 
   return (
-    // Rest of the component remains the same
     <div className="flex justify-center items-center my-[50px] px-4">
       <Card className="w-full max-w-md border-0 shadow-lg">
         <CardHeader className="space-y-1 text-center">
@@ -141,9 +163,11 @@ export default function LoginPage() {
                 )}
               />
 
-              
-
-              {error && <div className="text-red-500 text-sm">{error}</div>}
+              {(formError || error) && (
+                <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-200">
+                  {formError || error}
+                </div>
+              )}
 
               <Button
                 type="submit"

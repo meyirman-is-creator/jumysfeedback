@@ -75,6 +75,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const { signupUser, isLoading, error, resetAuth } = useAuth();
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -105,30 +106,47 @@ export default function RegisterPage() {
   }, [watchPassword]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setFormError(null);
+    
     try {
-      await signupUser({
+      const response = await signupUser({
         username: values.username,
         email: values.email,
         password: values.password,
       });
-
-      toast({
-        title: "Регистрация успешна",
-        description: "Проверьте вашу почту для подтверждения аккаунта",
-      });
-
-      sessionStorage.setItem("emailForVerification", values.email);
-
-      router.push("/auth/verify");
+      
+      if (response && !error) {
+        toast({
+          title: "Регистрация успешна",
+          description: "Проверьте вашу почту для подтверждения аккаунта",
+        });
+        
+        sessionStorage.setItem("emailForVerification", values.email);
+        router.push("/auth/verify");
+      }
     } catch (err: any) {
+      if (err.response?.data?.error) {
+        setFormError(err.response.data.error);
+      } else if (err.message) {
+        setFormError(err.message);
+      } else {
+        setFormError("Не удалось зарегистрироваться. Попробуйте снова.");
+      }
+      
       toast({
         title: "Ошибка регистрации",
-        description:
-          err.message || "Не удалось зарегистрироваться. Попробуйте снова.",
+        description: formError,
         variant: "destructive",
       });
     }
   };
+
+  // Set the form error from the auth state if it exists
+  useEffect(() => {
+    if (error) {
+      setFormError(error);
+    }
+  }, [error]);
 
   return (
     <div className="flex justify-center items-center my-[50px] px-4">
@@ -322,9 +340,9 @@ export default function RegisterPage() {
                 )}
               />
 
-              {error && (
-                <div className="text-red-500 text-sm bg-red-50 p-2 rounded border border-red-200">
-                  {error}
+              {(formError || error) && (
+                <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-200">
+                  {formError || error}
                 </div>
               )}
 
