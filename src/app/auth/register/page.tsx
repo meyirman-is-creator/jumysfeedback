@@ -76,6 +76,7 @@ export default function RegisterPage() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const { signupUser, isLoading, error, resetAuth } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
+  const [isRegistered, setIsRegistered] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -115,27 +116,37 @@ export default function RegisterPage() {
         password: values.password,
       });
       
-      if (response && !error) {
+      if (response && !error ) {
+        setIsRegistered(true);
+        
+        // Сохраняем email для возможного использования, но не делаем редирект
+        sessionStorage.setItem("emailForVerification", values.email);
+        
         toast({
           title: "Регистрация успешна",
           description: "Проверьте вашу почту для подтверждения аккаунта",
         });
+      } else {
+        // Обработка случая, когда response пустой или есть ошибка в auth state
+        const errorMessage = error || "Не удалось зарегистрироваться. Пожалуйста, попробуйте снова.";
+        setFormError(errorMessage);
         
-        sessionStorage.setItem("emailForVerification", values.email);
-        router.push("/auth/verify");
+        toast({
+          title: "Ошибка регистрации",
+          description: errorMessage,
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
-      if (err.response?.data?.error) {
-        setFormError(err.response.data.error);
-      } else if (err.message) {
-        setFormError(err.message);
-      } else {
-        setFormError("Не удалось зарегистрироваться. Попробуйте снова.");
-      }
+      const errorMessage = err.response?.data?.error || 
+                          err.message || 
+                          "Не удалось зарегистрироваться. Попробуйте снова.";
+      
+      setFormError(errorMessage);
       
       toast({
         title: "Ошибка регистрации",
-        description: formError,
+        description: errorMessage, // Используем текущее значение ошибки, а не состояние formError
         variant: "destructive",
       });
     }
@@ -153,208 +164,224 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md border-0 shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold text-[#800000]">
-            Создание аккаунта
+            {isRegistered ? "Регистрация успешна" : "Создание аккаунта"}
           </CardTitle>
           <CardDescription>
-            Введите данные для регистрации нового аккаунта
+            {isRegistered 
+              ? "Проверьте вашу почту для подтверждения аккаунта" 
+              : "Введите данные для регистрации нового аккаунта"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Имя пользователя</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                        <Input
-                          className="pl-10"
-                          placeholder="Введите имя пользователя"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormDescription className="text-xs text-gray-500">
-                      Имя пользователя должно начинаться с буквы, содержать 3-20
-                      символов. Допустимы буквы, цифры, точки и подчеркивания.
-                    </FormDescription>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                        <Input
-                          className="pl-10"
-                          placeholder="Введите email адрес"
-                          type="email"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Пароль</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                        <Input
-                          className="pl-10 pr-10"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Введите пароль"
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                        >
-                          {showPassword ? <FiEyeOff /> : <FiEye />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <div className="mt-2">
-                      <div className="flex items-center gap-1 mb-1">
-                        <div
-                          className={`h-1 flex-1 rounded-full ${
-                            passwordStrength >= 1 ? "bg-red-500" : "bg-gray-200"
-                          }`}
-                        ></div>
-                        <div
-                          className={`h-1 flex-1 rounded-full ${
-                            passwordStrength >= 2
-                              ? "bg-orange-500"
-                              : "bg-gray-200"
-                          }`}
-                        ></div>
-                        <div
-                          className={`h-1 flex-1 rounded-full ${
-                            passwordStrength >= 3
-                              ? "bg-yellow-500"
-                              : "bg-gray-200"
-                          }`}
-                        ></div>
-                        <div
-                          className={`h-1 flex-1 rounded-full ${
-                            passwordStrength >= 4
-                              ? "bg-green-500"
-                              : "bg-gray-200"
-                          }`}
-                        ></div>
-                      </div>
-                    </div>
-                    <FormDescription className="text-xs text-gray-500">
-                      Пароль должен содержать минимум 8 символов, включая:
-                    </FormDescription>
-                    <div className="mt-1 space-y-1 text-xs">
-                      <div
-                        className={
-                          watchPassword.length >= 8
-                            ? "text-green-600"
-                            : "text-gray-500"
-                        }
-                      >
-                        • Минимум 8 символов
-                      </div>
-                      <div
-                        className={
-                          /[A-Z]/.test(watchPassword)
-                            ? "text-green-600"
-                            : "text-gray-500"
-                        }
-                      >
-                        • Хотя бы одну заглавную букву (A-Z)
-                      </div>
-                      <div
-                        className={
-                          /[a-z]/.test(watchPassword)
-                            ? "text-green-600"
-                            : "text-gray-500"
-                        }
-                      >
-                        • Хотя бы одну строчную букву (a-z)
-                      </div>
-                      <div
-                        className={
-                          /[0-9]/.test(watchPassword)
-                            ? "text-green-600"
-                            : "text-gray-500"
-                        }
-                      >
-                        • Хотя бы одну цифру (0-9)
-                      </div>
-                    </div>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Подтверждение пароля</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                        <Input
-                          className="pl-10 pr-10"
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Повторите пароль"
-                          {...field}
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                        >
-                          {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
-              />
-
-              {(formError || error) && (
-                <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-200">
-                  {formError || error}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isLoading || !form.formState.isValid}
-                className="w-full bg-[#800000] hover:bg-[#660000]"
+          {isRegistered ? (
+            <div className="text-center space-y-4">
+              <p className="text-green-600">
+                Регистрация прошла успешно! Мы отправили письмо с инструкциями по подтверждению аккаунта на вашу электронную почту.
+              </p>
+              <Button 
+                className="bg-[#800000] hover:bg-[#660000]"
+                onClick={() => router.push("/auth/login")}
               >
-                {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+                Перейти на страницу входа
               </Button>
-            </form>
-          </Form>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Имя пользователя</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                          <Input
+                            className="pl-10"
+                            placeholder="Введите имя пользователя"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormDescription className="text-xs text-gray-500">
+                        Имя пользователя должно начинаться с буквы, содержать 3-20
+                        символов. Допустимы буквы, цифры, точки и подчеркивания.
+                      </FormDescription>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                          <Input
+                            className="pl-10"
+                            placeholder="Введите email адрес"
+                            type="email"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Пароль</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                          <Input
+                            className="pl-10 pr-10"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Введите пароль"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                          >
+                            {showPassword ? <FiEyeOff /> : <FiEye />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <div className="mt-2">
+                        <div className="flex items-center gap-1 mb-1">
+                          <div
+                            className={`h-1 flex-1 rounded-full ${
+                              passwordStrength >= 1 ? "bg-red-500" : "bg-gray-200"
+                            }`}
+                          ></div>
+                          <div
+                            className={`h-1 flex-1 rounded-full ${
+                              passwordStrength >= 2
+                                ? "bg-orange-500"
+                                : "bg-gray-200"
+                            }`}
+                          ></div>
+                          <div
+                            className={`h-1 flex-1 rounded-full ${
+                              passwordStrength >= 3
+                                ? "bg-yellow-500"
+                                : "bg-gray-200"
+                            }`}
+                          ></div>
+                          <div
+                            className={`h-1 flex-1 rounded-full ${
+                              passwordStrength >= 4
+                                ? "bg-green-500"
+                                : "bg-gray-200"
+                            }`}
+                          ></div>
+                        </div>
+                      </div>
+                      <FormDescription className="text-xs text-gray-500">
+                        Пароль должен содержать минимум 8 символов, включая:
+                      </FormDescription>
+                      <div className="mt-1 space-y-1 text-xs">
+                        <div
+                          className={
+                            watchPassword.length >= 8
+                              ? "text-green-600"
+                              : "text-gray-500"
+                          }
+                        >
+                          • Минимум 8 символов
+                        </div>
+                        <div
+                          className={
+                            /[A-Z]/.test(watchPassword)
+                              ? "text-green-600"
+                              : "text-gray-500"
+                          }
+                        >
+                          • Хотя бы одну заглавную букву (A-Z)
+                        </div>
+                        <div
+                          className={
+                            /[a-z]/.test(watchPassword)
+                              ? "text-green-600"
+                              : "text-gray-500"
+                          }
+                        >
+                          • Хотя бы одну строчную букву (a-z)
+                        </div>
+                        <div
+                          className={
+                            /[0-9]/.test(watchPassword)
+                              ? "text-green-600"
+                              : "text-gray-500"
+                          }
+                        >
+                          • Хотя бы одну цифру (0-9)
+                        </div>
+                      </div>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Подтверждение пароля</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                          <Input
+                            className="pl-10 pr-10"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Повторите пароль"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                          >
+                            {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-500" />
+                    </FormItem>
+                  )}
+                />
+
+                {formError && (
+                  <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-200">
+                    {formError}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={isLoading || !form.formState.isValid}
+                  className="w-full bg-[#800000] hover:bg-[#660000]"
+                >
+                  {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+                </Button>
+              </form>
+            </Form>
+          )}
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-center text-sm text-gray-500">

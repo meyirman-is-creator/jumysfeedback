@@ -32,7 +32,6 @@ export default function VerifyPage() {
   const [countdown, setCountdown] = useState(60);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const { verifyUserEmail, isLoading, error, resetAuth } = useAuth();
-  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     // Get email from localStorage
@@ -58,13 +57,6 @@ export default function VerifyPage() {
     }
   }, [countdown, isResendDisabled]);
 
-  // Set the form error from the auth state if it exists
-  useEffect(() => {
-    if (error) {
-      setFormError(error);
-    }
-  }, [error]);
-
   const handleResendCode = () => {
     // In a real application, you would call an API endpoint to resend the code
     toast({
@@ -75,11 +67,9 @@ export default function VerifyPage() {
     setIsResendDisabled(true);
   };
 
+  // Fix redirection after successful verification
   const handleSubmit = async () => {
-    setFormError(null);
-    
     if (verificationCode.length !== 6) {
-      setFormError("Пожалуйста, введите полный 6-значный код");
       toast({
         title: "Ошибка",
         description: "Пожалуйста, введите полный 6-значный код",
@@ -89,47 +79,39 @@ export default function VerifyPage() {
     }
 
     if (!emailAddress) {
-      setFormError("Email адрес не найден. Пожалуйста, зарегистрируйтесь снова.");
       toast({
         title: "Ошибка",
-        description: "Email адрес не найден. Пожалуйста, зарегистрируйтесь снова.",
+        description:
+          "Email адрес не найден. Пожалуйста, зарегистрируйтесь снова.",
         variant: "destructive",
       });
+      router.push("/auth/register");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const response = await verifyUserEmail({
+      await verifyUserEmail({
         email: emailAddress,
         code: verificationCode,
       });
-      
-      if (response && !error) {
-        toast({
-          title: "Аккаунт подтвержден",
-          description: "Ваш аккаунт успешно подтвержден",
-        });
 
-        // Clear email from storage
-        sessionStorage.removeItem("emailForVerification");
+      toast({
+        title: "Аккаунт подтвержден",
+        description: "Ваш аккаунт успешно подтвержден",
+      });
 
-        // Redirect to login
-        router.push("/auth/login");
-      }
+      // Clear email from storage
+      sessionStorage.removeItem("emailForVerification");
+
+      // Redirect to login
+      router.push("/auth/login");
     } catch (err: any) {
-      if (err.response?.data?.error) {
-        setFormError(err.response.data.error);
-      } else if (err.message) {
-        setFormError(err.message);
-      } else {
-        setFormError("Не удалось подтвердить аккаунт. Попробуйте снова.");
-      }
-      
       toast({
         title: "Ошибка",
-        description: formError,
+        description:
+          err.message || "Не удалось подтвердить аккаунт. Попробуйте снова.",
         variant: "destructive",
       });
     } finally {
@@ -171,10 +153,8 @@ export default function VerifyPage() {
             />
           </div>
 
-          {(formError || error) && (
-            <div className="text-red-500 text-sm bg-red-50 p-3 rounded border border-red-200 mb-4">
-              {formError || error}
-            </div>
+          {error && (
+            <div className="text-red-500 text-sm text-center mb-4">{error}</div>
           )}
 
           <Button
