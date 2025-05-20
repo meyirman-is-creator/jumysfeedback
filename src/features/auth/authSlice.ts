@@ -1,4 +1,3 @@
-// src/features/auth/authSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 import authAPI from "./authAPI";
@@ -19,6 +18,7 @@ const initialState: AuthState = {
   isAuthenticated: !!Cookies.get("accessToken"),
   isLoading: false,
   error: null,
+  errorCode: null,
 };
 
 export const initializeAuth = createAsyncThunk(
@@ -33,7 +33,10 @@ export const initializeAuth = createAsyncThunk(
       const response = await profileAPI.getProfile();
       return response.data || null;
     } catch (error: any) {
-      return rejectWithValue("Не удалось загрузить профиль");
+      return rejectWithValue({
+        message: "Не удалось загрузить профиль",
+        code: error.response?.status || null,
+      });
     }
   }
 );
@@ -46,11 +49,12 @@ export const signup = createAsyncThunk(
       sessionStorage.setItem("emailForVerification", data.email);
       return true;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.error || 
-        error.response?.data?.message || 
-        "Не удалось зарегистрироваться"
-      );
+      return rejectWithValue({
+        message: error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Не удалось зарегистрироваться",
+        code: error.response?.status || null,
+      });
     }
   }
 );
@@ -62,11 +66,12 @@ export const verifyEmail = createAsyncThunk(
       const response = await authAPI.verifyEmail(data);
       return response;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.error || 
-        error.response?.data?.message || 
-        "Не удалось подтвердить email"
-      );
+      return rejectWithValue({
+        message: error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Не удалось подтвердить email",
+        code: error.response?.status || null,
+      });
     }
   }
 );
@@ -107,11 +112,12 @@ export const login = createAsyncThunk(
         refreshToken: response.data.refreshToken,
       };
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.error || 
-        error.response?.data?.message || 
-        "Не удалось войти"
-      );
+      return rejectWithValue({
+        message: error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Не удалось войти",
+        code: error.response?.status || null,
+      });
     }
   }
 );
@@ -123,11 +129,12 @@ export const updateUserProfile = createAsyncThunk(
       const response = await apiClient.put("/profile/edit", data);
       return response.data.data;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.error || 
-        error.response?.data?.message || 
-        "Не удалось обновить профиль"
-      );
+      return rejectWithValue({
+        message: error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Не удалось обновить профиль",
+        code: error.response?.status || null,
+      });
     }
   }
 );
@@ -151,11 +158,12 @@ export const logout = createAsyncThunk(
 
       return true;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.error || 
-        error.response?.data?.message || 
-        "Не удалось выйти"
-      );
+      return rejectWithValue({
+        message: error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Не удалось выйти",
+        code: error.response?.status || null,
+      });
     }
   }
 );
@@ -167,6 +175,7 @@ const authSlice = createSlice({
     resetAuthState: (state) => {
       state.isLoading = false;
       state.error = null;
+      state.errorCode = null;
     },
     clearAuth: () => initialState,
     syncWithProfile: (state, action) => {
@@ -189,10 +198,15 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
       }
     });
-    builder.addCase(initializeAuth.rejected, (state) => {
+    builder.addCase(initializeAuth.rejected, (state, action) => {
       state.isLoading = false;
       state.isAuthenticated = false;
       state.user = null;
+      if (action.payload && typeof action.payload === 'object') {
+        const payload = action.payload as { message: string; code: number | null };
+        state.error = payload.message;
+        state.errorCode = payload.code;
+      }
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");
     });
@@ -200,30 +214,47 @@ const authSlice = createSlice({
     builder.addCase(signup.pending, (state) => {
       state.isLoading = true;
       state.error = null;
+      state.errorCode = null;
     });
     builder.addCase(signup.fulfilled, (state) => {
       state.isLoading = false;
     });
     builder.addCase(signup.rejected, (state, action) => {
       state.isLoading = false;
-      state.error = action.payload as string;
+      if (action.payload && typeof action.payload === 'object') {
+        const payload = action.payload as { message: string; code: number | null };
+        state.error = payload.message;
+        state.errorCode = payload.code;
+      } else {
+        state.error = 'Произошла неизвестная ошибка';
+        state.errorCode = null;
+      }
     });
 
     builder.addCase(verifyEmail.pending, (state) => {
       state.isLoading = true;
       state.error = null;
+      state.errorCode = null;
     });
     builder.addCase(verifyEmail.fulfilled, (state) => {
       state.isLoading = false;
     });
     builder.addCase(verifyEmail.rejected, (state, action) => {
       state.isLoading = false;
-      state.error = action.payload as string;
+      if (action.payload && typeof action.payload === 'object') {
+        const payload = action.payload as { message: string; code: number | null };
+        state.error = payload.message;
+        state.errorCode = payload.code;
+      } else {
+        state.error = 'Произошла неизвестная ошибка';
+        state.errorCode = null;
+      }
     });
 
     builder.addCase(login.pending, (state) => {
       state.isLoading = true;
       state.error = null;
+      state.errorCode = null;
     });
     builder.addCase(login.fulfilled, (state, action) => {
       state.isLoading = false;
@@ -234,12 +265,20 @@ const authSlice = createSlice({
     });
     builder.addCase(login.rejected, (state, action) => {
       state.isLoading = false;
-      state.error = action.payload as string;
+      if (action.payload && typeof action.payload === 'object') {
+        const payload = action.payload as { message: string; code: number | null };
+        state.error = payload.message;
+        state.errorCode = payload.code;
+      } else {
+        state.error = 'Произошла неизвестная ошибка';
+        state.errorCode = null;
+      }
     });
 
     builder.addCase(updateUserProfile.pending, (state) => {
       state.isLoading = true;
       state.error = null;
+      state.errorCode = null;
     });
     builder.addCase(updateUserProfile.fulfilled, (state, action) => {
       state.isLoading = false;
@@ -252,12 +291,20 @@ const authSlice = createSlice({
     });
     builder.addCase(updateUserProfile.rejected, (state, action) => {
       state.isLoading = false;
-      state.error = action.payload as string;
+      if (action.payload && typeof action.payload === 'object') {
+        const payload = action.payload as { message: string; code: number | null };
+        state.error = payload.message;
+        state.errorCode = payload.code;
+      } else {
+        state.error = 'Произошла неизвестная ошибка';
+        state.errorCode = null;
+      }
     });
 
     builder.addCase(logout.pending, (state) => {
       state.isLoading = true;
       state.error = null;
+      state.errorCode = null;
     });
     builder.addCase(logout.fulfilled, () => {
       return initialState;
@@ -265,7 +312,12 @@ const authSlice = createSlice({
     builder.addCase(logout.rejected, (state, action) => {
       return {
         ...initialState,
-        error: action.payload as string,
+        error: action.payload && typeof action.payload === 'object'
+          ? (action.payload as { message: string }).message
+          : 'Произошла неизвестная ошибка',
+        errorCode: action.payload && typeof action.payload === 'object'
+          ? (action.payload as { code: number | null }).code
+          : null
       };
     });
   },

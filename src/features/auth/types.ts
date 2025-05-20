@@ -1,4 +1,3 @@
-// src/features/auth/types.ts
 export interface User {
   username: string;
   jobTitle: string;
@@ -19,6 +18,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  errorCode: number | null;
 }
 
 export interface SignupRequest {
@@ -54,7 +54,6 @@ export interface LoginResponse {
   };
 }
 
-// Added ProfileData interface for updating user profile
 export interface ProfileData {
   username?: string;
   jobTitle?: string;
@@ -62,14 +61,18 @@ export interface ProfileData {
   location?: string;
   email?: string;
   phone?: string;
-  jobId:number;
-  locationId?:number;
+  jobId: number;
+  locationId?: number;
 }
 
-// Added PasswordUpdateData interface for updating password
 export interface PasswordUpdateData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
   oldPassword: string; 
+}
+
+export interface ErrorResponse {
+  message: string;
+  code: number | null;
 }

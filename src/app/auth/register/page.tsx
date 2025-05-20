@@ -1,4 +1,3 @@
-// src/app/auth/register/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -60,6 +59,9 @@ const formSchema = z
       })
       .regex(/[0-9]/, {
         message: "Пароль должен содержать хотя бы одну цифру (0-9)",
+      })
+      .regex(/[!@#$%^&*(),.?":{}|<>]/, {
+        message: "Пароль должен содержать хотя бы один специальный символ",
       }),
     confirmPassword: z.string(),
   })
@@ -74,7 +76,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const { signupUser, isLoading, error, resetAuth } = useAuth();
+  const { signupUser, isLoading, error, errorCode, resetAuth } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
 
@@ -103,56 +105,59 @@ export default function RegisterPage() {
     if (/[A-Z]/.test(watchPassword)) strength += 1;
     if (/[a-z]/.test(watchPassword)) strength += 1;
     if (/[0-9]/.test(watchPassword)) strength += 1;
-    setPasswordStrength(strength);
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(watchPassword)) strength += 1;
+    setPasswordStrength(Math.min(4, strength));
   }, [watchPassword]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setFormError(null);
     
     try {
-      const response = await signupUser({
+      await signupUser({
         username: values.username,
         email: values.email,
         password: values.password,
       });
       
-      if (response && !error ) {
-        setIsRegistered(true);
-        
-        // Сохраняем email для возможного использования, но не делаем редирект
-        sessionStorage.setItem("emailForVerification", values.email);
-        
-        toast({
-          title: "Регистрация успешна",
-          description: "Проверьте вашу почту для подтверждения аккаунта",
-        });
-      } else {
-        // Обработка случая, когда response пустой или есть ошибка в auth state
-        const errorMessage = error || "Не удалось зарегистрироваться. Пожалуйста, попробуйте снова.";
-        setFormError(errorMessage);
-        
-        toast({
-          title: "Ошибка регистрации",
-          description: errorMessage,
-          variant: "destructive",
-        });
+      setIsRegistered(true);
+      sessionStorage.setItem("emailForVerification", values.email);
+      
+      toast({
+        title: "Регистрация успешна",
+        description: "Проверьте вашу почту для подтверждения аккаунта",
+      });
+      
+      router.push("/auth/verify");
+    } catch (error: any) {
+      let errorMessage = "Не удалось зарегистрироваться. Попробуйте снова.";
+      let errorCode = error.code || null;
+      
+      if (error.message) {
+        errorMessage = error.message;
       }
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 
-                          err.message || 
-                          "Не удалось зарегистрироваться. Попробуйте снова.";
+      
+      if (errorCode === 406 && errorMessage.includes("именем")) {
+        errorMessage = "Пользователь с таким именем уже существует!";
+      } else if (errorCode === 406 && errorMessage.includes("электронной почты")) {
+        errorMessage = "Пользователь с таким адресом электронной почты уже существует!";
+      } else if (errorCode === 400 && errorMessage.includes("Имя пользователя")) {
+        errorMessage = "Имя пользователя должно начинаться с буквы, содержать от 3 до 20 символов, включать только буквы, цифры, точки и подчёркивания.";
+      } else if (errorCode === 400 && errorMessage.includes("email")) {
+        errorMessage = "Неверный формат email";
+      } else if (errorCode === 400 && errorMessage.includes("Пароль")) {
+        errorMessage = "Пароль должен содержать как минимум одну заглавную букву, одну цифру, один специальный символ и быть длиной не менее 8 символов.";
+      }
       
       setFormError(errorMessage);
       
       toast({
         title: "Ошибка регистрации",
-        description: errorMessage, // Используем текущее значение ошибки, а не состояние formError
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
 
-  // Set the form error from the auth state if it exists
   useEffect(() => {
     if (error) {
       setFormError(error);
@@ -180,9 +185,9 @@ export default function RegisterPage() {
               </p>
               <Button 
                 className="bg-[#800000] hover:bg-[#660000]"
-                onClick={() => router.push("/auth/login")}
+                onClick={() => router.push("/auth/verify")}
               >
-                Перейти на страницу входа
+                Перейти на страницу подтверждения
               </Button>
             </div>
           ) : (
@@ -328,6 +333,15 @@ export default function RegisterPage() {
                           }
                         >
                           • Хотя бы одну цифру (0-9)
+                        </div>
+                        <div
+                          className={
+                            /[!@#$%^&*(),.?":{}|<>]/.test(watchPassword)
+                              ? "text-green-600"
+                              : "text-gray-500"
+                          }
+                        >
+                          • Хотя бы один специальный символ
                         </div>
                       </div>
                       <FormMessage className="text-red-500" />
